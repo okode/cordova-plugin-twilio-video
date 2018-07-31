@@ -1,4 +1,4 @@
-package org.apache.cordova.plugin;
+package org.apache.cordova.twiliovideo;
 
 import org.apache.cordova.BuildHelper;
 import org.apache.cordova.CallbackContext;

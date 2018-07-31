@@ -1,4 +1,4 @@
-package org.apache.cordova.plugin;
+package org.apache.cordova.twiliovideo;
 IMPORT R class HERE
 
 import android.Manifest;

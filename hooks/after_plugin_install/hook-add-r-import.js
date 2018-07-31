@@ -6,6 +6,7 @@ var rootdir = process.argv[2];
 function replace_string_in_file(filename, to_replace, replace_with) {
     var data = fs.readFileSync(filename, 'utf8');
     var result = data.replace(to_replace, replace_with);
+    console.log(JSON.stringify(result));
     fs.writeFileSync(filename, result, 'utf8');
 }
 
@@ -28,7 +29,7 @@ if (process.env.TARGET) {
           var packageName = configobj.installed_plugins["cordova-plugin-twilio-video"]["PACKAGE_NAME"];
           console.log("With the package name: "+packageName);
           console.log("Adding import for R.java");
-            replace_string_in_file(val,"// import R class","import "+packageName+".R;");
+            replace_string_in_file(val,"IMPORT R class HERE","import "+packageName+".R;");
 
         } else {
             console.log("No android platform found! :(");

@@ -1,6 +1,5 @@
 package org.apache.cordova.plugin;
-import com.example.app.R;
-
+// import R class
 
 import android.Manifest;
 import android.content.Context;

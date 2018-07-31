@@ -19,7 +19,7 @@ if (process.env.TARGET) {
   // Add java files where you want to add R.java imports in the following array
 
     var filestoreplace = [
-        "platforms/android/src/org/apache/cordova/twiliovideo/TwilioVideoActivity.java"
+        "platforms/android/app/src/main/java/org/apache/cordova/twiliovideo/TwilioVideoActivity.java"
     ];
     filestoreplace.forEach(function(val, index, array) {
         if (fs.existsSync(val)) {
@@ -28,7 +28,7 @@ if (process.env.TARGET) {
           var packageName = configobj.installed_plugins["cordova-plugin-twilio-video"]["PACKAGE_NAME"];
           console.log("With the package name: "+packageName);
           console.log("Adding import for R.java");
-            replace_string_in_file(val,"package org.apache.cordova.plugin;","package org.apache.cordova.plugin;\n\nimport "+packageName+".R;");
+            replace_string_in_file(val,"// import R class","import "+packageName+".R;");
 
         } else {
             console.log("No android platform found! :(");

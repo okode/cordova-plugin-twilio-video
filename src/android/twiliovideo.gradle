@@ -1,0 +1,10 @@
+repositories {
+    jcenter()
+}
+
+
+dependencies {
+    compile 'com.twilio:video-android:1.0.0-beta12'
+    compile 'com.android.support:appcompat-v7:24.2.1'
+    compile 'com.android.support:design:24.2.1'
+}

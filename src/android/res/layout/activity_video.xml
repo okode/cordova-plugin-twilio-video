@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="org.apache.cordova.plugin.VideoActivity">
+    tools:context="org.apache.cordova.twiliovideo.VideoActivity">
 
     <include layout="@layout/content_video" />
 

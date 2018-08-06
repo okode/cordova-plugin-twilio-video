@@ -18,8 +18,25 @@
         <source-file src="src/ios/TwilioVideoPlugin.m" />
         <source-file src="src/ios/TwilioVideoViewController.m" />
         <header-file src="src/ios/TwilioVideoViewController.h" />
-        <resource-file src="src/ios/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
-        
+        <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
+        <resource-file src="src/ios/Resources/end_call.png" target="Resources/end_call.png" />
+        <resource-file src="src/ios/Resources/end_call@2x.png" target="Resources/end_call@2x.png" />
+        <resource-file src="src/ios/Resources/end_call@3x.png" target="Resources/end_call@3x.png" />
+        <resource-file src="src/ios/Resources/mic.png" target="Resources/mic.png" />
+        <resource-file src="src/ios/Resources/mic@2x.png" target="Resources/mic@2x.png" />
+        <resource-file src="src/ios/Resources/mic@3x.png" target="Resources/mic@3x.png" />
+        <resource-file src="src/ios/Resources/no_mic.png" target="Resources/no_mic.png" />
+        <resource-file src="src/ios/Resources/no_mic@2x.png" target="Resources/no_mic@2x.png" />
+        <resource-file src="src/ios/Resources/no_mic@3x.png" target="Resources/no_mic@3x.png" />
+        <resource-file src="src/ios/Resources/video.png" target="Resources/video.png" />
+        <resource-file src="src/ios/Resources/video@2x.png" target="Resources/video@2x.png" />
+        <resource-file src="src/ios/Resources/video@3x.png" target="Resources/video@3x.png" />
+        <resource-file src="src/ios/Resources/no_video.png" target="Resources/no_video.png" />
+        <resource-file src="src/ios/Resources/no_video@2x.png" target="Resources/no_video@2x.png" />
+        <resource-file src="src/ios/Resources/no_video@3x.png" target="Resources/no_video@3x.png" />
+        <resource-file src="src/ios/Resources/switch_camera.png" target="Resources/switch_camera.png" />
+        <resource-file src="src/ios/Resources/switch_camera@2x.png" target="Resources/switch_camera@2x.png" />
+        <resource-file src="src/ios/Resources/switch_camera@3x.png" target="Resources/switch_camera@3x.png" />
     </platform>
     <platform name="android">
         <hook type="after_plugin_install" src="hooks/after_plugin_install/hook-add-r-import.js" />

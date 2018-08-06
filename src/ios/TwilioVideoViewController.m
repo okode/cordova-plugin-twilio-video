@@ -14,6 +14,9 @@
 @property (nonatomic, strong) NSString *accessToken;
 @property (nonatomic, strong) NSString *tokenUrl;
 
+// Loading indicator
+@property (nonatomic, strong) UIActivityIndicatorView *activityIndicator;
+
 #pragma mark Video SDK components
 
 @property (nonatomic, strong) TVICameraCapturer *camera;
@@ -35,6 +38,8 @@
 @property (nonatomic, weak) IBOutlet UIButton *micButton;
 @property (nonatomic, weak) IBOutlet UILabel *roomLabel;
 @property (nonatomic, weak) IBOutlet UILabel *roomLine;
+@property (nonatomic, weak) IBOutlet UIButton *cameraSwitchButton;
+@property (nonatomic, weak) IBOutlet UIButton *videoButton;
 
 @end
 
@@ -57,10 +62,17 @@
     // Preview our local camera track in the local video preview view.
     [self startPreview];
     
+    // Hide message label by default. Enable it for debug
+    self.messageLabel.hidden = YES;
+    
     // Disconnect and mic button will be displayed when client is connected to a room.
     self.disconnectButton.hidden = YES;
     self.micButton.hidden = YES;
-    
+    [self.micButton setImage:[UIImage imageNamed:@"mic"] forState: UIControlStateNormal];
+    [self.micButton setImage:[UIImage imageNamed:@"no_mic"] forState: UIControlStateSelected];
+    [self.videoButton setImage:[UIImage imageNamed:@"video"] forState: UIControlStateNormal];
+    [self.videoButton setImage:[UIImage imageNamed:@"no_video"] forState: UIControlStateSelected];
+
     self.roomTextField.autocapitalizationType = UITextAutocapitalizationTypeNone;
     self.roomTextField.delegate = self;
     
@@ -96,6 +108,7 @@
     self.roomTextField.text=room;
     self.accessToken=token;
     [self showRoomUI:YES];
+    [self presentLoading];
     [self doConnect];
 }
 
@@ -108,13 +121,19 @@
     
     if (self.localAudioTrack) {
         self.localAudioTrack.enabled = !self.localAudioTrack.isEnabled;
-        
-        // Toggle the button title
-        if (self.localAudioTrack.isEnabled) {
-            [self.micButton setTitle:@"Mute" forState:UIControlStateNormal];
-        } else {
-            [self.micButton setTitle:@"Unmute" forState:UIControlStateNormal];
-        }
+        // If audio not enabled, mic is muted and button crossed out
+        [self.micButton setSelected: !self.localAudioTrack.isEnabled];
+    }
+}
+
+- (IBAction)cameraSwitchButtonPressed:(id)sender {
+    [self flipCamera];
+}
+
+- (IBAction)videoButtonPressed:(id)sender {
+    if(self.localVideoTrack){
+        self.localVideoTrack.enabled = !self.localVideoTrack.isEnabled;
+        [self.videoButton setSelected: !self.localVideoTrack.isEnabled];
     }
 }
 
@@ -149,6 +168,9 @@
         
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
                                                                               action:@selector(flipCamera)];
+        
+        self.videoButton.hidden = NO;
+        self.cameraSwitchButton.hidden = NO;
         [self.previewView addGestureRecognizer:tap];
     }
 }
@@ -212,9 +234,7 @@
 - (void)setupRemoteView {
     // Creating `TVIVideoView` programmatically
     TVIVideoView *remoteView = [[TVIVideoView alloc] init];
-    
-    //remoteView.frame=CGRectMake(0, 0, 50, 50);
-    
+        
     // `TVIVideoView` supports UIViewContentModeScaleToFill, UIViewContentModeScaleAspectFill and UIViewContentModeScaleAspectFit
     // UIViewContentModeScaleAspectFit is the default mode when you create `TVIVideoView` programmatically.
     self.remoteView.contentMode = UIViewContentModeScaleAspectFit;
@@ -289,6 +309,37 @@
     self.messageLabel.text = msg;
 }
 
+- (void)presentLoading {
+    self.activityIndicator = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 70, 70)];
+    self.activityIndicator.opaque = YES;
+    self.activityIndicator.center = self.view.center;
+    self.activityIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
+    [self.activityIndicator setColor:[UIColor darkGrayColor]];
+    [self.view addSubview:self.activityIndicator];
+    [self.activityIndicator startAnimating];
+}
+
+- (void)dismissLoading {
+    [self.activityIndicator performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:0.5];
+}
+
+- (void)presentConnectionErrorAlert: (NSString*)message {
+    UIAlertController * alert = [UIAlertController
+                                 alertControllerWithTitle:@"Error"
+                                 message: message
+                                 preferredStyle:UIAlertControllerStyleAlert];
+    
+    //Add Buttons
+    
+    UIAlertAction* yesButton = [UIAlertAction
+                                actionWithTitle:@"Aceptar"
+                                style:UIAlertActionStyleDefault
+                                handler: NULL];
+    
+    [alert addAction:yesButton];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
 #pragma mark - UITextFieldDelegate
 
 - (BOOL)testFieldShouldReturn:(UITextField *)textField {
@@ -300,8 +351,8 @@
 
 - (void)didConnectToRoom:(TVIRoom *)room {
     // At the moment, this example only supports rendering one Participant at a time.
-    
     [self logMessage:[NSString stringWithFormat:@"Connected to room %@ as %@", room.name, room.localParticipant.identity]];
+    [self dismissLoading];
     
     if (room.remoteParticipants.count > 0) {
         self.remoteParticipant = room.remoteParticipants[0];
@@ -311,6 +362,8 @@
 
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
     [self logMessage:[NSString stringWithFormat:@"Disconncted from room %@, error = %@", room.name, error]];
+    [self dismissLoading];
+    [self presentConnectionErrorAlert: @"Se ha producido un error. Desconectado."];
     
     [self cleanupRemoteParticipant];
     self.room = nil;
@@ -320,6 +373,8 @@
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
     [self logMessage:[NSString stringWithFormat:@"Failed to connect to room, error = %@", error]];
+    [self dismissLoading];
+    [self presentConnectionErrorAlert: @"No ha sido posible uniserse a la sala"];
     
     self.room = nil;
     

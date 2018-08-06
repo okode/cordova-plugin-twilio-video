@@ -72,20 +72,20 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="qlu-eV-2lM">
-                                <rect key="frame" x="167.5" y="28" width="40" height="40"/>
+                                <rect key="frame" x="162.5" y="28" width="50" height="50"/>
                                 <subviews>
                                     <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XKU-af-eTc" userLabel="Camera switch Button">
-                                        <rect key="frame" x="-167.5" y="0.0" width="40" height="40"/>
+                                        <rect key="frame" x="-162.5" y="0.0" width="50" height="50"/>
                                         <color key="backgroundColor" red="0.24313725490196078" green="0.27450980392156865" blue="0.40000000000000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
-                                            <constraint firstAttribute="height" constant="40" id="6Mt-cd-gfH"/>
-                                            <constraint firstAttribute="width" constant="40" id="K0R-TA-8E9"/>
+                                            <constraint firstAttribute="height" constant="50" id="6Mt-cd-gfH"/>
+                                            <constraint firstAttribute="width" constant="50" id="K0R-TA-8E9"/>
                                         </constraints>
                                         <state key="normal" image="switch_camera.png">
                                             <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         </state>
                                         <userDefinedRuntimeAttributes>
-                                            <userDefinedRuntimeAttribute type="string" keyPath="layer.cornerRadius" value="20"/>
+                                            <userDefinedRuntimeAttribute type="string" keyPath="layer.cornerRadius" value="25"/>
                                             <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
                                         </userDefinedRuntimeAttributes>
                                         <connections>
@@ -93,18 +93,18 @@
                                         </connections>
                                     </button>
                                     <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7bK-Tc-zw5" userLabel="Video button">
-                                        <rect key="frame" x="-167.5" y="0.0" width="40" height="40"/>
+                                        <rect key="frame" x="-162.5" y="0.0" width="50" height="50"/>
                                         <color key="backgroundColor" red="0.24313725489999999" green="0.27450980390000002" blue="0.40000000000000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
-                                            <constraint firstAttribute="height" constant="40" id="DeR-M4-O6S"/>
-                                            <constraint firstAttribute="width" constant="40" id="xBH-Gl-FtK"/>
+                                            <constraint firstAttribute="height" constant="50" id="DeR-M4-O6S"/>
+                                            <constraint firstAttribute="width" constant="50" id="xBH-Gl-FtK"/>
                                         </constraints>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <state key="normal" image="video.png">
                                             <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         </state>
                                         <userDefinedRuntimeAttributes>
-                                            <userDefinedRuntimeAttribute type="string" keyPath="layer.cornerRadius" value="20"/>
+                                            <userDefinedRuntimeAttribute type="string" keyPath="layer.cornerRadius" value="25"/>
                                             <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
                                         </userDefinedRuntimeAttributes>
                                         <connections>
@@ -112,18 +112,18 @@
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rwp-9E-VzS" userLabel="Mic Button">
-                                        <rect key="frame" x="0.0" y="0.0" width="40" height="40"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                         <color key="backgroundColor" red="0.24313725490196078" green="0.27450980392156865" blue="0.40000000000000002" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
-                                            <constraint firstAttribute="width" constant="40" id="QMt-3K-tlE"/>
-                                            <constraint firstAttribute="height" constant="40" id="Zj7-mh-UC4"/>
+                                            <constraint firstAttribute="width" constant="50" id="QMt-3K-tlE"/>
+                                            <constraint firstAttribute="height" constant="50" id="Zj7-mh-UC4"/>
                                         </constraints>
                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                         <state key="normal" image="mic.png">
                                             <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         </state>
                                         <userDefinedRuntimeAttributes>
-                                            <userDefinedRuntimeAttribute type="string" keyPath="layer.cornerRadius" value="20"/>
+                                            <userDefinedRuntimeAttribute type="string" keyPath="layer.cornerRadius" value="25"/>
                                             <userDefinedRuntimeAttribute type="boolean" keyPath="clipsToBounds" value="YES"/>
                                         </userDefinedRuntimeAttributes>
                                         <connections>

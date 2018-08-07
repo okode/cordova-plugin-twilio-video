@@ -185,10 +185,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
          * If this local video track is being shared in a Room, participants will be notified
          * that the track has been removed.
          */
+        // HACK: disabled this feature so the video works coming back from background.
+        // The video will be shared although the user is on background and if another app uses the camera,
+        // the video will be stopped and it will have to reconnected manually. 
+        /*
         if (localMedia != null && localVideoTrack != null) {
             localMedia.removeVideoTrack(localVideoTrack);
             localVideoTrack = null;
-        }
+        }*/
         super.onPause();
     }
 

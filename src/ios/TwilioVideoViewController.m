@@ -50,6 +50,8 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [self.navigationController setNavigationBarHidden:YES animated:NO];
+    
     [self logMessage:[NSString stringWithFormat:@"TwilioVideo v%@", [TwilioVideo version]]];
     
     // Configure access token for testing. Create one manually in the console
@@ -66,7 +68,6 @@
     self.messageLabel.hidden = YES;
     
     // Disconnect and mic button will be displayed when client is connected to a room.
-    self.disconnectButton.hidden = YES;
     self.micButton.hidden = YES;
     [self.micButton setImage:[UIImage imageNamed:@"mic"] forState: UIControlStateNormal];
     [self.micButton setImage:[UIImage imageNamed:@"no_mic"] forState: UIControlStateSelected];
@@ -283,7 +284,6 @@
     self.roomLine.hidden = inRoom;
     self.roomLabel.hidden = inRoom;*/
     self.micButton.hidden = !inRoom;
-    self.disconnectButton.hidden = !inRoom;
     [UIApplication sharedApplication].idleTimerDisabled = inRoom;
 }
 
@@ -334,7 +334,9 @@
     UIAlertAction* yesButton = [UIAlertAction
                                 actionWithTitle:@"Aceptar"
                                 style:UIAlertActionStyleDefault
-                                handler: NULL];
+                                handler: ^(UIAlertAction * action) {
+                                    [self dismissViewControllerAnimated:true completion:nil];
+                                }];
     
     [alert addAction:yesButton];
     [self presentViewController:alert animated:YES completion:nil];
@@ -363,22 +365,26 @@
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
     [self logMessage:[NSString stringWithFormat:@"Disconncted from room %@, error = %@", room.name, error]];
     [self dismissLoading];
-    [self presentConnectionErrorAlert: @"Se ha producido un error. Desconectado."];
     
     [self cleanupRemoteParticipant];
     self.room = nil;
     
     [self showRoomUI:NO];
+    if (error != NULL) {
+        [self presentConnectionErrorAlert: @"Se ha producido un error. Desconectado."];
+    } else {
+        [self dismissViewControllerAnimated:true completion:nil];
+    }
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
     [self logMessage:[NSString stringWithFormat:@"Failed to connect to room, error = %@", error]];
     [self dismissLoading];
-    [self presentConnectionErrorAlert: @"No ha sido posible uniserse a la sala"];
     
     self.room = nil;
     
     [self showRoomUI:NO];
+    [self presentConnectionErrorAlert: @"No ha sido posible uniserse a la sala"];
 }
 
 - (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {

@@ -72,7 +72,7 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="20" translatesAutoresizingMaskIntoConstraints="NO" id="qlu-eV-2lM">
-                                <rect key="frame" x="162.5" y="28" width="50" height="50"/>
+                                <rect key="frame" x="162.5" y="36" width="50" height="50"/>
                                 <subviews>
                                     <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XKU-af-eTc" userLabel="Camera switch Button">
                                         <rect key="frame" x="-162.5" y="0.0" width="50" height="50"/>
@@ -151,7 +151,7 @@
                                 </connections>
                             </button>
                         </subviews>
-                        <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <color key="backgroundColor" red="0.93333333333333335" green="0.93333333333333335" blue="0.93333333333333335" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="jgR-Qy-dC6" firstAttribute="top" secondItem="Zud-AS-DEE" secondAttribute="bottom" constant="21" id="0Am-2H-kE1"/>
                             <constraint firstItem="qlu-eV-2lM" firstAttribute="centerX" secondItem="3Bh-pO-6uY" secondAttribute="centerX" id="5jE-Xy-LRj"/>
@@ -167,7 +167,7 @@
                             <constraint firstAttribute="leadingMargin" secondItem="jgR-Qy-dC6" secondAttribute="leading" id="bOl-NA-2zy"/>
                             <constraint firstAttribute="trailingMargin" secondItem="jgR-Qy-dC6" secondAttribute="trailing" id="dqW-B2-5zF"/>
                             <constraint firstAttribute="trailing" secondItem="ebq-ja-6iU" secondAttribute="trailing" id="eiL-ob-cD1"/>
-                            <constraint firstItem="qlu-eV-2lM" firstAttribute="top" secondItem="8oD-ke-cGW" secondAttribute="bottom" constant="8" symbolic="YES" id="i2A-RE-Xm1"/>
+                            <constraint firstItem="qlu-eV-2lM" firstAttribute="top" secondItem="8oD-ke-cGW" secondAttribute="bottom" constant="16" id="i2A-RE-Xm1"/>
                             <constraint firstAttribute="trailingMargin" secondItem="EkL-i8-cDP" secondAttribute="trailing" id="lhs-bL-0xl"/>
                             <constraint firstAttribute="trailingMargin" secondItem="7dZ-Ur-uSj" secondAttribute="trailing" id="nNa-6o-3I1"/>
                             <constraint firstItem="tZu-uw-hgi" firstAttribute="top" secondItem="krA-sT-Z3g" secondAttribute="bottom" constant="16" id="o0p-IZ-2Th"/>
@@ -196,8 +196,8 @@
     </scenes>
     <resources>
         <image name="end_call.png" width="24" height="24"/>
-        <image name="mic.png" width="24" height="24"/>
-        <image name="switch_camera.png" width="24" height="24"/>
-        <image name="video.png" width="24" height="24"/>
+        <image name="mic.png" width="12" height="24"/>
+        <image name="switch_camera.png" width="24" height="18"/>
+        <image name="video.png" width="24" height="13"/>
     </resources>
 </document>

@@ -19,7 +19,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 import com.twilio.video.RoomState;
 import com.twilio.video.VideoRenderer;
@@ -409,6 +410,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 //videoStatusTextView.setText("Failed to connect");
+                this.presentConnectionErrorAlert("No ha sido posible unirse a la sala.");
             }
 
             @Override
@@ -416,11 +418,9 @@ public class TwilioVideoActivity extends AppCompatActivity {
                 ////videoStatusTextView.setText("Disconnected from " + room.getName());
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
-                // if (!disconnectedFromOnDestroy) {
-                //     setAudioFocus(false);
-                //     intializeUI();
-                //     moveLocalVideoToPrimaryView();
-                // }
+                if (!disconnectedFromOnDestroy && e != null) {
+                    this.presentConnectionErrorAlert("Se ha producido un error. Desconectado.");
+                }
             }
 
             @Override
@@ -618,6 +618,19 @@ public class TwilioVideoActivity extends AppCompatActivity {
             audioManager.setMode(previousAudioMode);
             audioManager.abandonAudioFocus(null);
         }
+    }
+
+    private void presentConnectionErrorAlert(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message)
+           .setCancelable(false)
+           .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int id) {
+                    TwilioVideoActivity.this.finish();
+               }
+           });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
 }

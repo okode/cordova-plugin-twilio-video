@@ -384,7 +384,7 @@
     self.room = nil;
     
     [self showRoomUI:NO];
-    [self presentConnectionErrorAlert: @"No ha sido posible uniserse a la sala"];
+    [self presentConnectionErrorAlert: @"No ha sido posible unirse a la sala."];
 }
 
 - (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {

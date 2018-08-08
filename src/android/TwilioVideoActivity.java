@@ -1,5 +1,5 @@
 package org.apache.cordova.twiliovideo;
-IMPORT R class HERE
+import com.mapfre.twilio.R;
 
 import android.Manifest;
 import android.content.Context;
@@ -47,7 +47,7 @@ import java.util.Map;
 public class TwilioVideoActivity extends AppCompatActivity {
 
 
- 	private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
+    private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
     private static final String TAG = "TwilioVideoActivity";
 
     /*
@@ -410,7 +410,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 //videoStatusTextView.setText("Failed to connect");
-                this.presentConnectionErrorAlert("No ha sido posible unirse a la sala.");
+                TwilioVideoActivity.this.presentConnectionErrorAlert("No ha sido posible unirse a la sala.");
             }
 
             @Override
@@ -419,7 +419,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
-                    this.presentConnectionErrorAlert("Se ha producido un error. Desconectado.");
+                    TwilioVideoActivity.this.presentConnectionErrorAlert("Se ha producido un error. Desconectado.");
                 }
             }
 
@@ -613,7 +613,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
              * speaker mode if this is not set.
              */
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-			audioManager.setSpeakerphoneOn(false);
+            audioManager.setSpeakerphoneOn(false);
         } else {
             audioManager.setMode(previousAudioMode);
             audioManager.abandonAudioFocus(null);

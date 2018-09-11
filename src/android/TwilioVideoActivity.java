@@ -1,5 +1,5 @@
 package org.apache.cordova.twiliovideo;
-import com.mapfre.twilio.R;
+IMPORT R class HERE
 
 import android.Manifest;
 import android.content.Context;

@@ -478,6 +478,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             public void onVideoTrackRemoved(Media media, VideoTrack videoTrack) {
                 //videoStatusTextView.setText("onVideoTrackRemoved");
                 removeParticipantVideo(videoTrack);
+                moveLocalVideoToPrimaryView();
             }
 
             @Override

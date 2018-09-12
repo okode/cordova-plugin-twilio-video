@@ -6,6 +6,7 @@ Cordova Plugin for Twilio Video
     - In the root node (widget). The spec URL should point to the version you want.
     ```
     <plugin name="cordova-plugin-twilio-video" spec="https://github.com/okode/cordova-plugin-twilio-video#develop" />
+    <plugin name="cordova-plugin-cocoapod-support" spec="1.6.0" />
     ```
 
     - In the iOS platform node (platform name="ios"). This allows you to install the Twilio iOS SDK by cocoapods instead of having the SDK versioned along with the project (bad practice).
@@ -20,7 +21,7 @@ Cordova Plugin for Twilio Video
     - In the dependencies section. It should point to the version you want.
     ```
     "cordova-plugin-twilio-video": "https://github.com/okode/cordova-plugin-twilio-video#develop",
-    "cordova-plugin-cocoapod-support": "1.5.0"
+    "cordova-plugin-cocoapod-support": "1.6.0"
     ```
 
     - In the cordova section.

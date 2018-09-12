@@ -19,7 +19,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 import com.twilio.video.RoomState;
 import com.twilio.video.VideoRenderer;
@@ -46,7 +47,7 @@ import java.util.Map;
 public class TwilioVideoActivity extends AppCompatActivity {
 
 
- 	private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
+    private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
     private static final String TAG = "TwilioVideoActivity";
 
     /*
@@ -185,10 +186,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
          * If this local video track is being shared in a Room, participants will be notified
          * that the track has been removed.
          */
+        // HACK: disabled this feature so the video works coming back from background.
+        // The video will be shared although the user is on background and if another app uses the camera,
+        // the video will be stopped and it will have to reconnected manually. 
+        /*
         if (localMedia != null && localVideoTrack != null) {
             localMedia.removeVideoTrack(localVideoTrack);
             localVideoTrack = null;
-        }
+        }*/
         super.onPause();
     }
 
@@ -405,6 +410,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 //videoStatusTextView.setText("Failed to connect");
+                TwilioVideoActivity.this.presentConnectionErrorAlert("No ha sido posible unirse a la sala.");
             }
 
             @Override
@@ -412,11 +418,9 @@ public class TwilioVideoActivity extends AppCompatActivity {
                 ////videoStatusTextView.setText("Disconnected from " + room.getName());
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
-                // if (!disconnectedFromOnDestroy) {
-                //     setAudioFocus(false);
-                //     intializeUI();
-                //     moveLocalVideoToPrimaryView();
-                // }
+                if (!disconnectedFromOnDestroy && e != null) {
+                    TwilioVideoActivity.this.presentConnectionErrorAlert("Se ha producido un error. Desconectado.");
+                }
             }
 
             @Override
@@ -609,11 +613,24 @@ public class TwilioVideoActivity extends AppCompatActivity {
              * speaker mode if this is not set.
              */
             audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-			audioManager.setSpeakerphoneOn(false);
+            audioManager.setSpeakerphoneOn(false);
         } else {
             audioManager.setMode(previousAudioMode);
             audioManager.abandonAudioFocus(null);
         }
+    }
+
+    private void presentConnectionErrorAlert(String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(message)
+           .setCancelable(false)
+           .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+               public void onClick(DialogInterface dialog, int id) {
+                    TwilioVideoActivity.this.finish();
+               }
+           });
+        AlertDialog alert = builder.create();
+        alert.show();
     }
 
 }

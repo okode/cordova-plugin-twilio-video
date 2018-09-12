@@ -15,20 +15,34 @@
                 <param name="ios-package" value="TwilioVideoPlugin" />
             </feature>
         </config-file>
-<!--
-        <framework src="TwilioVideo" type="podspec" spec="2.0.0" />
--->
         <source-file src="src/ios/TwilioVideoPlugin.m" />
         <source-file src="src/ios/TwilioVideoViewController.m" />
         <header-file src="src/ios/TwilioVideoViewController.h" />
-        <resource-file src="src/ios/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
-        
+        <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
+        <resource-file src="src/ios/Resources/end_call.png" target="Resources/end_call.png" />
+        <resource-file src="src/ios/Resources/end_call@2x.png" target="Resources/end_call@2x.png" />
+        <resource-file src="src/ios/Resources/end_call@3x.png" target="Resources/end_call@3x.png" />
+        <resource-file src="src/ios/Resources/mic.png" target="Resources/mic.png" />
+        <resource-file src="src/ios/Resources/mic@2x.png" target="Resources/mic@2x.png" />
+        <resource-file src="src/ios/Resources/mic@3x.png" target="Resources/mic@3x.png" />
+        <resource-file src="src/ios/Resources/no_mic.png" target="Resources/no_mic.png" />
+        <resource-file src="src/ios/Resources/no_mic@2x.png" target="Resources/no_mic@2x.png" />
+        <resource-file src="src/ios/Resources/no_mic@3x.png" target="Resources/no_mic@3x.png" />
+        <resource-file src="src/ios/Resources/video.png" target="Resources/video.png" />
+        <resource-file src="src/ios/Resources/video@2x.png" target="Resources/video@2x.png" />
+        <resource-file src="src/ios/Resources/video@3x.png" target="Resources/video@3x.png" />
+        <resource-file src="src/ios/Resources/no_video.png" target="Resources/no_video.png" />
+        <resource-file src="src/ios/Resources/no_video@2x.png" target="Resources/no_video@2x.png" />
+        <resource-file src="src/ios/Resources/no_video@3x.png" target="Resources/no_video@3x.png" />
+        <resource-file src="src/ios/Resources/switch_camera.png" target="Resources/switch_camera.png" />
+        <resource-file src="src/ios/Resources/switch_camera@2x.png" target="Resources/switch_camera@2x.png" />
+        <resource-file src="src/ios/Resources/switch_camera@3x.png" target="Resources/switch_camera@3x.png" />
     </platform>
     <platform name="android">
         <hook type="after_plugin_install" src="hooks/after_plugin_install/hook-add-r-import.js" />
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="TwilioVideoPlugin">
-                <param name="android-package" value="org.apache.cordova.plugin.TwilioVideo" />
+                <param name="android-package" value="org.apache.cordova.twiliovideo.TwilioVideo" />
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/*">
@@ -40,7 +54,7 @@
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:name="org.apache.cordova.plugin.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light"></activity>
+            <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light"></activity>
         </config-file>
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />

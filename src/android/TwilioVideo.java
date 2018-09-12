@@ -16,7 +16,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import org.apache.cordova.plugin.TwilioVideoActivity;
+import org.apache.cordova.twiliovideo.TwilioVideoActivity;
 
 
 public class TwilioVideo extends CordovaPlugin {

@@ -238,7 +238,7 @@
         
     // `TVIVideoView` supports UIViewContentModeScaleToFill, UIViewContentModeScaleAspectFill and UIViewContentModeScaleAspectFit
     // UIViewContentModeScaleAspectFit is the default mode when you create `TVIVideoView` programmatically.
-    self.remoteView.contentMode = UIViewContentModeScaleAspectFit;
+    remoteView.contentMode = UIViewContentModeScaleAspectFill;
     
     [self.view insertSubview:remoteView atIndex:0];
     self.remoteView = remoteView;

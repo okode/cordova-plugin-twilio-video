@@ -54,10 +54,14 @@
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light"></activity>
+            <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light.Translucent"></activity>
         </config-file>
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallEventsProducer.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
+
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="com.android.support:appcompat-v7:26+" />
         <framework src="src/android/twiliovideo.gradle" custom="true" type="gradleReference" />

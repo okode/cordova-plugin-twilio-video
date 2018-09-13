@@ -38,6 +38,7 @@ public class TwilioVideo extends CordovaPlugin {
 	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
 		this.callbackContext = callbackContext;
 		if (action.equals("openRoom")) {
+		    this.registerCallListener(callbackContext);
 		   	this.openRoom(args);
 		}
         return true;
@@ -71,6 +72,21 @@ public class TwilioVideo extends CordovaPlugin {
             //Log.e(TAG, "Invalid JSON string: " + json, e);
             //return null;
         }
+    }
+
+    private void registerCallListener(final CallbackContext callbackContext) {
+        if (callbackContext == null) {
+            return;
+        }
+        CallEventsProducer.getInstance().setObserver(new CallObserver() {
+            @Override
+            public void onEvent(String event) {
+                Log.i("TwilioEvents", "Event received: " + event);
+                PluginResult result = new PluginResult(PluginResult.Status.OK, event);
+                result.setKeepCallback(true);
+                callbackContext.sendPluginResult(result);
+            }
+        });
     }
 
     public Bundle onSaveInstanceState() {

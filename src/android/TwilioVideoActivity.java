@@ -94,6 +94,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        publishEvent(CallEvent.OPENED);
         setContentView(R.layout.activity_video);
 
         primaryVideoView = (VideoView) findViewById(R.id.primary_video_view);
@@ -197,6 +198,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
         super.onPause();
     }
 
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(0, 0);
+    }
+
     @Override
     protected void onDestroy() {
         /*
@@ -215,6 +224,8 @@ public class TwilioVideoActivity extends AppCompatActivity {
             localMedia.release();
             localMedia = null;
         }
+
+        publishEvent(CallEvent.CLOSED);
 
         super.onDestroy();
     }
@@ -250,9 +261,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
         // Share your camera
         cameraCapturer = new CameraCapturer(this, CameraSource.FRONT_CAMERA);
         localVideoTrack = localMedia.addVideoTrack(true, cameraCapturer);
-        primaryVideoView.setMirror(true);
-        localVideoTrack.addRenderer(primaryVideoView);
-        localVideoView = primaryVideoView;
+        this.moveLocalVideoToThumbnailView();
     }
 
 
@@ -337,7 +346,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
      * Set primary view as renderer for participant video track
      */
     private void addParticipantVideo(VideoTrack videoTrack) {
-        moveLocalVideoToThumbnailView();
+        primaryVideoView.setVisibility(View.VISIBLE);
         primaryVideoView.setMirror(false);
         videoTrack.addRenderer(primaryVideoView);
     }
@@ -369,14 +378,15 @@ public class TwilioVideoActivity extends AppCompatActivity {
         /*
          * Remove participant renderer
          */
+        primaryVideoView.setVisibility(View.GONE);
         if (participant.getMedia().getVideoTracks().size() > 0) {
             removeParticipantVideo(participant.getMedia().getVideoTracks().get(0));
         }
         participant.getMedia().setListener(null);
-        moveLocalVideoToPrimaryView();
     }
 
     private void removeParticipantVideo(VideoTrack videoTrack) {
+        primaryVideoView.setVisibility(View.GONE);
         videoTrack.removeRenderer(primaryVideoView);
     }
 
@@ -400,7 +410,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             public void onConnected(Room room) {
                 //videoStatusTextView.setText("Connected to " + room.getName());
                 //setTitle(room.getName());
-
+                publishEvent(CallEvent.CONNECTED);
                 for (Map.Entry<String, Participant> entry : room.getParticipants().entrySet()) {
                     addParticipant(entry.getValue());
                     break;
@@ -410,12 +420,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 //videoStatusTextView.setText("Failed to connect");
+                publishEvent(CallEvent.CONNECT_FAILURE);
                 TwilioVideoActivity.this.presentConnectionErrorAlert("No ha sido posible unirse a la sala.");
             }
 
             @Override
             public void onDisconnected(Room room, TwilioException e) {
                 ////videoStatusTextView.setText("Disconnected from " + room.getName());
+                publishEvent(CallEvent.DISCONNECTED);
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
@@ -425,14 +437,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
             @Override
             public void onParticipantConnected(Room room, Participant participant) {
+                publishEvent(CallEvent.PARTICIPANT_CONNECTED);
                 addParticipant(participant);
-
             }
 
             @Override
             public void onParticipantDisconnected(Room room, Participant participant) {
-                finish();
-                //removeParticipant(participant);
+                publishEvent(CallEvent.PARTICIPANT_DISCONNECTED);
+                removeParticipant(participant);
             }
 
             @Override
@@ -461,24 +473,27 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onAudioTrackAdded(Media media, AudioTrack audioTrack) {
                 //videoStatusTextView.setText("onAudioTrackAdded");
+                publishEvent(CallEvent.AUDIO_TRACK_ADDED);
             }
 
             @Override
             public void onAudioTrackRemoved(Media media, AudioTrack audioTrack) {
                 //videoStatusTextView.setText("onAudioTrackRemoved");
+                publishEvent(CallEvent.AUDIO_TRACK_REMOVED);
             }
 
             @Override
             public void onVideoTrackAdded(Media media, VideoTrack videoTrack) {
                 //videoStatusTextView.setText("onVideoTrackAdded");
+                publishEvent(CallEvent.VIDEO_TRACK_ADDED);
                 addParticipantVideo(videoTrack);
             }
 
             @Override
             public void onVideoTrackRemoved(Media media, VideoTrack videoTrack) {
                 //videoStatusTextView.setText("onVideoTrackRemoved");
+                publishEvent(CallEvent.VIDEO_TRACK_REMOVED);
                 removeParticipantVideo(videoTrack);
-                moveLocalVideoToPrimaryView();
             }
 
             @Override
@@ -632,6 +647,16 @@ public class TwilioVideoActivity extends AppCompatActivity {
            });
         AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        overridePendingTransition(0, 0);
+    }
+
+    private void publishEvent(CallEvent event) {
+        CallEventsProducer.getInstance().publishEvent(event);
     }
 
 }

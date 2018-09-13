@@ -13,6 +13,7 @@
 // Configure access token manually for testing in `ViewDidLoad`, if desired! Create one manually in the console.
 @property (nonatomic, strong) NSString *accessToken;
 @property (nonatomic, strong) NSString *tokenUrl;
+@property (nonatomic, strong) TwilioVideoPlugin *plugin;
 
 // Loading indicator
 @property (nonatomic, strong) UIActivityIndicatorView *activityIndicator;
@@ -43,6 +44,19 @@
 
 @end
 
+// CALL EVENTS
+NSString *const OPENED = @"OPENED";
+NSString *const CONNECTED = @"CONNECTED";
+NSString *const CONNECT_FAILURE = @"CONNECT_FAILURE";
+NSString *const DISCONNECTED = @"DISCONNECTED";
+NSString *const PARTICIPANT_CONNECTED = @"PARTICIPANT_CONNECTED";
+NSString *const PARTICIPANT_DISCONNECTED = @"PARTICIPANT_DISCONNECTED";
+NSString *const AUDIO_TRACK_ADDED = @"AUDIO_TRACK_ADDED";
+NSString *const AUDIO_TRACK_REMOVED = @"AUDIO_TRACK_REMOVED";
+NSString *const VIDEO_TRACK_ADDED = @"VIDEO_TRACK_ADDED";
+NSString *const VIDEO_TRACK_REMOVED = @"VIDEO_TRACK_REMOVED";
+NSString *const CLOSED = @"CLOSED";
+
 @implementation TwilioVideoViewController
 
 #pragma mark - UIViewController
@@ -50,6 +64,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [self.plugin notifyListener:OPENED];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     
     [self logMessage:[NSString stringWithFormat:@"TwilioVideo v%@", [TwilioVideo version]]];
@@ -239,7 +254,7 @@
     // `TVIVideoView` supports UIViewContentModeScaleToFill, UIViewContentModeScaleAspectFill and UIViewContentModeScaleAspectFit
     // UIViewContentModeScaleAspectFit is the default mode when you create `TVIVideoView` programmatically.
     remoteView.contentMode = UIViewContentModeScaleAspectFill;
-    
+
     [self.view insertSubview:remoteView atIndex:0];
     self.remoteView = remoteView;
     
@@ -335,11 +350,20 @@
                                 actionWithTitle:@"Aceptar"
                                 style:UIAlertActionStyleDefault
                                 handler: ^(UIAlertAction * action) {
-                                    [self dismissViewControllerAnimated:true completion:nil];
+                                    [self dismiss];
                                 }];
     
     [alert addAction:yesButton];
     [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void) setPluginInstance:(TwilioVideoPlugin *)plugin {
+    self.plugin = plugin;
+}
+
+- (void) dismiss {
+    [self.plugin notifyListener:CLOSED];
+    [self dismissViewControllerAnimated:NO completion:nil];
 }
 
 #pragma mark - UITextFieldDelegate
@@ -354,6 +378,7 @@
 - (void)didConnectToRoom:(TVIRoom *)room {
     // At the moment, this example only supports rendering one Participant at a time.
     [self logMessage:[NSString stringWithFormat:@"Connected to room %@ as %@", room.name, room.localParticipant.identity]];
+    [self.plugin notifyListener:CONNECTED];
     [self dismissLoading];
     
     if (room.remoteParticipants.count > 0) {
@@ -371,14 +396,16 @@
     
     [self showRoomUI:NO];
     if (error != NULL) {
+        [self.plugin notifyListener:DISCONNECTED];
         [self presentConnectionErrorAlert: @"Se ha producido un error. Desconectado."];
     } else {
-        [self dismissViewControllerAnimated:true completion:nil];
+        [self dismiss];
     }
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
     [self logMessage:[NSString stringWithFormat:@"Failed to connect to room, error = %@", error]];
+    [self.plugin notifyListener:CONNECT_FAILURE];
     [self dismissLoading];
     
     self.room = nil;
@@ -396,6 +423,7 @@
                       participant.identity,
                       (unsigned long)[participant.audioTracks count],
                       (unsigned long)[participant.videoTracks count]]];
+    [self.plugin notifyListener:PARTICIPANT_CONNECTED];
 }
 
 - (void)room:(TVIRoom *)room participantDidDisconnect:(TVIRemoteParticipant *)participant {
@@ -403,6 +431,7 @@
         [self cleanupRemoteParticipant];
     }
     [self logMessage:[NSString stringWithFormat:@"Room %@ participant %@ disconnected", room.name, participant.identity]];
+    [self.plugin notifyListener:PARTICIPANT_DISCONNECTED];
 }
 
 #pragma mark - TVIRemoteParticipantDelegate
@@ -452,7 +481,8 @@
     
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
-    
+    [self.plugin notifyListener:VIDEO_TRACK_ADDED];
+
     if (self.remoteParticipant == participant) {
         [self setupRemoteView];
         [videoTrack addRenderer:self.remoteView];
@@ -468,6 +498,7 @@
     
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
+    [self.plugin notifyListener:VIDEO_TRACK_REMOVED];
     
     if (self.remoteParticipant == participant) {
         [videoTrack removeRenderer:self.remoteView];
@@ -484,6 +515,7 @@
     
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
+    [self.plugin notifyListener:AUDIO_TRACK_ADDED];
 }
 
 - (void)unsubscribedFromAudioTrack:(TVIRemoteAudioTrack *)audioTrack
@@ -495,6 +527,7 @@
     
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
+    [self.plugin notifyListener:AUDIO_TRACK_REMOVED];
 }
 
 - (void)remoteParticipant:(TVIRemoteParticipant *)participant

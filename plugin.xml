@@ -15,6 +15,7 @@
                 <param name="ios-package" value="TwilioVideoPlugin" />
             </feature>
         </config-file>
+        <source-file src="src/ios/TwilioVideoPlugin.h" />
         <source-file src="src/ios/TwilioVideoPlugin.m" />
         <source-file src="src/ios/TwilioVideoViewController.m" />
         <header-file src="src/ios/TwilioVideoViewController.h" />

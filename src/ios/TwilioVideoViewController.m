@@ -15,9 +15,6 @@
 @property (nonatomic, strong) NSString *tokenUrl;
 @property (nonatomic, strong) TwilioVideoPlugin *plugin;
 
-// Loading indicator
-@property (nonatomic, strong) UIActivityIndicatorView *activityIndicator;
-
 #pragma mark Video SDK components
 
 @property (nonatomic, strong) TVICameraCapturer *camera;
@@ -124,7 +121,6 @@ NSString *const CLOSED = @"CLOSED";
     self.roomTextField.text=room;
     self.accessToken=token;
     [self showRoomUI:YES];
-    [self presentLoading];
     [self doConnect];
 }
 
@@ -324,20 +320,6 @@ NSString *const CLOSED = @"CLOSED";
     self.messageLabel.text = msg;
 }
 
-- (void)presentLoading {
-    self.activityIndicator = [[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(0, 0, 70, 70)];
-    self.activityIndicator.opaque = YES;
-    self.activityIndicator.center = self.view.center;
-    self.activityIndicator.activityIndicatorViewStyle = UIActivityIndicatorViewStyleGray;
-    [self.activityIndicator setColor:[UIColor darkGrayColor]];
-    [self.view addSubview:self.activityIndicator];
-    [self.activityIndicator startAnimating];
-}
-
-- (void)dismissLoading {
-    [self.activityIndicator performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:0.5];
-}
-
 - (void)presentConnectionErrorAlert: (NSString*)message {
     UIAlertController * alert = [UIAlertController
                                  alertControllerWithTitle:@"Error"
@@ -379,7 +361,6 @@ NSString *const CLOSED = @"CLOSED";
     // At the moment, this example only supports rendering one Participant at a time.
     [self logMessage:[NSString stringWithFormat:@"Connected to room %@ as %@", room.name, room.localParticipant.identity]];
     [self.plugin notifyListener:CONNECTED];
-    [self dismissLoading];
     
     if (room.remoteParticipants.count > 0) {
         self.remoteParticipant = room.remoteParticipants[0];
@@ -389,7 +370,6 @@ NSString *const CLOSED = @"CLOSED";
 
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
     [self logMessage:[NSString stringWithFormat:@"Disconncted from room %@, error = %@", room.name, error]];
-    [self dismissLoading];
     
     [self cleanupRemoteParticipant];
     self.room = nil;
@@ -406,7 +386,6 @@ NSString *const CLOSED = @"CLOSED";
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
     [self logMessage:[NSString stringWithFormat:@"Failed to connect to room, error = %@", error]];
     [self.plugin notifyListener:CONNECT_FAILURE];
-    [self dismissLoading];
     
     self.room = nil;
     

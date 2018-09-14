@@ -60,6 +60,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
      */
     private String accessToken;
     private String roomId;
+    private CallConfig config;
 
     /*
      * A Room represents communication between a local participant and one or more participants.
@@ -125,6 +126,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
         this.accessToken = intent.getStringExtra("token");
         this.roomId =   intent.getStringExtra("roomId");
+        this.config = (CallConfig) intent.getSerializableExtra("config");
 
         Log.d(TAG, "BEFORE REQUEST PERMISSIONS");
         if (!checkPermissionForCameraAndMicrophone()) {
@@ -136,12 +138,11 @@ public class TwilioVideoActivity extends AppCompatActivity {
             connectToRoom();
         }
 
-        CallConfig config = (CallConfig) intent.getSerializableExtra("config");
 
         /*
          * Set the initial state of the UI
          */
-        intializeUI(config.getPrimaryColorHex(), config.getSecondaryColorHex());
+        intializeUI();
         // new CountDownTimer(5000, 300) {
         //      public void onTick(long millisUntilFinished) { }
         //      public void onFinish() {
@@ -284,19 +285,19 @@ public class TwilioVideoActivity extends AppCompatActivity {
     /*
      * The initial state when there is no active conversation.
      */
-    private void intializeUI(String primaryColorHex, String secondaryColorHex) {
+    private void intializeUI() {
     //     connectActionFab.setImageDrawable(ContextCompat.getDrawable(this,
     //             R.drawable.ic_call_white_24px));
     //     connectActionFab.show();
     //     connectActionFab.setOnClickListener(connectActionClickListener());
-        if (primaryColorHex != null) {
-            int primaryColor = Color.parseColor(primaryColorHex);
+        if (config.getPrimaryColorHex() != null) {
+            int primaryColor = Color.parseColor(config.getPrimaryColorHex());
             ColorStateList color = ColorStateList.valueOf(primaryColor);
             connectActionFab.setBackgroundTintList(color);
         }
 
-        if (secondaryColorHex != null) {
-            int secondaryColor = Color.parseColor(secondaryColorHex);
+        if (config.getSecondaryColorHex() != null) {
+            int secondaryColor = Color.parseColor(config.getSecondaryColorHex());
             ColorStateList color = ColorStateList.valueOf(secondaryColor);
             switchCameraActionFab.setBackgroundTintList(color);
             localVideoActionFab.setBackgroundTintList(color);
@@ -608,6 +609,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
                         icon = R.drawable.ic_videocam_off_red_24px;
                         switchCameraActionFab.hide();
                     }
+
                     localVideoActionFab.setImageDrawable(
                             ContextCompat.getDrawable(TwilioVideoActivity.this, icon));
                 }

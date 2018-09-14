@@ -62,6 +62,7 @@
         <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEventsProducer.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallConfig.java" target-dir="src/org/apache/cordova/twiliovideo" />
 
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="com.android.support:appcompat-v7:26+" />

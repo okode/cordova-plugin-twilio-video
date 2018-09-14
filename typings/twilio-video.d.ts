@@ -7,8 +7,11 @@ declare module TwilioVideo {
          * @param token 
          * @param roomName 
          * @param onEvent - (Optional) It will be fired any time that a call event is received
+         * @param {Object} config
+         * @param config.primaryColor - Hex primary color that the app will use
+         * @param config.secondaryColor - Hex secondary color that the app will use
          */
-        openRoom(token: string, roomName: string, onEvent?: Function): void;
+        openRoom(token: string, roomName: string, onEvent?: Function, config?: any): void;
     }
 }
 

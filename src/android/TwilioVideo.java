@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import org.apache.cordova.twiliovideo.TwilioVideoActivity;
+import org.json.JSONObject;
 
 
 public class TwilioVideo extends CordovaPlugin {
@@ -27,6 +28,7 @@ public class TwilioVideo extends CordovaPlugin {
     private CordovaInterface cordova;
     private String roomId;
     private String token;
+    private CallConfig config = new CallConfig();
 
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
@@ -52,6 +54,9 @@ public class TwilioVideo extends CordovaPlugin {
             final CordovaPlugin that = this;
             final String token = this.token;
             final String roomId = this.roomId;
+            if (args.length() > 2) {
+                this.config.parse(args.getJSONObject(2));
+            }
 
             LOG.d("TOKEN", token);
             LOG.d("ROOMID", roomId);
@@ -61,6 +66,7 @@ public class TwilioVideo extends CordovaPlugin {
                     Intent intentTwilioVideo = new Intent(that.cordova.getActivity().getBaseContext(), TwilioVideoActivity.class);
         			intentTwilioVideo.putExtra("token", token);
                     intentTwilioVideo.putExtra("roomId", roomId);
+                    intentTwilioVideo.putExtra("config", config);
                     // avoid calling other phonegap apps
                     intentTwilioVideo.setPackage(that.cordova.getActivity().getApplicationContext().getPackageName());
                     //that.cordova.startActivityForResult(that, intentTwilioVideo);
@@ -94,15 +100,15 @@ public class TwilioVideo extends CordovaPlugin {
         Bundle state = new Bundle();
         state.putString("token", this.token);
         state.putString("roomId", this.roomId);
+        state.putSerializable("config", this.config);
         return state;
     }
 
     public void onRestoreStateForActivityResult(Bundle state, CallbackContext callbackContext) {
         this.token = state.getString("token");
         this.roomId = state.getString("roomId");
+        this.config = (CallConfig) state.getSerializable("config");
         this.callbackContext = callbackContext;
     }
-
-
 
 }

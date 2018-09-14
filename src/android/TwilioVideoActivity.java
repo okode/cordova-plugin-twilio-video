@@ -5,6 +5,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -41,6 +43,8 @@ import com.twilio.video.VideoView;
 
 import android.content.Intent;
 
+
+import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -132,10 +136,12 @@ public class TwilioVideoActivity extends AppCompatActivity {
             connectToRoom();
         }
 
+        CallConfig config = (CallConfig) intent.getSerializableExtra("config");
+
         /*
          * Set the initial state of the UI
          */
-        intializeUI();
+        intializeUI(config.getPrimaryColorHex(), config.getSecondaryColorHex());
         // new CountDownTimer(5000, 300) {
         //      public void onTick(long millisUntilFinished) { }
         //      public void onFinish() {
@@ -278,17 +284,32 @@ public class TwilioVideoActivity extends AppCompatActivity {
     /*
      * The initial state when there is no active conversation.
      */
-    private void intializeUI() {
+    private void intializeUI(String primaryColorHex, String secondaryColorHex) {
     //     connectActionFab.setImageDrawable(ContextCompat.getDrawable(this,
     //             R.drawable.ic_call_white_24px));
     //     connectActionFab.show();
     //     connectActionFab.setOnClickListener(connectActionClickListener());
-         switchCameraActionFab.show();
-         switchCameraActionFab.setOnClickListener(switchCameraClickListener());
-         localVideoActionFab.show();
-         localVideoActionFab.setOnClickListener(localVideoClickListener());
-         muteActionFab.show();
-         muteActionFab.setOnClickListener(muteClickListener());
+        if (primaryColorHex != null) {
+            int primaryColor = Color.parseColor(primaryColorHex);
+            ColorStateList color = ColorStateList.valueOf(primaryColor);
+            connectActionFab.setBackgroundTintList(color);
+        }
+
+        if (secondaryColorHex != null) {
+            int secondaryColor = Color.parseColor(secondaryColorHex);
+            ColorStateList color = ColorStateList.valueOf(secondaryColor);
+            switchCameraActionFab.setBackgroundTintList(color);
+            localVideoActionFab.setBackgroundTintList(color);
+            muteActionFab.setBackgroundTintList(color);
+            switchAudioActionFab.setBackgroundTintList(color);
+        }
+
+        switchCameraActionFab.show();
+        switchCameraActionFab.setOnClickListener(switchCameraClickListener());
+        localVideoActionFab.show();
+        localVideoActionFab.setOnClickListener(localVideoClickListener());
+        muteActionFab.show();
+        muteActionFab.setOnClickListener(muteClickListener());
         switchAudioActionFab.show();
         switchAudioActionFab.setOnClickListener(switchAudioClickListener());
      }

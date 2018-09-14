@@ -12,16 +12,12 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         UIStoryboard *sb = [UIStoryboard storyboardWithName:@"TwilioVideo" bundle:nil];
         TwilioVideoViewController *vc = [sb instantiateViewControllerWithIdentifier:@"TwilioVideoViewController"];
+        [vc setPluginInstance: self];
         vc.view.backgroundColor = [UIColor clearColor];
         vc.modalPresentationStyle = UIModalPresentationOverFullScreen;
         
-        [vc setPluginInstance: self];
         [self.viewController presentViewController:vc animated:NO completion:^{
-            
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"ok"];
             [vc connectToRoom:room token:token];
-            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-            
         }];
     });
 

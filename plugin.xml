@@ -3,8 +3,8 @@
     <name>TwilioVideo</name>
     <author>Gilles HAIAT</author>
     <license>MIT</license>
-    <js-module name="TwilioVideoPlugin" src="www/TwilioVideo.js">
-        <clobbers target="cordova.plugins.TwilioVideoPlugin" />
+    <js-module name="TwilioVideo" src="www/TwilioVideo.js">
+        <clobbers target="window.TwilioVideo" />
     </js-module>
     <engines>
         <engine name="cordova" version=">=4.0.0" />

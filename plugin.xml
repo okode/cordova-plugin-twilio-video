@@ -3,7 +3,7 @@
     <name>TwilioVideo</name>
     <author>Gilles HAIAT</author>
     <license>MIT</license>
-    <js-module name="TwilioVideo" src="www/TwilioVideo.js">
+    <js-module name="twiliovideo" src="www/TwilioVideo.js">
         <clobbers target="window.TwilioVideo" />
     </js-module>
     <engines>

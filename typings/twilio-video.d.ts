@@ -15,4 +15,4 @@ declare module TwilioVideo {
     }
 }
 
-declare var TwilioVideo: TwilioVideo.TwilioVideoPlugin;
+declare var twiliovideo: TwilioVideo.TwilioVideoPlugin;

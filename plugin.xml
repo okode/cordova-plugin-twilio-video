@@ -67,11 +67,11 @@
         <source-file src="src/android/CallEventsProducer.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallConfig.java" target-dir="src/org/apache/cordova/twiliovideo" />
-
+        <source-file src="src/android/CameraCapturerCompat.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="com.android.support:appcompat-v7:26+" />
         <framework src="src/android/twiliovideo.gradle" custom="true" type="gradleReference" />
-        <dependency id="cordova-plugin-compat" />
         
         <resource-file src="src/android/res/drawable/ic_call_black_24dp.xml" target="res/drawable/ic_call_black_24dp.xml" />
         <resource-file src="src/android/res/drawable/ic_call_end_white_24px.xml" target="res/drawable/ic_call_end_white_24px.xml" />

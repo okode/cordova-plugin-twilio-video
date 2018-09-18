@@ -5,6 +5,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -42,6 +44,8 @@ import com.twilio.video.VideoView;
 import android.content.Intent;
 
 
+import org.json.JSONObject;
+
 import java.util.Map;
 
 public class TwilioVideoActivity extends AppCompatActivity {
@@ -56,6 +60,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
      */
     private String accessToken;
     private String roomId;
+    private CallConfig config;
 
     /*
      * A Room represents communication between a local participant and one or more participants.
@@ -94,6 +99,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        publishEvent(CallEvent.OPENED);
         setContentView(R.layout.activity_video);
 
         primaryVideoView = (VideoView) findViewById(R.id.primary_video_view);
@@ -120,6 +126,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
         this.accessToken = intent.getStringExtra("token");
         this.roomId =   intent.getStringExtra("roomId");
+        this.config = (CallConfig) intent.getSerializableExtra("config");
 
         Log.d(TAG, "BEFORE REQUEST PERMISSIONS");
         if (!checkPermissionForCameraAndMicrophone()) {
@@ -130,6 +137,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             createLocalMedia();
             connectToRoom();
         }
+
 
         /*
          * Set the initial state of the UI
@@ -197,6 +205,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
         super.onPause();
     }
 
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(0, 0);
+    }
+
     @Override
     protected void onDestroy() {
         /*
@@ -215,6 +231,8 @@ public class TwilioVideoActivity extends AppCompatActivity {
             localMedia.release();
             localMedia = null;
         }
+
+        publishEvent(CallEvent.CLOSED);
 
         super.onDestroy();
     }
@@ -250,9 +268,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
         // Share your camera
         cameraCapturer = new CameraCapturer(this, CameraSource.FRONT_CAMERA);
         localVideoTrack = localMedia.addVideoTrack(true, cameraCapturer);
-        primaryVideoView.setMirror(true);
-        localVideoTrack.addRenderer(primaryVideoView);
-        localVideoView = primaryVideoView;
+        this.moveLocalVideoToThumbnailView();
     }
 
 
@@ -274,12 +290,27 @@ public class TwilioVideoActivity extends AppCompatActivity {
     //             R.drawable.ic_call_white_24px));
     //     connectActionFab.show();
     //     connectActionFab.setOnClickListener(connectActionClickListener());
-         switchCameraActionFab.show();
-         switchCameraActionFab.setOnClickListener(switchCameraClickListener());
-         localVideoActionFab.show();
-         localVideoActionFab.setOnClickListener(localVideoClickListener());
-         muteActionFab.show();
-         muteActionFab.setOnClickListener(muteClickListener());
+        if (config.getPrimaryColorHex() != null) {
+            int primaryColor = Color.parseColor(config.getPrimaryColorHex());
+            ColorStateList color = ColorStateList.valueOf(primaryColor);
+            connectActionFab.setBackgroundTintList(color);
+        }
+
+        if (config.getSecondaryColorHex() != null) {
+            int secondaryColor = Color.parseColor(config.getSecondaryColorHex());
+            ColorStateList color = ColorStateList.valueOf(secondaryColor);
+            switchCameraActionFab.setBackgroundTintList(color);
+            localVideoActionFab.setBackgroundTintList(color);
+            muteActionFab.setBackgroundTintList(color);
+            switchAudioActionFab.setBackgroundTintList(color);
+        }
+
+        switchCameraActionFab.show();
+        switchCameraActionFab.setOnClickListener(switchCameraClickListener());
+        localVideoActionFab.show();
+        localVideoActionFab.setOnClickListener(localVideoClickListener());
+        muteActionFab.show();
+        muteActionFab.setOnClickListener(muteClickListener());
         switchAudioActionFab.show();
         switchAudioActionFab.setOnClickListener(switchAudioClickListener());
      }
@@ -337,7 +368,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
      * Set primary view as renderer for participant video track
      */
     private void addParticipantVideo(VideoTrack videoTrack) {
-        moveLocalVideoToThumbnailView();
+        primaryVideoView.setVisibility(View.VISIBLE);
         primaryVideoView.setMirror(false);
         videoTrack.addRenderer(primaryVideoView);
     }
@@ -369,14 +400,15 @@ public class TwilioVideoActivity extends AppCompatActivity {
         /*
          * Remove participant renderer
          */
+        primaryVideoView.setVisibility(View.GONE);
         if (participant.getMedia().getVideoTracks().size() > 0) {
             removeParticipantVideo(participant.getMedia().getVideoTracks().get(0));
         }
         participant.getMedia().setListener(null);
-        moveLocalVideoToPrimaryView();
     }
 
     private void removeParticipantVideo(VideoTrack videoTrack) {
+        primaryVideoView.setVisibility(View.GONE);
         videoTrack.removeRenderer(primaryVideoView);
     }
 
@@ -400,7 +432,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             public void onConnected(Room room) {
                 //videoStatusTextView.setText("Connected to " + room.getName());
                 //setTitle(room.getName());
-
+                publishEvent(CallEvent.CONNECTED);
                 for (Map.Entry<String, Participant> entry : room.getParticipants().entrySet()) {
                     addParticipant(entry.getValue());
                     break;
@@ -410,12 +442,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 //videoStatusTextView.setText("Failed to connect");
+                publishEvent(CallEvent.CONNECT_FAILURE);
                 TwilioVideoActivity.this.presentConnectionErrorAlert("No ha sido posible unirse a la sala.");
             }
 
             @Override
             public void onDisconnected(Room room, TwilioException e) {
                 ////videoStatusTextView.setText("Disconnected from " + room.getName());
+                publishEvent(CallEvent.DISCONNECTED);
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
@@ -425,14 +459,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
             @Override
             public void onParticipantConnected(Room room, Participant participant) {
+                publishEvent(CallEvent.PARTICIPANT_CONNECTED);
                 addParticipant(participant);
-
             }
 
             @Override
             public void onParticipantDisconnected(Room room, Participant participant) {
-                finish();
-                //removeParticipant(participant);
+                publishEvent(CallEvent.PARTICIPANT_DISCONNECTED);
+                removeParticipant(participant);
             }
 
             @Override
@@ -461,22 +495,26 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onAudioTrackAdded(Media media, AudioTrack audioTrack) {
                 //videoStatusTextView.setText("onAudioTrackAdded");
+                publishEvent(CallEvent.AUDIO_TRACK_ADDED);
             }
 
             @Override
             public void onAudioTrackRemoved(Media media, AudioTrack audioTrack) {
                 //videoStatusTextView.setText("onAudioTrackRemoved");
+                publishEvent(CallEvent.AUDIO_TRACK_REMOVED);
             }
 
             @Override
             public void onVideoTrackAdded(Media media, VideoTrack videoTrack) {
                 //videoStatusTextView.setText("onVideoTrackAdded");
+                publishEvent(CallEvent.VIDEO_TRACK_ADDED);
                 addParticipantVideo(videoTrack);
             }
 
             @Override
             public void onVideoTrackRemoved(Media media, VideoTrack videoTrack) {
                 //videoStatusTextView.setText("onVideoTrackRemoved");
+                publishEvent(CallEvent.VIDEO_TRACK_REMOVED);
                 removeParticipantVideo(videoTrack);
             }
 
@@ -571,6 +609,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
                         icon = R.drawable.ic_videocam_off_red_24px;
                         switchCameraActionFab.hide();
                     }
+
                     localVideoActionFab.setImageDrawable(
                             ContextCompat.getDrawable(TwilioVideoActivity.this, icon));
                 }
@@ -631,6 +670,16 @@ public class TwilioVideoActivity extends AppCompatActivity {
            });
         AlertDialog alert = builder.create();
         alert.show();
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        overridePendingTransition(0, 0);
+    }
+
+    private void publishEvent(CallEvent event) {
+        CallEventsProducer.getInstance().publishEvent(event);
     }
 
 }

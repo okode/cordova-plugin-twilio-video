@@ -3,8 +3,8 @@
     <name>TwilioVideo</name>
     <author>Gilles HAIAT</author>
     <license>MIT</license>
-    <js-module name="TwilioVideoPlugin" src="www/TwilioVideo.js">
-        <clobbers target="cordova.plugins.TwilioVideoPlugin" />
+    <js-module name="twiliovideo" src="www/twiliovideo.js">
+        <clobbers target="window.twiliovideo" />
     </js-module>
     <engines>
         <engine name="cordova" version=">=4.0.0" />
@@ -15,9 +15,14 @@
                 <param name="ios-package" value="TwilioVideoPlugin" />
             </feature>
         </config-file>
+        <header-file src="src/ios/TwilioVideoPlugin.h" />
         <source-file src="src/ios/TwilioVideoPlugin.m" />
-        <source-file src="src/ios/TwilioVideoViewController.m" />
         <header-file src="src/ios/TwilioVideoViewController.h" />
+        <source-file src="src/ios/TwilioVideoViewController.m" />
+        <header-file src="src/ios/TwilioVideoEventProducer.h" />
+        <source-file src="src/ios/TwilioVideoEventProducer.m" />
+        <header-file src="src/ios/TwilioVideoConfig.h" />
+        <source-file src="src/ios/TwilioVideoConfig.m" />
         <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
         <resource-file src="src/ios/Resources/end_call.png" target="Resources/end_call.png" />
         <resource-file src="src/ios/Resources/end_call@2x.png" target="Resources/end_call@2x.png" />
@@ -54,10 +59,15 @@
             <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light"></activity>
+            <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light.Translucent"></activity>
         </config-file>
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallEventsProducer.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallConfig.java" target-dir="src/org/apache/cordova/twiliovideo" />
+
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="com.android.support:appcompat-v7:26+" />
         <framework src="src/android/twiliovideo.gradle" custom="true" type="gradleReference" />

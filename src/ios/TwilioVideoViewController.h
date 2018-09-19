@@ -9,7 +9,7 @@
 #import "TwilioVideoEventProducer.h"
 #import "TwilioVideoConfig.h"
 
-@interface TwilioVideoViewController: UIViewController <UITextFieldDelegate, TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraCapturerDelegate>
+@interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraCapturerDelegate>
 
 // Configure access token manually for testing in `ViewDidLoad`, if desired! Create one manually in the console.
 @property (nonatomic, strong) NSString *accessToken;
@@ -30,10 +30,7 @@
 // `TVIVideoView` created from a storyboard
 @property (weak, nonatomic) IBOutlet TVIVideoView *previewView;
 
-@property (nonatomic, weak) IBOutlet UIView *connectButton;
 @property (nonatomic, weak) IBOutlet UIButton *disconnectButton;
-@property (nonatomic, weak) IBOutlet UILabel *messageLabel;
-@property (nonatomic, weak) IBOutlet UITextField *roomTextField;
 @property (nonatomic, weak) IBOutlet UIButton *micButton;
 @property (nonatomic, weak) IBOutlet UILabel *roomLabel;
 @property (nonatomic, weak) IBOutlet UILabel *roomLine;

@@ -16,6 +16,10 @@ public class CallConfig implements Serializable {
     private static final String i18n_DISCONNECTED_WITH_ERROR_PROP = "i18nDisconnectedWithError";
     private static final String i18n_ACCEPT_PROP = "i18nAccept";
 
+    private static final String i18n_CONNECTION_ERROR_DEF_TEXT = "It was not possible to join the room";
+    private static final String i18n_DISCONNECTED_WITH_ERROR_DEF_TEXT = "Disconnected";
+    private static final String i18n_ACCEPT_DEF_TEXT = "Accept";
+
     private String primaryColorHex;
     private String secondaryColorHex;
     private String i18nConnectionError;
@@ -27,8 +31,17 @@ public class CallConfig implements Serializable {
         this.primaryColorHex = config.optString(PRIMARY_COLOR_PROP, null);
         this.secondaryColorHex = config.optString(SECONDARY_COLOR_PROP, null);
         this.i18nConnectionError = config.optString(i18n_CONNECTION_ERROR_PROP, null);
+        if (this.i18nConnectionError == null) {
+            this.i18nConnectionError = i18n_CONNECTION_ERROR_DEF_TEXT;
+        }
         this.i18nDisconnectedWithError = config.optString(i18n_DISCONNECTED_WITH_ERROR_PROP, null);
+        if (this.i18nDisconnectedWithError == null) {
+            this.i18nDisconnectedWithError = i18n_DISCONNECTED_WITH_ERROR_DEF_TEXT;
+        }
         this.i18nAccept = config.optString(i18n_ACCEPT_PROP, null);
+        if (this.i18nAccept == null) {
+            this.i18nAccept = i18n_ACCEPT_DEF_TEXT;
+        }
     }
 
     public String getPrimaryColorHex() {

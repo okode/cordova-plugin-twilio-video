@@ -35,14 +35,8 @@ NSString *const CLOSED = @"CLOSED";
     // at https://www.twilio.com/console/video/runtime/testing-tools
     self.accessToken = @"TWILIO_ACCESS_TOKEN";
     
-    // Using a token server to provide access tokens? Make sure the tokenURL is pointing to the correct location.
-    self.tokenUrl = @"http://localhost:8000/token.php";
-    
     // Preview our local camera track in the local video preview view.
     [self startPreview];
-    
-    // Hide message label by default. Enable it for debug
-    self.messageLabel.hidden = YES;
     
     // Disconnect and mic button will be displayed when client is connected to a room.
     self.micButton.hidden = YES;
@@ -63,40 +57,11 @@ NSString *const CLOSED = @"CLOSED";
         self.videoButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
         self.cameraSwitchButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
     }
-
-    self.roomTextField.autocapitalizationType = UITextAutocapitalizationTypeNone;
-    self.roomTextField.delegate = self;
-    
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(dismissKeyboard)];
-    [self.view addGestureRecognizer:tap];
 }
 
 #pragma mark - Public
 
-/*- (IBAction)connectButtonPressed:(id)sender {
-    [self showRoomUI:YES];
-    [self dismissKeyboard];
-    
-    if ([self.accessToken isEqualToString:@"TWILIO_ACCESS_TOKEN"]) {
-        [self logMessage:[NSString stringWithFormat:@"Fetching an access token"]];
-        [TokenUtils retrieveAccessTokenFromURL:self.tokenUrl completion:^(NSString *token, NSError *err) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (!err) {
-                    self.accessToken = token;
-                    [self doConnect];
-                } else {
-                    [self logMessage:[NSString stringWithFormat:@"Error retrieving the access token"]];
-                    [self showRoomUI:NO];
-                }
-            });
-        }];
-    } else {
-        [self doConnect];
-    }
-}*/
-
 - (void)connectToRoom:(NSString*)room token:(NSString *)token {
-    self.roomTextField.text=room;
     self.accessToken=token;
     [self showRoomUI:YES];
     [self doConnect];
@@ -209,16 +174,12 @@ NSString *const CLOSED = @"CLOSED";
                                                                           // Use the local media that we prepared earlier.
                                                                           builder.audioTracks = self.localAudioTrack ? @[ self.localAudioTrack ] : @[ ];
                                                                           builder.videoTracks = self.localVideoTrack ? @[ self.localVideoTrack ] : @[ ];
-                                                                          
-                                                                          // The name of the Room where the Client will attempt to connect to. Please note that if you pass an empty
-                                                                          // Room `name`, the Client will create one for you. You can get the name or sid from any connected Room.
-                                                                          builder.roomName = self.roomTextField.text;
                                                                       }];
     
     // Connect to the Room using the options we provided.
     self.room = [TwilioVideo connectWithOptions:connectOptions delegate:self];
     
-    [self logMessage:[NSString stringWithFormat:@"Attempting to connect to room %@", self.roomTextField.text]];
+    [self logMessage:@"Attempting to connect to room"];
 }
 
 - (void)setupRemoteView {
@@ -268,18 +229,8 @@ NSString *const CLOSED = @"CLOSED";
 
 // Reset the client ui status
 - (void)showRoomUI:(BOOL)inRoom {
-    /*self.roomTextField.hidden = inRoom;
-    self.connectButton.hidden = inRoom;
-    self.roomLine.hidden = inRoom;
-    self.roomLabel.hidden = inRoom;*/
     self.micButton.hidden = !inRoom;
     [UIApplication sharedApplication].idleTimerDisabled = inRoom;
-}
-
-- (void)dismissKeyboard {
-    if (self.roomTextField.isFirstResponder) {
-        [self.roomTextField resignFirstResponder];
-    }
 }
 
 - (void)cleanupRemoteParticipant {
@@ -295,19 +246,18 @@ NSString *const CLOSED = @"CLOSED";
 
 - (void)logMessage:(NSString *)msg {
     NSLog(@"%@", msg);
-    self.messageLabel.text = msg;
 }
 
 - (void)presentConnectionErrorAlert: (NSString*)message {
     UIAlertController * alert = [UIAlertController
-                                 alertControllerWithTitle:@"Error"
+                                 alertControllerWithTitle:NULL
                                  message: message
                                  preferredStyle:UIAlertControllerStyleAlert];
     
     //Add Buttons
     
     UIAlertAction* yesButton = [UIAlertAction
-                                actionWithTitle:@"Aceptar"
+                                actionWithTitle:[self.config i18nAccept]
                                 style:UIAlertActionStyleDefault
                                 handler: ^(UIAlertAction * action) {
                                     [self dismiss];
@@ -320,13 +270,6 @@ NSString *const CLOSED = @"CLOSED";
 - (void) dismiss {
     [[TwilioVideoEventProducer getInstance] publishEvent: CLOSED];
     [self dismissViewControllerAnimated:NO completion:nil];
-}
-
-#pragma mark - UITextFieldDelegate
-
-- (BOOL)testFieldShouldReturn:(UITextField *)textField {
-    //[self connectButtonPressed:textField];
-    return YES;
 }
 
 #pragma mark - TVIRoomDelegate
@@ -343,7 +286,7 @@ NSString *const CLOSED = @"CLOSED";
 }
 
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
-    [self logMessage:[NSString stringWithFormat:@"Disconncted from room %@, error = %@", room.name, error]];
+    [self logMessage:[NSString stringWithFormat:@"Disconnected from room %@, error = %@", room.name, error]];
     
     [self cleanupRemoteParticipant];
     self.room = nil;
@@ -351,7 +294,7 @@ NSString *const CLOSED = @"CLOSED";
     [self showRoomUI:NO];
     if (error != NULL) {
         [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED];
-        [self presentConnectionErrorAlert: @"Se ha producido un error. Desconectado."];
+        [self presentConnectionErrorAlert: [self.config i18nDisconnectedWithError]];
     } else {
         [self dismiss];
     }
@@ -364,7 +307,7 @@ NSString *const CLOSED = @"CLOSED";
     self.room = nil;
     
     [self showRoomUI:NO];
-    [self presentConnectionErrorAlert: @"No ha sido posible unirse a la sala."];
+    [self presentConnectionErrorAlert: [self.config i18nConnectionError]];
 }
 
 - (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {

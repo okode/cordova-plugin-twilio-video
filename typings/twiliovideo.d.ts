@@ -7,9 +7,12 @@ declare module TwilioVideo {
          * @param token 
          * @param roomName 
          * @param onEvent - (Optional) It will be fired any time that a call event is received
-         * @param {Object} config
+         * @param {Object} config - (Optional) Call configuraiton
          * @param config.primaryColor - Hex primary color that the app will use
          * @param config.secondaryColor - Hex secondary color that the app will use
+         * @param config.i18nConnectionError - Message shown when it is not possible to join the room
+         * @param config.i18nDisconnectedWithError - Message show when the client is disconnected due to an error
+         * @param config.i18nAccept - Accept translation
          */
         openRoom(token: string, roomName: string, onEvent?: Function, config?: any): void;
     }

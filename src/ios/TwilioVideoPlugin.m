@@ -36,10 +36,6 @@
 
 }
 
-- (void) dismissTwilioVideoController {
-    [self.viewController dismissViewControllerAnimated:NO completion:nil];
-}
-
 #pragma mark - TwilioVideoEventProducerDelegate
 
 - (void)onCallEvent:(NSString *)event {

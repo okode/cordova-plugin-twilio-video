@@ -253,14 +253,14 @@ NSString *const CLOSED = @"CLOSED";
 
 - (void)presentConnectionErrorAlert: (NSString*)message {
     UIAlertController * alert = [UIAlertController
-                                 alertControllerWithTitle:@"Error"
+                                 alertControllerWithTitle:NULL
                                  message: message
                                  preferredStyle:UIAlertControllerStyleAlert];
     
     //Add Buttons
     
     UIAlertAction* yesButton = [UIAlertAction
-                                actionWithTitle:@"Aceptar"
+                                actionWithTitle:[self.config i18nAccept]
                                 style:UIAlertActionStyleDefault
                                 handler: ^(UIAlertAction * action) {
                                     [self dismiss];
@@ -289,7 +289,7 @@ NSString *const CLOSED = @"CLOSED";
 }
 
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
-    [self logMessage:[NSString stringWithFormat:@"Disconncted from room %@, error = %@", room.name, error]];
+    [self logMessage:[NSString stringWithFormat:@"Disconnected from room %@, error = %@", room.name, error]];
     
     [self cleanupRemoteParticipant];
     self.room = nil;
@@ -297,7 +297,7 @@ NSString *const CLOSED = @"CLOSED";
     [self showRoomUI:NO];
     if (error != NULL) {
         [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED];
-        [self presentConnectionErrorAlert: @"Se ha producido un error. Desconectado."];
+        [self presentConnectionErrorAlert: [self.config i18nDisconnectedWithError]];
     } else {
         [self dismiss];
     }
@@ -310,7 +310,7 @@ NSString *const CLOSED = @"CLOSED";
     self.room = nil;
     
     [self showRoomUI:NO];
-    [self presentConnectionErrorAlert: @"No ha sido posible unirse a la sala."];
+    [self presentConnectionErrorAlert: [self.config i18nConnectionError]];
 }
 
 - (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {

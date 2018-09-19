@@ -454,7 +454,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 publishEvent(CallEvent.CONNECT_FAILURE);
-                TwilioVideoActivity.this.presentConnectionErrorAlert("No ha sido posible unirse a la sala.");
+                TwilioVideoActivity.this.presentConnectionErrorAlert(config.getI18nConnectionError());
             }
 
             @Override
@@ -464,7 +464,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
-                    TwilioVideoActivity.this.presentConnectionErrorAlert("Se ha producido un error. Desconectado.");
+                    TwilioVideoActivity.this.presentConnectionErrorAlert(config.getI18nDisconnectedWithError());
                 }
             }
 
@@ -858,7 +858,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)
            .setCancelable(false)
-           .setPositiveButton("Aceptar", new DialogInterface.OnClickListener() {
+           .setPositiveButton(config.getI18nAccept(), new DialogInterface.OnClickListener() {
                public void onClick(DialogInterface dialog, int id) {
                     TwilioVideoActivity.this.finish();
                }

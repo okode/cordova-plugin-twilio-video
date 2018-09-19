@@ -12,14 +12,23 @@ public class CallConfig implements Serializable {
 
     private static final String PRIMARY_COLOR_PROP = "primaryColor";
     private static final String SECONDARY_COLOR_PROP = "secondaryColor";
+    private static final String i18n_CONNECTION_ERROR_PROP = "i18nConnectionError";
+    private static final String i18n_DISCONNECTED_WITH_ERROR_PROP = "i18nDisconnectedWithError";
+    private static final String i18n_ACCEPT_PROP = "i18nAccept";
 
     private String primaryColorHex;
     private String secondaryColorHex;
+    private String i18nConnectionError;
+    private String i18nDisconnectedWithError;
+    private String i18nAccept;
 
     public void parse(JSONObject config) {
         if (config == null) { return; }
         this.primaryColorHex = config.optString(PRIMARY_COLOR_PROP, null);
         this.secondaryColorHex = config.optString(SECONDARY_COLOR_PROP, null);
+        this.i18nConnectionError = config.optString(i18n_CONNECTION_ERROR_PROP, null);
+        this.i18nDisconnectedWithError = config.optString(i18n_DISCONNECTED_WITH_ERROR_PROP, null);
+        this.i18nAccept = config.optString(i18n_ACCEPT_PROP, null);
     }
 
     public String getPrimaryColorHex() {
@@ -28,5 +37,17 @@ public class CallConfig implements Serializable {
 
     public String getSecondaryColorHex() {
         return this.secondaryColorHex;
+    }
+
+    public String getI18nConnectionError() {
+        return i18nConnectionError;
+    }
+
+    public String getI18nDisconnectedWithError() {
+        return i18nDisconnectedWithError;
+    }
+
+    public String getI18nAccept() {
+        return i18nAccept;
     }
 }

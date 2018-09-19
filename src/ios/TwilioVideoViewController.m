@@ -35,9 +35,6 @@ NSString *const CLOSED = @"CLOSED";
     // at https://www.twilio.com/console/video/runtime/testing-tools
     self.accessToken = @"TWILIO_ACCESS_TOKEN";
     
-    // Using a token server to provide access tokens? Make sure the tokenURL is pointing to the correct location.
-    self.tokenUrl = @"http://localhost:8000/token.php";
-    
     // Preview our local camera track in the local video preview view.
     [self startPreview];
     

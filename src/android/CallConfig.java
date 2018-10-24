@@ -15,6 +15,7 @@ public class CallConfig implements Serializable {
     private static final String i18n_CONNECTION_ERROR_PROP = "i18nConnectionError";
     private static final String i18n_DISCONNECTED_WITH_ERROR_PROP = "i18nDisconnectedWithError";
     private static final String i18n_ACCEPT_PROP = "i18nAccept";
+    private static final String HANDLE_ERROR_IN_APP = "handleErrorInApp";
 
     private static final String i18n_CONNECTION_ERROR_DEF_TEXT = "It was not possible to join the room";
     private static final String i18n_DISCONNECTED_WITH_ERROR_DEF_TEXT = "Disconnected";
@@ -25,6 +26,7 @@ public class CallConfig implements Serializable {
     private String i18nConnectionError;
     private String i18nDisconnectedWithError;
     private String i18nAccept;
+    private boolean handleErrorInApp;
 
     public void parse(JSONObject config) {
         if (config == null) { return; }
@@ -42,6 +44,7 @@ public class CallConfig implements Serializable {
         if (this.i18nAccept == null) {
             this.i18nAccept = i18n_ACCEPT_DEF_TEXT;
         }
+        this.handleErrorInApp = config.optBoolean(HANDLE_ERROR_IN_APP, false);
     }
 
     public String getPrimaryColorHex() {
@@ -62,5 +65,9 @@ public class CallConfig implements Serializable {
 
     public String getI18nAccept() {
         return i18nAccept;
+    }
+
+    public boolean getHandleErrorInApp() {
+        return handleErrorInApp;
     }
 }

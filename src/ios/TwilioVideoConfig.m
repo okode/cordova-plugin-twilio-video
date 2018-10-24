@@ -17,6 +17,7 @@
     if (self.i18nAccept == NULL) {
         self.i18nAccept = @"Accept";
     }
+    self.handleErrorInApp = [config objectForKey:HANDLE_ERROR_IN_APP];
 }
 
 + (UIColor *)colorFromHexString:(NSString *)hexString {

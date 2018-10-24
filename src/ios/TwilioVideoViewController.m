@@ -11,6 +11,7 @@ NSString *const OPENED = @"OPENED";
 NSString *const CONNECTED = @"CONNECTED";
 NSString *const CONNECT_FAILURE = @"CONNECT_FAILURE";
 NSString *const DISCONNECTED = @"DISCONNECTED";
+NSString *const DISCONNECTED_WITH_ERROR = @"DISCONNECTED_WITH_ERROR";
 NSString *const PARTICIPANT_CONNECTED = @"PARTICIPANT_CONNECTED";
 NSString *const PARTICIPANT_DISCONNECTED = @"PARTICIPANT_DISCONNECTED";
 NSString *const AUDIO_TRACK_ADDED = @"AUDIO_TRACK_ADDED";
@@ -249,6 +250,11 @@ NSString *const CLOSED = @"CLOSED";
 }
 
 - (void)presentConnectionErrorAlert: (NSString*)message {
+    if ([self.config handleErrorInApp]) {
+        [self logMessage: @"Error handling disabled for the plugin. This error should be handled in the hybrid app"];
+        return;
+    }
+    [self logMessage: @"Connection error handled by the plugin"];
     UIAlertController * alert = [UIAlertController
                                  alertControllerWithTitle:NULL
                                  message: message
@@ -293,9 +299,10 @@ NSString *const CLOSED = @"CLOSED";
     
     [self showRoomUI:NO];
     if (error != NULL) {
-        [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED];
+        [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED_WITH_ERROR];
         [self presentConnectionErrorAlert: [self.config i18nDisconnectedWithError]];
     } else {
+        [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED];
         [self dismiss];
     }
 }

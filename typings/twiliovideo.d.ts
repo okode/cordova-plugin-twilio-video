@@ -13,6 +13,7 @@ declare module TwilioVideo {
          * @param config.i18nConnectionError - Message shown when it is not possible to join the room
          * @param config.i18nDisconnectedWithError - Message show when the client is disconnected due to an error
          * @param config.i18nAccept - Accept translation
+      	 * @param config.handleErrorInApp - (Default = false) Flag to indicate the application will manage any error in the app by events emitted by the plugin
          */
         openRoom(token: string, roomName: string, onEvent?: Function, config?: any): void;
     }

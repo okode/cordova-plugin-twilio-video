@@ -459,12 +459,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
             @Override
             public void onDisconnected(Room room, TwilioException e) {
-                publishEvent(CallEvent.DISCONNECTED);
                 localParticipant = null;
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
+                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR);
                     TwilioVideoActivity.this.presentConnectionErrorAlert(config.getI18nDisconnectedWithError());
+                } else {
+                    publishEvent(CallEvent.DISCONNECTED);
                 }
             }
 
@@ -855,6 +857,11 @@ public class TwilioVideoActivity extends AppCompatActivity {
     }
 
     private void presentConnectionErrorAlert(String message) {
+        if (config.getHandleErrorInApp()) {
+            Log.i(TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
+            return;
+        }
+        Log.i(TAG, "Connection error handled by the plugin");
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)
            .setCancelable(false)

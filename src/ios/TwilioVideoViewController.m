@@ -252,6 +252,7 @@ NSString *const CLOSED = @"CLOSED";
 - (void)presentConnectionErrorAlert: (NSString*)message {
     if ([self.config handleErrorInApp]) {
         [self logMessage: @"Error handling disabled for the plugin. This error should be handled in the hybrid app"];
+        [self dismiss];
         return;
     }
     [self logMessage: @"Connection error handled by the plugin"];

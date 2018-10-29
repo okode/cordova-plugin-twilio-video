@@ -859,6 +859,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
     private void presentConnectionErrorAlert(String message) {
         if (config.getHandleErrorInApp()) {
             Log.i(TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
+            this.finish();
             return;
         }
         Log.i(TAG, "Connection error handled by the plugin");

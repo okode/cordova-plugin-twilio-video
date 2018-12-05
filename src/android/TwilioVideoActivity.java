@@ -755,7 +755,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
                 }
                 int icon = audioManager.isSpeakerphoneOn() ?
-                        R.drawable.ic_phonelink_ring_white_24dp : R.drawable.ic_volume_up_white_24dp;
+                        R.drawable.ic_phonelink_ring_white_24dp : R.drawable.ic_volume_headhphones_white_24dp;
                 switchAudioActionFab.setImageDrawable(ContextCompat.getDrawable(
                         TwilioVideoActivity.this, icon));
             }

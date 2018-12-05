@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             app:fabSize="mini"
             android:layout_margin="@dimen/fab_margin"
-            android:src="@drawable/ic_volume_up_white_24dp"
+            android:src="@drawable/ic_phonelink_ring_white_24dp"
             app:backgroundTint="#3e4666"
             />
         <android.support.design.widget.FloatingActionButton

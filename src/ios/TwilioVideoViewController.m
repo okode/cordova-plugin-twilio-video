@@ -63,7 +63,8 @@ NSString *const CLOSED = @"CLOSED";
 #pragma mark - Public
 
 - (void)connectToRoom:(NSString*)room token:(NSString *)token {
-    self.accessToken=token;
+    self.roomName = room;
+    self.accessToken = token;
     [self showRoomUI:YES];
     [self doConnect];
 }
@@ -171,7 +172,7 @@ NSString *const CLOSED = @"CLOSED";
     
     TVIConnectOptions *connectOptions = [TVIConnectOptions optionsWithToken:self.accessToken
                                                                       block:^(TVIConnectOptionsBuilder * _Nonnull builder) {
-                                                                          
+                                                                          builder.roomName = self.roomName;
                                                                           // Use the local media that we prepared earlier.
                                                                           builder.audioTracks = self.localAudioTrack ? @[ self.localAudioTrack ] : @[ ];
                                                                           builder.videoTracks = self.localVideoTrack ? @[ self.localVideoTrack ] : @[ ];

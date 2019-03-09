@@ -12,6 +12,7 @@
 @interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraCapturerDelegate>
 
 // Configure access token manually for testing in `ViewDidLoad`, if desired! Create one manually in the console.
+@property (nonatomic, strong) NSString *roomName;
 @property (nonatomic, strong) NSString *accessToken;
 @property (nonatomic, strong) TwilioVideoConfig *config;
 

@@ -1,5 +1,12 @@
 #import "TwilioVideoConfig.h"
 
+#define PRIMARY_COLOR_PROP                  @"primaryColor"
+#define SECONDARY_COLOR_PROP                @"secondaryColor"
+#define i18n_CONNECTION_ERROR_PROP          @"i18nConnectionError"
+#define i18n_DISCONNECTED_WITH_ERROR_PROP   @"i18nDisconnectedWithError"
+#define i18n_ACCEPT_PROP                    @"i18nAccept"
+#define HANDLE_ERROR_IN_APP                 @"handleErrorInApp"
+
 @implementation TwilioVideoConfig
 -(void) parse:(NSDictionary*)config {
     if (config == NULL) { return; }

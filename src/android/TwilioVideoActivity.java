@@ -57,7 +57,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
      * other participants can use RemoteVideoTrack#getName to determine which video track is
      * produced from the other participant's screen or camera.
      */
-    private static final String LOCAL_AUDIO_TRACK_NAME = "mic";
+    private static final String LOCAL_AUDIO_TRACK_NAME = "microphone";
     private static final String LOCAL_VIDEO_TRACK_NAME = "camera";
 
     /*

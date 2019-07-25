@@ -43,6 +43,9 @@ import com.twilio.video.VideoRenderer;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Collections;
 
 public class TwilioVideoActivity extends AppCompatActivity {
@@ -453,7 +456,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 publishEvent(CallEvent.CONNECT_FAILURE);
-                TwilioVideoActivity.this.presentConnectionErrorAlert(config.getI18nConnectionError());
+                TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
             }
 
             @Override
@@ -472,8 +475,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
-                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR);
-                    TwilioVideoActivity.this.presentConnectionErrorAlert(config.getI18nDisconnectedWithError());
+                    JSONObject data = null;
+                    try {
+                        data = new JSONObject().put("code", e.getCode());
+                    } catch (JSONException e1) {
+                        Log.e(TAG, "onDisconnected. Error sending error data");
+                    }
+                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR, data);
+                    TwilioVideoActivity.this.handleConnectionError(config.getI18nDisconnectedWithError());
                 } else {
                     publishEvent(CallEvent.DISCONNECTED);
                 }
@@ -865,7 +874,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
         }
     }
 
-    private void presentConnectionErrorAlert(String message) {
+    private void handleConnectionError(String message) {
         if (config.getHandleErrorInApp()) {
             Log.i(TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
             this.finish();
@@ -893,6 +902,10 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
     private void publishEvent(CallEvent event) {
         CallEventsProducer.getInstance().publishEvent(event);
+    }
+
+    private void publishEvent(CallEvent event, JSONObject data) {
+        CallEventsProducer.getInstance().publishEvent(event, data);
     }
 
 }

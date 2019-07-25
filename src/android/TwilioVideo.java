@@ -84,9 +84,19 @@ public class TwilioVideo extends CordovaPlugin {
         }
         CallEventsProducer.getInstance().setObserver(new CallObserver() {
             @Override
-            public void onEvent(String event) {
-                Log.i("TwilioEvents", "Event received: " + event);
-                PluginResult result = new PluginResult(PluginResult.Status.OK, event);
+            public void onEvent(String event, JSONObject data) {
+                Log.i("TwilioEvents", String.format("Event received: %s with data: %s", event, data));
+
+                JSONObject eventData = new JSONObject();
+                try {
+                    eventData.putOpt("event", event);
+                    eventData.putOpt("data", data);
+                } catch (JSONException e) {
+                    Log.e("TwilioEvents", "Failed to create event: " + event);
+                    return;
+                }
+
+                PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
                 result.setKeepCallback(true);
                 callbackContext.sendPluginResult(result);
             }

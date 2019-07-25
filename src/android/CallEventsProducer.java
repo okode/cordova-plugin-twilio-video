@@ -1,5 +1,7 @@
 package org.apache.cordova.twiliovideo;
 
+import org.json.JSONObject;
+
 /**
  * Created by rpanadero on 13/9/18.
  */
@@ -20,8 +22,12 @@ public class CallEventsProducer {
     }
 
     public void publishEvent(CallEvent event) {
+        publishEvent(event, null);
+    }
+
+    public void publishEvent(CallEvent event, JSONObject data) {
         if (hasListener()) {
-            listener.onEvent(event.name());
+            listener.onEvent(event.name(), data);
         }
     }
 

@@ -7,7 +7,7 @@ TwilioVideo.openRoom = function(token, room, eventCallback, config) {
     exec(function(e) {
         console.log("Twilio video event fired: " + e);
         if (eventCallback) {
-            eventCallback(e);
+            eventCallback(e.event, e.data);
         }
     }, null, 'TwilioVideoPlugin', 'openRoom', [token, room, config]);
 };

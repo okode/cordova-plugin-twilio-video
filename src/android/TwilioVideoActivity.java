@@ -477,7 +477,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
                 if (!disconnectedFromOnDestroy && e != null) {
                     JSONObject data = null;
                     try {
-                        data = new JSONObject().put("code", e.getCode());
+                        data = new JSONObject().put("code", String.valueOf(e.getCode()));
                     } catch (JSONException e1) {
                         Log.e(TAG, "onDisconnected. Error sending error data");
                     }

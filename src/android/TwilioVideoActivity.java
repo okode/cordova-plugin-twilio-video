@@ -315,13 +315,14 @@ public class TwilioVideoActivity extends AppCompatActivity {
         }
 
         room = Video.connect(this, connectOptionsBuilder.build(), roomListener());
-        setDisconnectAction();
     }
 
     /*
      * The initial state when there is no active conversation.
      */
     private void initializeUI() {
+        setDisconnectAction();
+        
         if (config.getPrimaryColorHex() != null) {
             int primaryColor = Color.parseColor(config.getPrimaryColorHex());
             ColorStateList color = ColorStateList.valueOf(primaryColor);

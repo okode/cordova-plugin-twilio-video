@@ -7,9 +7,18 @@
         <clobbers target="window.twiliovideo" />
     </js-module>
     <engines>
-        <engine name="cordova" version=">=4.0.0" />
+        <engine name="cordova" version=">=7.0.0" />
+        <engine name="cordova-ios" version=">=5.0.0" />
     </engines>
     <platform name="ios">
+        <podspec>
+            <config>
+                <source url="https://github.com/CocoaPods/Specs.git"/>
+            </config>
+            <pods>
+                <pod name="TwilioVideo" spec="2.4.0"/>
+            </pods>
+        </podspec>
         <config-file parent="/*" target="config.xml">
             <feature name="TwilioVideoPlugin">
                 <param name="ios-package" value="TwilioVideoPlugin" />

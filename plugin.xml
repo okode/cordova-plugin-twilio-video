@@ -72,6 +72,7 @@
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light.Translucent"></activity>
         </config-file>
+        <source-file src="src/android/FakeR.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />

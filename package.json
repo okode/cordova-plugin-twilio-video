@@ -1,5 +1,5 @@
 {
-    "version": "2.0.5",
+    "version": "3.0.0",
     "name": "cordova-plugin-twilio-video",
     "cordova_name": "Twilio video plugin",
     "license": "Apache 2.0",
@@ -7,5 +7,5 @@
         "android",
         "ios"
     ],
-    "engines": []
+    "engines": {}
 }

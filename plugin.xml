@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<plugin id="cordova-plugin-twilio-video" version="2.0.5" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="cordova-plugin-twilio-video" version="3.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>TwilioVideo</name>
     <author>Okode</author>
     <license>MIT</license>
@@ -51,9 +51,10 @@
         <resource-file src="src/ios/Resources/switch_camera.png" target="Resources/switch_camera.png" />
         <resource-file src="src/ios/Resources/switch_camera@2x.png" target="Resources/switch_camera@2x.png" />
         <resource-file src="src/ios/Resources/switch_camera@3x.png" target="Resources/switch_camera@3x.png" />
+
+        <framework src="TwilioVideo" type="podspec" spec="2.4.0"/>
     </platform>
     <platform name="android">
-        <hook type="after_plugin_install" src="hooks/after_plugin_install/hook-add-r-import.js" />
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="TwilioVideoPlugin">
                 <param name="android-package" value="org.apache.cordova.twiliovideo.TwilioVideo" />
@@ -70,6 +71,7 @@
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/Theme.AppCompat.Light.Translucent"></activity>
         </config-file>
+        <source-file src="src/android/FakeR.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />

@@ -1,28 +1,24 @@
 package org.apache.cordova.twiliovideo;
 
-import org.apache.cordova.BuildHelper;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
-import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.apache.cordova.twiliovideo.TwilioVideoActivity;
 import org.json.JSONObject;
 
 
 public class TwilioVideo extends CordovaPlugin {
 
+    public static final String TAG = "TwilioPlugin";
 
     public CallbackContext callbackContext;
     private CordovaInterface cordova;
@@ -38,7 +34,7 @@ public class TwilioVideo extends CordovaPlugin {
     }
 
     
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
 		this.callbackContext = callbackContext;
 		if (action.equals("openRoom")) {
 		    this.registerCallListener(callbackContext);
@@ -58,26 +54,22 @@ public class TwilioVideo extends CordovaPlugin {
                 this.config.parse(args.getJSONObject(2));
             }
 
-            LOG.d("TOKEN", token);
-            LOG.d("ROOMID", roomId);
+            LOG.d(TAG, "TOKEN: " + token);
+            LOG.d(TAG, "ROOMID: " + roomId);
      		cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
-
-                    Intent intentTwilioVideo = new Intent(that.cordova.getActivity().getBaseContext(), TwilioVideoActivity.class);
-        			intentTwilioVideo.putExtra("token", token);
+                    Intent intentTwilioVideo = new Intent(Intent.ACTION_VIEW);
+                    intentTwilioVideo.setClass(that.cordova.getActivity().getBaseContext(), TwilioVideoActivity.class);
+                    intentTwilioVideo.setPackage(that.cordova.getActivity().getApplicationContext().getPackageName());
+                    intentTwilioVideo.putExtra("token", token);
                     intentTwilioVideo.putExtra("roomId", roomId);
                     intentTwilioVideo.putExtra("config", config);
-                    // avoid calling other phonegap apps
-                    intentTwilioVideo.setPackage(that.cordova.getActivity().getApplicationContext().getPackageName());
-                    //that.cordova.startActivityForResult(that, intentTwilioVideo);
-                    //that.cordova.getActivity().startActivity(intentTwilioVideo);
-                    that.cordova.startActivityForResult(that, intentTwilioVideo, 0);
+                    that.cordova.getActivity().startActivity(intentTwilioVideo);
                 }
                     
             });
         } catch (JSONException e) {
-            //Log.e(TAG, "Invalid JSON string: " + json, e);
-            //return null;
+            Log.e(TAG, "Couldn't open room. No valid input params", e);
         }
     }
 
@@ -87,9 +79,19 @@ public class TwilioVideo extends CordovaPlugin {
         }
         CallEventsProducer.getInstance().setObserver(new CallObserver() {
             @Override
-            public void onEvent(String event) {
-                Log.i("TwilioEvents", "Event received: " + event);
-                PluginResult result = new PluginResult(PluginResult.Status.OK, event);
+            public void onEvent(String event, JSONObject data) {
+                Log.i(TAG, String.format("Event received: %s with data: %s", event, data));
+
+                JSONObject eventData = new JSONObject();
+                try {
+                    eventData.putOpt("event", event);
+                    eventData.putOpt("data", data);
+                } catch (JSONException e) {
+                    Log.e(TAG, "Failed to create event: " + event);
+                    return;
+                }
+
+                PluginResult result = new PluginResult(PluginResult.Status.OK, eventData);
                 result.setKeepCallback(true);
                 callbackContext.sendPluginResult(result);
             }

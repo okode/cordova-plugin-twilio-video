@@ -250,7 +250,7 @@ NSString *const CLOSED = @"CLOSED";
     NSLog(@"%@", msg);
 }
 
-- (void)presentConnectionErrorAlert: (NSString*)message {
+- (void)handleConnectionError: (NSString*)message {
     if ([self.config handleErrorInApp]) {
         [self logMessage: @"Error handling disabled for the plugin. This error should be handled in the hybrid app"];
         [self dismiss];
@@ -301,8 +301,8 @@ NSString *const CLOSED = @"CLOSED";
     
     [self showRoomUI:NO];
     if (error != NULL) {
-        [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED_WITH_ERROR];
-        [self presentConnectionErrorAlert: [self.config i18nDisconnectedWithError]];
+        [[TwilioVideoEventProducer getInstance] publishEvent:DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
+        [self handleConnectionError: [self.config i18nDisconnectedWithError]];
     } else {
         [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED];
         [self dismiss];
@@ -316,7 +316,7 @@ NSString *const CLOSED = @"CLOSED";
     self.room = nil;
     
     [self showRoomUI:NO];
-    [self presentConnectionErrorAlert: [self.config i18nConnectionError]];
+    [self handleConnectionError: [self.config i18nConnectionError]];
 }
 
 - (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {

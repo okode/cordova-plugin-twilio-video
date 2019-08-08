@@ -1,28 +1,24 @@
 package org.apache.cordova.twiliovideo;
 
-import org.apache.cordova.BuildHelper;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
-import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.LOG;
-import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.CordovaInterface;
 import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import org.apache.cordova.twiliovideo.TwilioVideoActivity;
 import org.json.JSONObject;
 
 
 public class TwilioVideo extends CordovaPlugin {
 
+    public static final String TAG = "TwilioPlugin";
 
     public CallbackContext callbackContext;
     private CordovaInterface cordova;
@@ -38,7 +34,7 @@ public class TwilioVideo extends CordovaPlugin {
     }
 
     
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
 		this.callbackContext = callbackContext;
 		if (action.equals("openRoom")) {
 		    this.registerCallListener(callbackContext);
@@ -58,8 +54,8 @@ public class TwilioVideo extends CordovaPlugin {
                 this.config.parse(args.getJSONObject(2));
             }
 
-            LOG.d("TOKEN", token);
-            LOG.d("ROOMID", roomId);
+            LOG.d(TAG, "TOKEN: " + token);
+            LOG.d(TAG, "ROOMID: " + roomId);
      		cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     Intent intentTwilioVideo = new Intent(Intent.ACTION_VIEW);
@@ -73,8 +69,7 @@ public class TwilioVideo extends CordovaPlugin {
                     
             });
         } catch (JSONException e) {
-            //Log.e(TAG, "Invalid JSON string: " + json, e);
-            //return null;
+            Log.e(TAG, "Couldn't open room. No valid input params", e);
         }
     }
 
@@ -85,14 +80,14 @@ public class TwilioVideo extends CordovaPlugin {
         CallEventsProducer.getInstance().setObserver(new CallObserver() {
             @Override
             public void onEvent(String event, JSONObject data) {
-                Log.i("TwilioEvents", String.format("Event received: %s with data: %s", event, data));
+                Log.i(TAG, String.format("Event received: %s with data: %s", event, data));
 
                 JSONObject eventData = new JSONObject();
                 try {
                     eventData.putOpt("event", event);
                     eventData.putOpt("data", data);
                 } catch (JSONException e) {
-                    Log.e("TwilioEvents", "Failed to create event: " + event);
+                    Log.e(TAG, "Failed to create event: " + event);
                     return;
                 }
 

@@ -11,7 +11,12 @@
 }
 - (void)publishEvent:(NSString*)event {
     if (self.delegate != NULL) {
-        [self.delegate onCallEvent:event];
+        [self.delegate onCallEvent:event with:NULL];
+    }
+}
+- (void)publishEvent:(NSString*)event with:(NSDictionary*)data {
+    if (self.delegate != NULL) {
+        [self.delegate onCallEvent:event with:data];
     }
 }
 @end

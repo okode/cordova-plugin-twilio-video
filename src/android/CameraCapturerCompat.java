@@ -14,7 +14,6 @@ import org.webrtc.Camera2Enumerator;
  * Simple wrapper class that uses Camera2Capturer with supported devices.
  */
 public class CameraCapturerCompat {
-    private static final String TAG = "CameraCapturerCompat";
 
     private CameraCapturer camera1Capturer;
     private Camera2Capturer camera2Capturer;
@@ -23,17 +22,17 @@ public class CameraCapturerCompat {
     private final Camera2Capturer.Listener camera2Listener = new Camera2Capturer.Listener() {
         @Override
         public void onFirstFrameAvailable() {
-            Log.i(TAG, "onFirstFrameAvailable");
+            Log.i(TwilioVideo.TAG, "onFirstFrameAvailable");
         }
 
         @Override
         public void onCameraSwitched(String newCameraId) {
-            Log.i(TAG, "onCameraSwitched: newCameraId = " + newCameraId);
+            Log.i(TwilioVideo.TAG, "onCameraSwitched: newCameraId = " + newCameraId);
         }
 
         @Override
         public void onError(Camera2Capturer.Exception camera2CapturerException) {
-            Log.e(TAG, camera2CapturerException.getMessage());
+            Log.e(TwilioVideo.TAG, camera2CapturerException.getMessage());
         }
     };
 

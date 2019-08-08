@@ -38,14 +38,23 @@
 
 #pragma mark - TwilioVideoEventProducerDelegate
 
-- (void)onCallEvent:(NSString *)event {
+- (void)onCallEvent:(NSString *)event with:(NSDictionary*)data {
     if (!self.listenerCallbackID) {
         NSLog(@"Listener callback unavailable.  event %@", event);
         return;
     }
     
-    NSLog(@"Event received %@", event);
-    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:event];
+    if (data != NULL) {
+        NSLog(@"Event received %@ with data %@", event, data);
+    } else {
+        NSLog(@"Event received %@", event);
+    }
+    
+    NSMutableDictionary *message = [NSMutableDictionary dictionary];
+    [message setValue:event forKey:@"event"];
+    [message setValue:data != NULL ? data : [NSNull null] forKey:@"data"];
+    
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
     [result setKeepCallbackAsBool:YES];
     
     [self.commandDelegate sendPluginResult:result callbackId:self.listenerCallbackID];

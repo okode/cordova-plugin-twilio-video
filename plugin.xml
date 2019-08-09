@@ -79,7 +79,9 @@
         <source-file src="src/android/CallObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallConfig.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CameraCapturerCompat.java" target-dir="src/org/apache/cordova/twiliovideo" />
-        
+        <source-file src="src/android/TwilioVideoActions.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/TwilioVideoHolder.java" target-dir="src/org/apache/cordova/twiliovideo" />
+
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="com.android.support:appcompat-v7:26+" />
         <framework src="src/android/twiliovideo.gradle" custom="true" type="gradleReference" />

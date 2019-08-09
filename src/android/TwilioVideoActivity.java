@@ -47,7 +47,7 @@ import org.json.JSONObject;
 
 import java.util.Collections;
 
-public class TwilioVideoActivity extends AppCompatActivity {
+public class TwilioVideoActivity extends AppCompatActivity implements TwilioVideoActions {
 
     private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
 
@@ -107,6 +107,8 @@ public class TwilioVideoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        TwilioVideoHolder.getInstance().setVideoInstance(this);
 
         FAKE_R = new FakeR(this);
 
@@ -229,6 +231,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+
         /*
          * Always disconnect from the room before leaving the Activity to
          * ensure any memory allocated to the Room resource is freed.
@@ -252,6 +255,8 @@ public class TwilioVideoActivity extends AppCompatActivity {
         }
 
         publishEvent(CallEvent.CLOSED);
+
+        TwilioVideoHolder.getInstance().setVideoInstance(null);
 
         super.onDestroy();
     }
@@ -738,13 +743,12 @@ public class TwilioVideoActivity extends AppCompatActivity {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*
-                 * Disconnect from room
-                 */
-                if (room != null) {
-                    room.disconnect();
+                if (config.isHangUpInApp()) {
+                    // Propagating the event to the web side in order to allow developers to do something else before disconnecting the room
+                    publishEvent(CallEvent.HANG_UP);
+                } else {
+                    disconnect();
                 }
-                finish();
             }
         };
     }
@@ -879,7 +883,7 @@ public class TwilioVideoActivity extends AppCompatActivity {
     }
 
     private void handleConnectionError(String message) {
-        if (config.getHandleErrorInApp()) {
+        if (config.isHandleErrorInApp()) {
             Log.i(TwilioVideo.TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
             this.finish();
             return;
@@ -897,6 +901,19 @@ public class TwilioVideoActivity extends AppCompatActivity {
         alert.show();
     }
 
+
+    @Override
+    public void disconnect() {
+        /*
+         * Disconnect from room
+         */
+        if (room != null) {
+            room.disconnect();
+        }
+
+        finish();
+    }
+
     @Override
     public void finish() {
         configureAudio(false);
@@ -911,5 +928,4 @@ public class TwilioVideoActivity extends AppCompatActivity {
     private void publishEvent(CallEvent event, JSONObject data) {
         CallEventsProducer.getInstance().publishEvent(event, data);
     }
-
 }

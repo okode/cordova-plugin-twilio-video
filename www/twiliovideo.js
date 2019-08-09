@@ -12,4 +12,15 @@ TwilioVideo.openRoom = function(token, room, eventCallback, config) {
     }, null, 'TwilioVideoPlugin', 'openRoom', [token, room, config]);
 };
 
+
+TwilioVideo.closeRoom = function() {
+    return new Promise(function(resolve, reject) {
+        exec(function() {
+            resolve();
+        }, function(error) {
+            reject(error);
+        }, "TwilioVideoPlugin", "closeRoom", []);
+    });
+};
+
 module.exports = TwilioVideo;

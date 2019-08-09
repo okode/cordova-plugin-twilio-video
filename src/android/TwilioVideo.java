@@ -30,7 +30,6 @@ public class TwilioVideo extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         super.initialize(cordova, webView);
         this.cordova = cordova;
-        // your init code here
     }
 
     
@@ -39,7 +38,9 @@ public class TwilioVideo extends CordovaPlugin {
 		if (action.equals("openRoom")) {
 		    this.registerCallListener(callbackContext);
 		   	this.openRoom(args);
-		}
+		} else if (action.equals("closeRoom")) {
+            this.closeRoom(callbackContext);
+        }
         return true;
 	}
 
@@ -56,6 +57,7 @@ public class TwilioVideo extends CordovaPlugin {
 
             LOG.d(TAG, "TOKEN: " + token);
             LOG.d(TAG, "ROOMID: " + roomId);
+
      		cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     Intent intentTwilioVideo = new Intent(Intent.ACTION_VIEW);
@@ -96,6 +98,16 @@ public class TwilioVideo extends CordovaPlugin {
                 callbackContext.sendPluginResult(result);
             }
         });
+    }
+
+    private void closeRoom(CallbackContext callbackContext) {
+        TwilioVideoActions videoInstance = TwilioVideoHolder.getInstance().getVideoInstance();
+        if (videoInstance != null) {
+            videoInstance.disconnect();
+            callbackContext.success();
+        } else {
+            callbackContext.error("Twilio video is not running");
+        }
     }
 
     public Bundle onSaveInstanceState() {

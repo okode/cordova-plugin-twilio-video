@@ -6,6 +6,7 @@
 #define i18n_DISCONNECTED_WITH_ERROR_PROP   @"i18nDisconnectedWithError"
 #define i18n_ACCEPT_PROP                    @"i18nAccept"
 #define HANDLE_ERROR_IN_APP                 @"handleErrorInApp"
+#define HANG_UP_IN_APP                      @"handleErrorInApp"
 
 @implementation TwilioVideoConfig
 -(void) parse:(NSDictionary*)config {
@@ -25,6 +26,7 @@
         self.i18nAccept = @"Accept";
     }
     self.handleErrorInApp = [config objectForKey:HANDLE_ERROR_IN_APP];
+    self.hangUpInApp = [config objectForKey:HANG_UP_IN_APP];
 }
 
 + (UIColor *)colorFromHexString:(NSString *)hexString {

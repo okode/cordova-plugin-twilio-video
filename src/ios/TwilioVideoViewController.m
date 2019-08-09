@@ -18,6 +18,7 @@ NSString *const AUDIO_TRACK_ADDED = @"AUDIO_TRACK_ADDED";
 NSString *const AUDIO_TRACK_REMOVED = @"AUDIO_TRACK_REMOVED";
 NSString *const VIDEO_TRACK_ADDED = @"VIDEO_TRACK_ADDED";
 NSString *const VIDEO_TRACK_REMOVED = @"VIDEO_TRACK_REMOVED";
+NSString *const HANG_UP = @"HANG_UP";
 NSString *const CLOSED = @"CLOSED";
 
 @implementation TwilioVideoViewController
@@ -27,6 +28,8 @@ NSString *const CLOSED = @"CLOSED";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    [[TwilioVideoHolder getInstance] setVideoInstance:self];
+            
     [[TwilioVideoEventProducer getInstance] publishEvent: OPENED];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     
@@ -60,6 +63,11 @@ NSString *const CLOSED = @"CLOSED";
     }
 }
 
+- (void)viewDidDisappear {
+    // TODO: not working on tests
+    [[TwilioVideoHolder getInstance] setVideoInstance:NULL];
+}
+
 #pragma mark - Public
 
 - (void)connectToRoom:(NSString*)room token:(NSString *)token {
@@ -70,7 +78,11 @@ NSString *const CLOSED = @"CLOSED";
 }
 
 - (IBAction)disconnectButtonPressed:(id)sender {
-    [self.room disconnect];
+    if ([self.config hangUpInApp]) {
+        [[TwilioVideoEventProducer getInstance] publishEvent: HANG_UP];
+    } else {
+        [self disconnect];
+    }
 }
 
 - (IBAction)micButtonPressed:(id)sender {
@@ -273,6 +285,12 @@ NSString *const CLOSED = @"CLOSED";
     
     [alert addAction:yesButton];
     [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void) disconnect {
+    if (self.room != NULL) {
+        [self.room disconnect];
+    }
 }
 
 - (void) dismiss {

@@ -7,6 +7,7 @@
 @property NSString *i18nDisconnectedWithError;
 @property NSString *i18nAccept;
 @property BOOL handleErrorInApp;
+@property BOOL hangUpInApp;
 
 -(void) parse:(NSDictionary*)config;
 + (UIColor *)colorFromHexString:(NSString *)hexString;

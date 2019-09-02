@@ -79,7 +79,7 @@ public class TwilioVideo extends CordovaPlugin {
         if (callbackContext == null) {
             return;
         }
-        CallEventsProducer.getInstance().setObserver(new CallObserver() {
+        TwilioVideoManager.getInstance().setEventObserver(new CallEventObserver() {
             @Override
             public void onEvent(String event, JSONObject data) {
                 Log.i(TAG, String.format("Event received: %s with data: %s", event, data));
@@ -101,9 +101,7 @@ public class TwilioVideo extends CordovaPlugin {
     }
 
     private void closeRoom(CallbackContext callbackContext) {
-        TwilioVideoActions videoInstance = TwilioVideoHolder.getInstance().getVideoInstance();
-        if (videoInstance != null) {
-            videoInstance.disconnect();
+        if (TwilioVideoManager.getInstance().publishDisconnection()) {
             callbackContext.success();
         } else {
             callbackContext.error("Twilio video is not running");

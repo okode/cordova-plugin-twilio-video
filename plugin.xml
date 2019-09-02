@@ -28,13 +28,10 @@
         <source-file src="src/ios/TwilioVideoPlugin.m" />
         <header-file src="src/ios/TwilioVideoViewController.h" />
         <source-file src="src/ios/TwilioVideoViewController.m" />
-        <header-file src="src/ios/TwilioVideoEventProducer.h" />
-        <source-file src="src/ios/TwilioVideoEventProducer.m" />
+        <header-file src="src/ios/TwilioVideoManager.h" />
+        <source-file src="src/ios/TwilioVideoManager.m" />
         <header-file src="src/ios/TwilioVideoConfig.h" />
         <source-file src="src/ios/TwilioVideoConfig.m" />
-        <header-file src="src/ios/TwilioVideoActions.h" />
-        <header-file src="src/ios/TwilioVideoHolder.h" />
-        <source-file src="src/ios/TwilioVideoHolder.m" />
         <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
         <resource-file src="src/ios/Resources/end_call.png" target="Resources/end_call.png" />
         <resource-file src="src/ios/Resources/end_call@2x.png" target="Resources/end_call@2x.png" />
@@ -78,12 +75,11 @@
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />
-        <source-file src="src/android/CallEventsProducer.java" target-dir="src/org/apache/cordova/twiliovideo" />
-        <source-file src="src/android/CallObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/TwilioVideoManager.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallEventObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallActionObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallConfig.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CameraCapturerCompat.java" target-dir="src/org/apache/cordova/twiliovideo" />
-        <source-file src="src/android/TwilioVideoActions.java" target-dir="src/org/apache/cordova/twiliovideo" />
-        <source-file src="src/android/TwilioVideoHolder.java" target-dir="src/org/apache/cordova/twiliovideo" />
 
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="com.android.support:appcompat-v7:26+" />

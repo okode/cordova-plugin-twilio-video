@@ -6,12 +6,10 @@
 
 @import TwilioVideo;
 @import UIKit;
-#import "TwilioVideoEventProducer.h"
+#import "TwilioVideoManager.h"
 #import "TwilioVideoConfig.h"
-#import "TwilioVideoHolder.h"
-#import "TwilioVideoActions.h"
 
-@interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraCapturerDelegate, TwilioVideoActions>
+@interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraCapturerDelegate, TwilioVideoActionProducerDelegate>
 
 // Configure access token manually for testing in `ViewDidLoad`, if desired! Create one manually in the console.
 @property (nonatomic, strong) NSString *roomName;
@@ -40,7 +38,6 @@
 @property (nonatomic, weak) IBOutlet UIButton *videoButton;
 
 - (void)connectToRoom:(NSString*)room token: (NSString *)token;
-- (void)disconnect;
 
 @end
 

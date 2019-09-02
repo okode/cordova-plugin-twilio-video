@@ -28,9 +28,9 @@ NSString *const CLOSED = @"CLOSED";
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [[TwilioVideoHolder getInstance] setVideoInstance:self];
-            
-    [[TwilioVideoEventProducer getInstance] publishEvent: OPENED];
+    [[TwilioVideoManager getInstance] setActionDelegate:self];
+
+    [[TwilioVideoManager getInstance] publishEvent: OPENED];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     
     [self logMessage:[NSString stringWithFormat:@"TwilioVideo v%@", [TwilioVideo version]]];
@@ -63,11 +63,6 @@ NSString *const CLOSED = @"CLOSED";
     }
 }
 
-- (void)viewDidDisappear {
-    // TODO: not working on tests
-    [[TwilioVideoHolder getInstance] setVideoInstance:NULL];
-}
-
 #pragma mark - Public
 
 - (void)connectToRoom:(NSString*)room token:(NSString *)token {
@@ -79,9 +74,9 @@ NSString *const CLOSED = @"CLOSED";
 
 - (IBAction)disconnectButtonPressed:(id)sender {
     if ([self.config hangUpInApp]) {
-        [[TwilioVideoEventProducer getInstance] publishEvent: HANG_UP];
+        [[TwilioVideoManager getInstance] publishEvent: HANG_UP];
     } else {
-        [self disconnect];
+        [self onDisconnect];
     }
 }
 
@@ -287,15 +282,17 @@ NSString *const CLOSED = @"CLOSED";
     [self presentViewController:alert animated:YES completion:nil];
 }
 
-- (void) disconnect {
+- (void) dismiss {
+    [[TwilioVideoManager getInstance] publishEvent: CLOSED];
+    [self dismissViewControllerAnimated:NO completion:nil];
+}
+
+#pragma mark - TVIRoomDelegate
+
+- (void) onDisconnect {
     if (self.room != NULL) {
         [self.room disconnect];
     }
-}
-
-- (void) dismiss {
-    [[TwilioVideoEventProducer getInstance] publishEvent: CLOSED];
-    [self dismissViewControllerAnimated:NO completion:nil];
 }
 
 #pragma mark - TVIRoomDelegate
@@ -303,7 +300,7 @@ NSString *const CLOSED = @"CLOSED";
 - (void)didConnectToRoom:(TVIRoom *)room {
     // At the moment, this example only supports rendering one Participant at a time.
     [self logMessage:[NSString stringWithFormat:@"Connected to room %@ as %@", room.name, room.localParticipant.identity]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: CONNECTED];
+    [[TwilioVideoManager getInstance] publishEvent: CONNECTED];
     
     if (room.remoteParticipants.count > 0) {
         self.remoteParticipant = room.remoteParticipants[0];
@@ -319,17 +316,17 @@ NSString *const CLOSED = @"CLOSED";
     
     [self showRoomUI:NO];
     if (error != NULL) {
-        [[TwilioVideoEventProducer getInstance] publishEvent:DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
+        [[TwilioVideoManager getInstance] publishEvent:DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
         [self handleConnectionError: [self.config i18nDisconnectedWithError]];
     } else {
-        [[TwilioVideoEventProducer getInstance] publishEvent: DISCONNECTED];
+        [[TwilioVideoManager getInstance] publishEvent: DISCONNECTED];
         [self dismiss];
     }
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
     [self logMessage:[NSString stringWithFormat:@"Failed to connect to room, error = %@", error]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: CONNECT_FAILURE];
+    [[TwilioVideoManager getInstance] publishEvent: CONNECT_FAILURE];
     
     self.room = nil;
     
@@ -346,7 +343,7 @@ NSString *const CLOSED = @"CLOSED";
                       participant.identity,
                       (unsigned long)[participant.audioTracks count],
                       (unsigned long)[participant.videoTracks count]]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: PARTICIPANT_CONNECTED];
+    [[TwilioVideoManager getInstance] publishEvent: PARTICIPANT_CONNECTED];
 }
 
 - (void)room:(TVIRoom *)room participantDidDisconnect:(TVIRemoteParticipant *)participant {
@@ -354,7 +351,7 @@ NSString *const CLOSED = @"CLOSED";
         [self cleanupRemoteParticipant];
     }
     [self logMessage:[NSString stringWithFormat:@"Room %@ participant %@ disconnected", room.name, participant.identity]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: PARTICIPANT_DISCONNECTED];
+    [[TwilioVideoManager getInstance] publishEvent: PARTICIPANT_DISCONNECTED];
 }
 
 #pragma mark - TVIRemoteParticipantDelegate
@@ -404,7 +401,7 @@ NSString *const CLOSED = @"CLOSED";
     
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: VIDEO_TRACK_ADDED];
+    [[TwilioVideoManager getInstance] publishEvent: VIDEO_TRACK_ADDED];
 
     if (self.remoteParticipant == participant) {
         [self setupRemoteView];
@@ -421,7 +418,7 @@ NSString *const CLOSED = @"CLOSED";
     
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: VIDEO_TRACK_REMOVED];
+    [[TwilioVideoManager getInstance] publishEvent: VIDEO_TRACK_REMOVED];
     
     if (self.remoteParticipant == participant) {
         [videoTrack removeRenderer:self.remoteView];
@@ -438,7 +435,7 @@ NSString *const CLOSED = @"CLOSED";
     
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: AUDIO_TRACK_ADDED];
+    [[TwilioVideoManager getInstance] publishEvent: AUDIO_TRACK_ADDED];
 }
 
 - (void)unsubscribedFromAudioTrack:(TVIRemoteAudioTrack *)audioTrack
@@ -450,7 +447,7 @@ NSString *const CLOSED = @"CLOSED";
     
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoEventProducer getInstance] publishEvent: AUDIO_TRACK_REMOVED];
+    [[TwilioVideoManager getInstance] publishEvent: AUDIO_TRACK_REMOVED];
 }
 
 - (void)remoteParticipant:(TVIRemoteParticipant *)participant

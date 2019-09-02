@@ -7,7 +7,7 @@
 #pragma mark - Plugin Initialization
 - (void)pluginInitialize
 {
-    [[TwilioVideoEventProducer getInstance] setDelegate:self];
+    [[TwilioVideoManager getInstance] setEventDelegate:self];
 }
 
 - (void)openRoom:(CDVInvokedUrlCommand*)command {
@@ -37,10 +37,7 @@
 }
 
 - (void)closeRoom:(CDVInvokedUrlCommand*)command {
-    TwilioVideoHolder *holder = [TwilioVideoHolder getInstance];
-    // BOOL *disconnected = [[Twilio getInstance] hangUp];
-    if (holder.videoInstance != NULL) {
-        [holder.videoInstance disconnect];
+    if ([[TwilioVideoManager getInstance] publishDisconnection]) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];

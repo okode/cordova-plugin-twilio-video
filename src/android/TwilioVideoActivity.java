@@ -47,7 +47,7 @@ import org.json.JSONObject;
 
 import java.util.Collections;
 
-public class TwilioVideoActivity extends AppCompatActivity implements TwilioVideoActions {
+public class TwilioVideoActivity extends AppCompatActivity implements CallActionObserver {
 
     private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
 
@@ -108,7 +108,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements TwilioVide
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        TwilioVideoHolder.getInstance().setVideoInstance(this);
+        TwilioVideoManager.getInstance().setActionListenerObserver(this);
 
         FAKE_R = new FakeR(this);
 
@@ -256,7 +256,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements TwilioVide
 
         publishEvent(CallEvent.CLOSED);
 
-        TwilioVideoHolder.getInstance().setVideoInstance(null);
+        TwilioVideoManager.getInstance().setActionListenerObserver(null);
 
         super.onDestroy();
     }
@@ -747,7 +747,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements TwilioVide
                     // Propagating the event to the web side in order to allow developers to do something else before disconnecting the room
                     publishEvent(CallEvent.HANG_UP);
                 } else {
-                    disconnect();
+                    onDisconnect();
                 }
             }
         };
@@ -903,7 +903,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements TwilioVide
 
 
     @Override
-    public void disconnect() {
+    public void onDisconnect() {
         /*
          * Disconnect from room
          */
@@ -922,10 +922,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements TwilioVide
     }
 
     private void publishEvent(CallEvent event) {
-        CallEventsProducer.getInstance().publishEvent(event);
+        TwilioVideoManager.getInstance().publishEvent(event);
     }
 
     private void publishEvent(CallEvent event, JSONObject data) {
-        CallEventsProducer.getInstance().publishEvent(event, data);
+        TwilioVideoManager.getInstance().publishEvent(event, data);
     }
+
 }

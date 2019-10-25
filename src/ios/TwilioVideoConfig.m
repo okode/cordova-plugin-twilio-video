@@ -10,7 +10,7 @@
 
 @implementation TwilioVideoConfig
 -(void) parse:(NSDictionary*)config {
-    if (config == NULL) { return; }
+    if (config == NULL || config == (id)[NSNull null]) { return; }
     self.primaryColorHex = [config objectForKey:PRIMARY_COLOR_PROP];
     self.secondaryColorHex = [config objectForKey:SECONDARY_COLOR_PROP];
     self.i18nConnectionError = [config objectForKey:i18n_CONNECTION_ERROR_PROP];

@@ -11,14 +11,6 @@
         <engine name="cordova-ios" version=">=5.0.0" />
     </engines>
     <platform name="ios">
-        <podspec>
-            <config>
-                <source url="https://github.com/CocoaPods/Specs.git"/>
-            </config>
-            <pods>
-                <pod name="TwilioVideo" spec="2.4.0"/>
-            </pods>
-        </podspec>
         <config-file parent="/*" target="config.xml">
             <feature name="TwilioVideoPlugin">
                 <param name="ios-package" value="TwilioVideoPlugin" />
@@ -52,7 +44,16 @@
         <resource-file src="src/ios/Resources/switch_camera@2x.png" target="Resources/switch_camera@2x.png" />
         <resource-file src="src/ios/Resources/switch_camera@3x.png" target="Resources/switch_camera@3x.png" />
 
-        <framework src="TwilioVideo" type="podspec" spec="2.4.0"/>
+        <framework src="TwilioVideo" type="podspec" spec="2.5.6"/>
+        <podspec>
+            <config>
+                <source url="https://github.com/CocoaPods/Specs.git"/>
+            </config>
+            <pods>
+                <pod name="TwilioVideo" spec="2.5.6"/>
+            </pods>
+        </podspec>
+
     </platform>
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">

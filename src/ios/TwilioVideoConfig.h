@@ -8,6 +8,7 @@
 @property NSString *i18nAccept;
 @property BOOL handleErrorInApp;
 @property BOOL hangUpInApp;
+@property BOOL useCallKit;
 
 -(void) parse:(NSDictionary*)config;
 + (UIColor *)colorFromHexString:(NSString *)hexString;

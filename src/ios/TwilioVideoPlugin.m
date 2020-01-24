@@ -20,20 +20,24 @@
         [config parse: command.arguments[2]];
     }
     
+    TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:[NSUUID new] room:room token:token isCallKitCall:false];
+    call.config = config;
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         UIStoryboard *sb = [UIStoryboard storyboardWithName:@"TwilioVideo" bundle:nil];
         TwilioVideoViewController *vc = [sb instantiateViewControllerWithIdentifier:@"TwilioVideoViewController"];
-        
-        vc.config = config;
+        vc.call = call;
 
         vc.view.backgroundColor = [UIColor clearColor];
         vc.modalPresentationStyle = UIModalPresentationOverFullScreen;
-        
+
         [self.viewController presentViewController:vc animated:NO completion:^{
-            [vc connectToRoom:room token:token];
+            [call connectToRoom:^(BOOL connected) {
+                [call connectLocalVideoWithDelegate:vc];
+                NSLog(connected ? @"Connected twilio video" : @"Error connecting twilio video");
+            }];
         }];
     });
-
 }
 
 - (void)closeRoom:(CDVInvokedUrlCommand*)command {

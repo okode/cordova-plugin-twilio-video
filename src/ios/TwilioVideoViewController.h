@@ -7,7 +7,7 @@
 @import TwilioVideo;
 @import UIKit;
 @import CallKit;
-#import "TwilioVideoManager.h"
+#import "TwilioVideoEventManager.h"
 #import "TwilioVideoCall.h"
 
 @interface TwilioVideoViewController: UIViewController <TwilioVideoCallDelegate, TVIRemoteParticipantDelegate, TVICameraCapturerDelegate, TwilioVideoActionProducerDelegate>

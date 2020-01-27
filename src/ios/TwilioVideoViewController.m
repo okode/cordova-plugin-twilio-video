@@ -17,9 +17,9 @@
 
 - (void)viewDidLoad {
     self.call.delegate = self;
-    [[TwilioVideoManager getInstance] setActionDelegate:self];
+    [[TwilioVideoEventManager getInstance] setActionDelegate:self];
 
-    [[TwilioVideoManager getInstance] publishEvent: CALL_OPENED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_OPENED];
 
     [self.navigationController setNavigationBarHidden:YES animated:NO];
     
@@ -174,7 +174,7 @@
 }
 
 - (void) dismiss {
-    [[TwilioVideoManager getInstance] publishEvent: CALL_CLOSED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CLOSED];
     [self dismissViewControllerAnimated:NO completion:nil];
 }
 
@@ -194,7 +194,7 @@
 #pragma mark - TwilioVideoCallDelegate
 
 - (void)didConnectToRoom:(TVIRoom *)room {
-    [[TwilioVideoManager getInstance] publishEvent: CALL_CONNECTED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CONNECTED];
     [self setRemoteParticipantDelegate];
 }
 
@@ -202,27 +202,27 @@
     [self cleanupRemoteParticipant];
     [self showRoomUI:false];
     if (error != NULL) {
-        [[TwilioVideoManager getInstance] publishEvent:CALL_DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
+        [[TwilioVideoEventManager getInstance] publishCallEvent:CALL_DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
     } else {
-        [[TwilioVideoManager getInstance] publishEvent: CALL_DISCONNECTED];
+        [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_DISCONNECTED];
     }
     [self dismiss];
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
     [self showRoomUI:NO];
-    [[TwilioVideoManager getInstance] publishEvent: CALL_CONNECT_FAILURE];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CONNECT_FAILURE];
     [self dismiss];
 }
 
 - (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {
     [self setRemoteParticipantDelegate];
-    [[TwilioVideoManager getInstance] publishEvent: CALL_PARTICIPANT_CONNECTED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_PARTICIPANT_CONNECTED];
 }
 
 - (void)room:(TVIRoom *)room participantDidDisconnect:(TVIRemoteParticipant *)participant {
     [self cleanupRemoteParticipant];
-    [[TwilioVideoManager getInstance] publishEvent: CALL_PARTICIPANT_DISCONNECTED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_PARTICIPANT_DISCONNECTED];
 }
 
 - (void)audioChanged:(BOOL)isMuted {
@@ -285,7 +285,7 @@
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
     
-    [[TwilioVideoManager getInstance] publishEvent: CALL_VIDEO_TRACK_ADDED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_VIDEO_TRACK_ADDED];
 
     if (self.call.remoteParticipant == participant) {
         [self setupRemoteView];
@@ -303,7 +303,7 @@
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
     
-    [[TwilioVideoManager getInstance] publishEvent: CALL_VIDEO_TRACK_REMOVED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_VIDEO_TRACK_REMOVED];
     
     if (self.call.remoteParticipant == participant) {
         [videoTrack removeRenderer:self.remoteView];
@@ -321,7 +321,7 @@
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
     
-    [[TwilioVideoManager getInstance] publishEvent: CALL_AUDIO_TRACK_ADDED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_AUDIO_TRACK_ADDED];
 }
 
 - (void)unsubscribedFromAudioTrack:(TVIRemoteAudioTrack *)audioTrack
@@ -334,7 +334,7 @@
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
     
-    [[TwilioVideoManager getInstance] publishEvent: CALL_AUDIO_TRACK_REMOVED];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_AUDIO_TRACK_REMOVED];
 }
 
 - (void)remoteParticipant:(TVIRemoteParticipant *)participant

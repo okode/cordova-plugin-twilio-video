@@ -7,6 +7,7 @@
 @import CallKit;
 #import "TwilioVideoCallManager.h"
 #import "TwilioVideoViewController.h"
+#import "TwilioVideoEventManager.h"
 
 @interface TwilioVideoCallKit: NSObject <CXProviderDelegate>
 

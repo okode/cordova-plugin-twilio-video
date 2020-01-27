@@ -26,8 +26,8 @@
         <source-file src="src/ios/TwilioVideoPlugin.m" />
         <header-file src="src/ios/TwilioVideoViewController.h" />
         <source-file src="src/ios/TwilioVideoViewController.m" />
-        <header-file src="src/ios/TwilioVideoManager.h" />
-        <source-file src="src/ios/TwilioVideoManager.m" />
+        <header-file src="src/ios/TwilioVideoEventManager.h" />
+        <source-file src="src/ios/TwilioVideoEventManager.m" />
         <header-file src="src/ios/TwilioVideoConfig.h" />
         <source-file src="src/ios/TwilioVideoConfig.m" />
         <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />

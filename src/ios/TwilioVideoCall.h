@@ -5,7 +5,7 @@
 //
 @import CallKit;
 @import TwilioVideo;
-#import "TwilioVideoManager.h"
+#import "TwilioVideoEventManager.h"
 #import "TwilioVideoConfig.h"
 
 extern NSString *const CALL_OPENED;

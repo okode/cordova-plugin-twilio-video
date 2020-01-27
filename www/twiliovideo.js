@@ -32,4 +32,13 @@ TwilioVideo.displayIncomingCall = function(callUUID, eventCallback, config) {
     }, null, 'TwilioVideoPlugin', 'displayIncomingCall', [callUUID, config]);
 };
 
+TwilioVideo.bindDocumentEvent = function() {
+    exec(function(e) {
+      console.log("Firing document event: " + e.eventType + " with data " + JSON.stringify(e.eventData));
+      cordova.fireDocumentEvent(e.eventType, e.eventData);
+    }, null, "TwilioVideo", "registerListener", []);
+};
+
+document.addEventListener("deviceready", TwilioVideo.bindDocumentEvent, false);
+
 module.exports = TwilioVideo;

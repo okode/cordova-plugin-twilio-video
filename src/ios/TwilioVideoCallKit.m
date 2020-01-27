@@ -108,14 +108,6 @@
             [action fulfillWithDateConnected:[[NSDate alloc] init]];
             self.anserCall = call;
             [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall" with:@{ @"code": call.callUuid }];
-            // TwilioVideoConfig *config = [[TwilioVideoConfig alloc] init];
-            UIStoryboard *sb = [UIStoryboard storyboardWithName:@"TwilioVideo" bundle:nil];
-            TwilioVideoViewController *vc = [sb instantiateViewControllerWithIdentifier:@"TwilioVideoViewController"];
-            // vc.config = config;
-            vc.call = call;
-            [self.rootViewController presentViewController:vc animated:NO completion:^{
-                NSLog(@"Test");
-            }];
         } else {
             [action fail];
         }

@@ -11,7 +11,7 @@
     [[TwilioVideoEventManager getInstance] setEventDelegate:self];
 }
 
-- (void)registerDocumentEventListener:(CDVInvokedUrlCommand*)command {
+- (void)registerListener:(CDVInvokedUrlCommand*)command {
     self.documentEventListenerCallbackId = command.callbackId;
 }
 

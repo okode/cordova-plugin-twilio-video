@@ -261,7 +261,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         super.onDestroy();
     }
 
-    private boolean checkPermissionForCameraAndMicrophone(){
+    public static boolean checkPermissionForCameraAndMicrophone(){
         int resultCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         int resultMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
         return resultCamera == PackageManager.PERMISSION_GRANTED &&

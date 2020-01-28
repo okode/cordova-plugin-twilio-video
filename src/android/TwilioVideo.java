@@ -9,11 +9,8 @@ import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -112,14 +109,7 @@ public class TwilioVideo extends CordovaPlugin {
     }
 
     public void hasRequiredPermissions(CallbackContext callbackContext) {
-        switch (ContextCompat.checkSelfPermission(cordova.getActivity(), Manifest.permission.CAMERA)) {
-            case PackageManager.PERMISSION_GRANTED:
-                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, true));
-            case PackageManager.PERMISSION_DENIED:
-                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, false));
-            default:
-                callbackContext.error("Something goes wrong on Twilio permissions!");
-        }
+        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, TwilioVideoActivity.checkPermissionForCameraAndMicrophone()));
     }
 
     public Bundle onSaveInstanceState() {

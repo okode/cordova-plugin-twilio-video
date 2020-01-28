@@ -15,7 +15,6 @@ import android.util.Log;
 
 import org.json.JSONObject;
 
-
 public class TwilioVideo extends CordovaPlugin {
 
     public static final String TAG = "TwilioPlugin";
@@ -32,21 +31,22 @@ public class TwilioVideo extends CordovaPlugin {
         this.cordova = cordova;
     }
 
-    
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
-		this.callbackContext = callbackContext;
-		if (action.equals("openRoom")) {
-		    this.registerCallListener(callbackContext);
-		   	this.openRoom(args);
-		} else if (action.equals("closeRoom")) {
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
+        this.callbackContext = callbackContext;
+        if (action.equals("openRoom")) {
+            this.registerCallListener(callbackContext);
+            this.openRoom(args);
+        } else if (action.equals("closeRoom")) {
             this.closeRoom(callbackContext);
+        } else if (action.equals("hasRequiredPermissions")) {
+            this.hasRequiredPermissions(callbackContext);
         }
         return true;
-	}
+    }
 
-	public void openRoom(final JSONArray args) {
+    public void openRoom(final JSONArray args) {
         try {
-    	 	this.token = args.getString(0);
+            this.token = args.getString(0);
             this.roomId = args.getString(1);
             final CordovaPlugin that = this;
             final String token = this.token;
@@ -58,7 +58,7 @@ public class TwilioVideo extends CordovaPlugin {
             LOG.d(TAG, "TOKEN: " + token);
             LOG.d(TAG, "ROOMID: " + roomId);
 
-     		cordova.getThreadPool().execute(new Runnable() {
+            cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     Intent intentTwilioVideo = new Intent(Intent.ACTION_VIEW);
                     intentTwilioVideo.setClass(that.cordova.getActivity().getBaseContext(), TwilioVideoActivity.class);
@@ -68,7 +68,7 @@ public class TwilioVideo extends CordovaPlugin {
                     intentTwilioVideo.putExtra("config", config);
                     that.cordova.getActivity().startActivity(intentTwilioVideo);
                 }
-                    
+
             });
         } catch (JSONException e) {
             Log.e(TAG, "Couldn't open room. No valid input params", e);
@@ -105,6 +105,15 @@ public class TwilioVideo extends CordovaPlugin {
             callbackContext.success();
         } else {
             callbackContext.error("Twilio video is not running");
+        }
+    }
+
+    public hasRequiredPermissions(CallbackContext callbackContext) {
+        if (cordova.hasPermission(Manifest.permission.CAMERA) &&
+        cordova.hasPermission(Manifest.permission.RECORD_AUDIO)) {
+            callbackContext.success(true);
+        } else {
+            callbackContext.error(false);
         }
     }
 

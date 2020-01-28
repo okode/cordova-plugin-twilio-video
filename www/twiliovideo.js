@@ -23,4 +23,14 @@ TwilioVideo.closeRoom = function() {
     });
 };
 
+TwilioVideo.hasRequiredPermissions = function() {
+    return new Promise(function(resolve, reject) {
+        exec(function() {
+            resolve();
+        }, function(error) {
+            reject(error);
+        }, "TwilioVideoPlugin", "hasRequiredPermissions", []);
+    });
+};
+
 module.exports = TwilioVideo;

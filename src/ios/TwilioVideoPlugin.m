@@ -1,6 +1,7 @@
 /********* TwilioVideo.m Cordova Plugin Implementation *******/
 
 #import "TwilioVideoPlugin.h"
+#import <AVFoundation/AVFoundation.h>
 
 @implementation TwilioVideoPlugin
 
@@ -41,6 +42,26 @@
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    }
+}
+
+- (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command {
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    if(authStatus == AVAuthorizationStatusAuthorized)
+    {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    }
+    else if(authStatus == AVAuthorizationStatusNotDetermined)
+    {
+        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
+    }
+    else if (authStatus == AVAuthorizationStatusRestricted)
+    {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+    } else {
+       CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];
         [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
     }
 }

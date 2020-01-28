@@ -25,8 +25,8 @@ TwilioVideo.closeRoom = function() {
 
 TwilioVideo.hasRequiredPermissions = function() {
     return new Promise(function(resolve, reject) {
-        exec(function() {
-            resolve();
+        exec(function(result) {
+            resolve(result);
         }, function(error) {
             reject(error);
         }, "TwilioVideoPlugin", "hasRequiredPermissions", []);

@@ -22,7 +22,11 @@ import org.json.JSONObject;
 public class TwilioVideo extends CordovaPlugin {
 
     public static final String TAG = "TwilioPlugin";
-    private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
+    public static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
+    public static final String[] PERMISSIONS_REQUIRED = new String[]{
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+    };
 
     public CallbackContext callbackContext;
     private CordovaInterface cordova;
@@ -130,8 +134,7 @@ public class TwilioVideo extends CordovaPlugin {
     }
 
     private void requestPermissionForCameraAndMicrophone() {
-        cordova.requestPermissions(this, CAMERA_MIC_PERMISSION_REQUEST_CODE,
-                new String[]{ Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO });
+        cordova.requestPermissions(this, CAMERA_MIC_PERMISSION_REQUEST_CODE, PERMISSIONS_REQUIRED);
         System.out.println("requestPermissionForCameraAndMicrophone called");
     }
 

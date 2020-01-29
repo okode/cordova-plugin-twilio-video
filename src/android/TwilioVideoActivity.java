@@ -49,8 +49,6 @@ import java.util.Collections;
 
 public class TwilioVideoActivity extends AppCompatActivity implements CallActionObserver {
 
-    private static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
-
     /*
      * Audio and video tracks can be created with names. This feature is useful for categorizing
      * tracks of participants. For example, if one participant publishes a video track with
@@ -132,13 +130,13 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         /*
          * Needed for setting/abandoning audio focus during call
          */
-        audioManager = (AudioManager)getSystemService(Context.AUDIO_SERVICE);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         audioManager.setSpeakerphoneOn(true);
 
         Intent intent = getIntent();
 
         this.accessToken = intent.getStringExtra("token");
-        this.roomId =   intent.getStringExtra("roomId");
+        this.roomId = intent.getStringExtra("roomId");
         this.config = (CallConfig) intent.getSerializableExtra("config");
 
         Log.d(TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
@@ -146,7 +144,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             Log.d(TwilioVideo.TAG, "REQUEST PERMISSIONS");
             requestPermissionForCameraAndMicrophone();
         } else {
-             Log.d(TwilioVideo.TAG, "PERMISSIONS OK. CREATE LOCAL MEDIA");
+            Log.d(TwilioVideo.TAG, "PERMISSIONS OK. CREATE LOCAL MEDIA");
             createAudioAndVideoTracks();
             connectToRoom();
         }
@@ -161,7 +159,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == CAMERA_MIC_PERMISSION_REQUEST_CODE) {
+        if (requestCode == TwilioVideo.CAMERA_MIC_PERMISSION_REQUEST_CODE) {
             boolean cameraAndMicPermissionGranted = true;
 
             for (int grantResult : grantResults) {
@@ -180,7 +178,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     }
 
     @Override
-    protected  void onResume() {
+    protected void onResume() {
         super.onResume();
         /*
          * If the local video track was released when the app was put in the background, recreate.
@@ -261,26 +259,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         super.onDestroy();
     }
 
-    private boolean checkPermissionForCameraAndMicrophone(){
+    private boolean checkPermissionForCameraAndMicrophone() {
         int resultCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         int resultMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
         return resultCamera == PackageManager.PERMISSION_GRANTED &&
-               resultMic == PackageManager.PERMISSION_GRANTED;
+                resultMic == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void requestPermissionForCameraAndMicrophone(){
-        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.RECORD_AUDIO)) {
-            Toast.makeText(this,
-                    FAKE_R.getString("permissions_needed"),
-                    Toast.LENGTH_LONG).show();
-        } else {
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO},
-                    CAMERA_MIC_PERMISSION_REQUEST_CODE);
-        }
+    private void requestPermissionForCameraAndMicrophone() {
+        ActivityCompat.requestPermissions(
+                this,
+                TwilioVideo.PERMISSIONS_REQUIRED,
+                TwilioVideo.CAMERA_MIC_PERMISSION_REQUEST_CODE);
+
     }
 
     private void createAudioAndVideoTracks() {
@@ -330,7 +321,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
      */
     private void initializeUI() {
         setDisconnectAction();
-        
+
         if (config.getPrimaryColorHex() != null) {
             int primaryColor = Color.parseColor(config.getPrimaryColorHex());
             ColorStateList color = ColorStateList.valueOf(primaryColor);
@@ -354,7 +345,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         muteActionFab.setOnClickListener(muteClickListener());
         switchAudioActionFab.show();
         switchAudioActionFab.setOnClickListener(switchAudioClickListener());
-     }
+    }
 
     /*
      * The actions performed during disconnect.
@@ -405,11 +396,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private void moveLocalVideoToThumbnailView() {
         if (thumbnailVideoView.getVisibility() == View.GONE) {
             thumbnailVideoView.setVisibility(View.VISIBLE);
-            if(localVideoTrack!=null) {
+            if (localVideoTrack != null) {
                 localVideoTrack.removeRenderer(primaryVideoView);
                 localVideoTrack.addRenderer(thumbnailVideoView);
             }
-            if(localVideoView != null && thumbnailVideoView != null) {
+            if (localVideoView != null && thumbnailVideoView != null) {
                 localVideoView = thumbnailVideoView;
             }
             thumbnailVideoView.setMirror(cameraCapturer.getCameraSource() ==
@@ -774,14 +765,14 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(audioManager.isSpeakerphoneOn()){
+                if (audioManager.isSpeakerphoneOn()) {
                     audioManager.setSpeakerphoneOn(false);
-                }else{
+                } else {
                     audioManager.setSpeakerphoneOn(true);
 
                 }
                 int icon = audioManager.isSpeakerphoneOn() ?
-                        FAKE_R.getDrawable("ic_phonelink_ring_white_24dp") :  FAKE_R.getDrawable("ic_volume_headhphones_white_24dp");
+                        FAKE_R.getDrawable("ic_phonelink_ring_white_24dp") : FAKE_R.getDrawable("ic_volume_headhphones_white_24dp");
                 switchAudioActionFab.setImageDrawable(ContextCompat.getDrawable(
                         TwilioVideoActivity.this, icon));
             }
@@ -872,7 +863,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                             .setOnAudioFocusChangeListener(
                                     new AudioManager.OnAudioFocusChangeListener() {
                                         @Override
-                                        public void onAudioFocusChange(int i) { }
+                                        public void onAudioFocusChange(int i) {
+                                        }
                                     })
                             .build();
             audioManager.requestAudioFocus(focusRequest);
@@ -891,12 +883,12 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         Log.i(TwilioVideo.TAG, "Connection error handled by the plugin");
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)
-           .setCancelable(false)
-           .setPositiveButton(config.getI18nAccept(), new DialogInterface.OnClickListener() {
-               public void onClick(DialogInterface dialog, int id) {
-                    TwilioVideoActivity.this.finish();
-               }
-           });
+                .setCancelable(false)
+                .setPositiveButton(config.getI18nAccept(), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        TwilioVideoActivity.this.finish();
+                    }
+                });
         AlertDialog alert = builder.create();
         alert.show();
     }

@@ -24,14 +24,14 @@ declare module TwilioVideo {
     closeRoom(): Promise<void>;
 
     /**
-     * Check if the plugin has required permissions
-     * @returns boolean - if user has granted or denied permissions
+     * Check if the plugin has required permissions (Camera and Microphone)
+     * @returns boolean - if user has granted all permissions or not
      */
     hasRequiredPermissions(): Promise<boolean>;
 
     /**
-     * Request required permissions
-     * @returns boolean - if user has granted or denied permissions
+     * Request required permissions (Camera and Microphone)
+     * @returns boolean -if user has granted all permissions or not
      */
     requestPermissions(): Promise<boolean>;
   }

@@ -125,7 +125,6 @@ public class TwilioVideo extends CordovaPlugin {
     }
 
     private void hasRequiredPermissions(CallbackContext callbackContext) {
-        System.out.println("hasRequiredPermissions called");
         callbackContext.sendPluginResult(
                 new PluginResult(PluginResult.Status.OK,
                         cordova.hasPermission(Manifest.permission.RECORD_AUDIO)
@@ -135,24 +134,19 @@ public class TwilioVideo extends CordovaPlugin {
 
     private void requestPermissionForCameraAndMicrophone() {
         cordova.requestPermissions(this, CAMERA_MIC_PERMISSION_REQUEST_CODE, PERMISSIONS_REQUIRED);
-        System.out.println("requestPermissionForCameraAndMicrophone called");
     }
 
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == CAMERA_MIC_PERMISSION_REQUEST_CODE) {
             boolean cameraAndMicPermissionGranted = true;
-
             for (int grantResult : grantResults) {
                 cameraAndMicPermissionGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
             }
-
-            System.out.println("onRequestPermissionResult result: " + cameraAndMicPermissionGranted);
             PluginResult result = new PluginResult(PluginResult.Status.OK, cameraAndMicPermissionGranted);
-            result.setKeepCallback(true);
             callbackContext.sendPluginResult(result);
         } else {
-            callbackContext.error("Something goes wrong!");
+          callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, false));
         }
     }
 

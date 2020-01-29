@@ -33,4 +33,14 @@ TwilioVideo.hasRequiredPermissions = function() {
     });
 };
 
+TwilioVideo.requestPermissions = function() {
+    return new Promise(function(resolve, reject) {
+        exec(function(result) {
+            resolve(result);
+        }, function(error) {
+            reject(error);
+        }, "TwilioVideoPlugin", "requestPermissions", []);
+    });
+};
+
 module.exports = TwilioVideo;

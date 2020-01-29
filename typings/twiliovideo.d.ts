@@ -25,8 +25,15 @@ declare module TwilioVideo {
 
     /**
      * Check if the plugin has required permissions
+     * @returns boolean - if user has granted or denied permissions
      */
     hasRequiredPermissions(): Promise<boolean>;
+
+    /**
+     * Request required permissions
+     * @returns boolean - if user has granted or denied permissions
+     */
+    requestPermissions(): Promise<boolean>;
   }
 }
 

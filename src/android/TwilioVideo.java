@@ -40,6 +40,8 @@ public class TwilioVideo extends CordovaPlugin {
             this.closeRoom(callbackContext);
         } else if (action.equals("hasRequiredPermissions")) {
             this.hasRequiredPermissions(callbackContext);
+        } else if (action.equals("requestPermissions")) {
+            this.hasRequiredPermissions(callbackContext);
         }
         return true;
     }
@@ -108,8 +110,35 @@ public class TwilioVideo extends CordovaPlugin {
         }
     }
 
-    public void hasRequiredPermissions(CallbackContext callbackContext) {
-        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, TwilioVideoActivity.checkPermissionForCameraAndMicrophone()));
+    private void hasRequiredPermissions(CallbackContext callbackContext) {
+        callbackContext.sendPluginResult(
+                new PluginResult(PluginResult.Status.OK,
+                    TwilioVideoActivity.checkPermissionForCameraAndMicrophone()));
+    }
+
+    private void requestPermissionForCameraAndMicrophone() {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(cordova.getActivity(), Manifest.permission.CAMERA)
+                || ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.RECORD_AUDIO)) {
+            Toast.makeText(this, FAKE_R.getString("permissions_needed"), Toast.LENGTH_LONG).show();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] { Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO },
+                    CAMERA_MIC_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+        if (requestCode == CAMERA_MIC_PERMISSION_REQUEST_CODE) {
+            boolean cameraAndMicPermissionGranted = true;
+
+            for (int grantResult : grantResults) {
+                cameraAndMicPermissionGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
+            }
+
+            callbackContext.success(new PluginResult(PluginResult.Status.OK, cameraAndMicPermissionGranted));
+        }
     }
 
     public Bundle onSaveInstanceState() {

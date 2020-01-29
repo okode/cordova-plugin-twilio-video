@@ -47,23 +47,22 @@
 }
 
 - (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command {
-    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-    if(authStatus == AVAuthorizationStatusAuthorized)
+    AVAuthorizationStatus videoPermissionStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    AVAudioSessionRecordPermission audioPermissionStatus = [AVAudioSession sharedInstance].recordPermission;
+    BOOL status = videoPermissionStatus == AVAuthorizationStatusAuthorized
+            && audioPermissionStatus == AVAudioSessionRecordPermissionGranted;
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:status] callbackId:command.callbackId];
+}
+
+- (void)requestPermissions:(CDVInvokedUrlCommand*)command {
+    [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL grantedCamera)
     {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
-    }
-    else if(authStatus == AVAuthorizationStatusNotDetermined)
-    {
-        [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
-    }
-    else if (authStatus == AVAuthorizationStatusRestricted)
-    {
-        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];
-        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
-    } else {
-       CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];
-        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
-    }
+        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL grantedAudio) {
+             [self.commandDelegate sendPluginResult:
+              [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:grantedCamera && grantedAudio]
+                                         callbackId:command.callbackId];
+        }];
+    }];
 }
 
 #pragma mark - TwilioVideoEventProducerDelegate

@@ -37,8 +37,8 @@
     return self;
 }
 
-- (void) reportIncomingCall:(UIViewController*)vc uuid:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token completion:(void (^)(NSError *_Nullable error))completion {
-    CXHandle *callHandle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:roomName != nil ? roomName : @""];
+- (void) reportIncomingCall:(UIViewController*)vc uuid:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token caller:(NSString*)caller extras:(NSDictionary*)extras completion:(void (^)(NSError *_Nullable error))completion {
+    CXHandle *callHandle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:caller != nil ? caller : @""];
     CXCallUpdate *callUpdate = [[CXCallUpdate alloc] init];
     [callUpdate setRemoteHandle:callHandle];
     [callUpdate setSupportsDTMF:false];
@@ -51,6 +51,7 @@
             NSLog(@"Incoming call successfully reported.");
             self.rootViewController = vc;
             TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:uuid room:roomName token:token isCallKitCall:true];
+            call.extras = extras;
             [self.callManager addCall:call];
         } else {
             NSLog(@"Failed to report incoming call successfully: %@", error.localizedDescription);
@@ -66,23 +67,7 @@
         return;
     }
     
-    [self.anserCall.audioDevice setEnabled:true];
-}
-
-- (void)provider:(CXProvider *)provider didActivateAudioSession:(AVAudioSession *)audioSession {
-    if (self.anserCall == nil) {
-        return;
-    }
-    
-    [self.anserCall.audioDevice setEnabled:true];
-}
-
-- (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession *)audioSession {
-    if (self.anserCall == nil) {
-        return;
-    }
-    
-    [self.anserCall.audioDevice setEnabled:false];
+    [self.anserCall endCall];
 }
 
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action {
@@ -92,24 +77,49 @@
         [action fail];
         return;
     }
-    /*
-     * Configure the audio session, but do not start call audio here, since it must be done once
-     * the audio session has been activated by the system after having its priority elevated.
-     */
-    // Stop the audio unit by setting isEnabled to `false`.
-    [call setAudioDevice:false];
-    // Configure the AVAudioSession by executign the audio device's `block`.
-    [call.audioDevice block];
+    
+    if (self.anserCall != nil) {
+        [self.anserCall endCall:^{
+            {
+                NSLog(@"Call ended successfully");
+                [self answerCallWith:call action:action];
+            }
+        }];
+    } else {
+         [self answerCallWith:call action:action];
+    }
+}
+
+- (void)answerCallWith:(TwilioVideoCall *)call action:(CXAnswerCallAction *)action {
+    
+    self.anserCall = call;
+    
     /*
      Perform room connect
      */
     [call connectToRoom:^(BOOL connected) {
         if (connected) {
-            [action fulfillWithDateConnected:[[NSDate alloc] init]];
-            self.anserCall = call;
-            [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall" with:@{ @"code": call.callUuid }];
+            if ([TwilioVideoPermissions hasRequiredPermissions]) {
+                [action fulfillWithDateConnected:[[NSDate alloc] init]];
+                [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.success" with:
+                @{
+                    @"callUUID": [call.callUuid UUIDString],
+                    @"extras": call.extras
+                }];
+            } else {
+                [call endCall];
+                [action fail];
+                [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
+                @{
+                    @"code": @"NO_REQUIRED_PERMISSIONS"
+                }];
+            }
         } else {
             [action fail];
+            [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
+            @{
+                @"code": @"CONNECTION_ERROR"
+            }];
         }
     }];
 }

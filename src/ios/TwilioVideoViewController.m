@@ -15,6 +15,12 @@
     return self;
 }
 
+- (void)dealloc {
+    if (self.call) {
+        [self.call stopCamera];
+    }
+}
+
 - (void)viewDidLoad {
     self.call.delegate = self;
     [[TwilioVideoEventManager getInstance] setActionDelegate:self];
@@ -206,6 +212,7 @@
     } else {
         [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_DISCONNECTED];
     }
+    [self.call performCallKitEndCallAction];
     [self dismiss];
 }
 

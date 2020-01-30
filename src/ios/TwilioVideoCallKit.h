@@ -8,6 +8,7 @@
 #import "TwilioVideoCallManager.h"
 #import "TwilioVideoViewController.h"
 #import "TwilioVideoEventManager.h"
+#import "TwilioVideoPermissions.h"
 
 @interface TwilioVideoCallKit: NSObject <CXProviderDelegate>
 
@@ -20,7 +21,7 @@
 @property (nonatomic, strong) UIViewController *rootViewController;
 
 + (instancetype)getInstance;
-- (void) reportIncomingCall:(UIViewController*)vc uuid:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token completion:(void (^)(NSError *_Nullable error))completion;
+- (void) reportIncomingCall:(UIViewController*)vc uuid:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token caller:(NSString*)caller extras:(NSDictionary*)extras completion:(void (^)(NSError *_Nullable error))completion;
 
 @end
 

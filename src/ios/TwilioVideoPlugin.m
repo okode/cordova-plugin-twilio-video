@@ -11,8 +11,13 @@
     [[TwilioVideoEventManager getInstance] setEventDelegate:self];
 }
 
-- (void)registerListener:(CDVInvokedUrlCommand*)command {
-    self.documentEventListenerCallbackId = command.callbackId;
+- (void)addListener:(CDVInvokedUrlCommand*)command {
+    self.pluginEventListenerCallbackId = command.callbackId;
+    if (self.pendingPluginEventName != nil && self.pendingPluginEventData != nil) {
+        [self sendEvent:self.pluginEventListenerCallbackId with:self.pendingPluginEventName data: self.pendingPluginEventData];
+        self.pendingPluginEventName = nil;
+        self.pendingPluginEventData = nil;
+    }
 }
 
 - (void)openRoom:(CDVInvokedUrlCommand*)command {
@@ -26,7 +31,21 @@
     }
     
     TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:[NSUUID new] room:room token:token isCallKitCall:false];
-    [self presentCallViewController:call withConfig:config command:command];
+    call.config = config;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        TwilioVideoViewController *vc = [self getTwilioVideoController: call];
+        [self.viewController presentViewController:vc animated:NO completion:^{
+            [call connectToRoom:^(BOOL connected) {
+                if (connected) {
+                    NSLog(@"Connected twilio video");
+                    [call connectLocalVideoWithDelegate:vc];
+                } else {
+                    NSLog(@"Error connecting twilio video");
+                }
+            }];
+        }];
+    });
 }
 
 - (void)closeRoom:(CDVInvokedUrlCommand*)command {
@@ -44,17 +63,11 @@
     NSString* callUuid = args[0];
     TwilioVideoConfig *config = [[TwilioVideoConfig alloc] init];
     if ([args count] > 1) {
-        [config parse: command.arguments[2]];
+        [config parse: command.arguments[1]];
     }
     
     TwilioVideoCall *call = [[TwilioVideoCallKit getInstance].callManager callWithUUID:[[NSUUID alloc] initWithUUIDString:callUuid]];
     
-    [self presentCallViewController:call withConfig:config command:command];
-}
-
-#pragma mark - Private
-
-- (void)presentCallViewController:(TwilioVideoCall*)call withConfig:(TwilioVideoConfig *)config command:(CDVInvokedUrlCommand*)command {
     if (call == nil) {
         NSLog(@"Unknown twilio video call");
         return;
@@ -63,25 +76,25 @@
     call.config = config;
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        UIStoryboard *sb = [UIStoryboard storyboardWithName:@"TwilioVideo" bundle:nil];
-        TwilioVideoViewController *vc = [sb instantiateViewControllerWithIdentifier:@"TwilioVideoViewController"];
-        vc.call = call;
-
-        vc.view.backgroundColor = [UIColor clearColor];
-        vc.modalPresentationStyle = UIModalPresentationOverFullScreen;
-
+        TwilioVideoViewController *vc = [self getTwilioVideoController: call];
         [self.viewController presentViewController:vc animated:NO completion:^{
-            [call connectToRoom:^(BOOL connected) {
-                if (connected) {
-                    NSLog(@"Connected twilio video");
-                } else {
-                    NSLog(@"Error connecting twilio video");
-                }
-            }];
+            NSLog(@"Displayed incoming call");
         }];
     });
 }
 
+#pragma mark - Private
+
+- (TwilioVideoViewController*)getTwilioVideoController:(TwilioVideoCall*)call {
+    UIStoryboard *sb = [UIStoryboard storyboardWithName:@"TwilioVideo" bundle:nil];
+    TwilioVideoViewController *vc = [sb instantiateViewControllerWithIdentifier:@"TwilioVideoViewController"];
+    vc.call = call;
+
+    vc.view.backgroundColor = [UIColor clearColor];
+    vc.modalPresentationStyle = UIModalPresentationOverFullScreen;
+
+    return vc;
+}
 
 - (void)sendEvent:(NSString*)callbackId with:(NSString *)event data:(NSDictionary*)data {
     if (!callbackId) {
@@ -102,7 +115,7 @@
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
     [result setKeepCallbackAsBool:YES];
     
-    [self.commandDelegate sendPluginResult:result callbackId:self.listenerCallbackID];
+    [self.commandDelegate sendPluginResult:result callbackId:callbackId];
 }
 
 #pragma mark - TwilioVideoEventProducerDelegate
@@ -112,7 +125,12 @@
 }
 
 - (void)onPluginEvent:(NSString *)event with:(NSDictionary*)data {
-    [self sendEvent:self.documentEventListenerCallbackId with:event data:data];
+    if (self.pluginEventListenerCallbackId) {
+        [self sendEvent:self.pluginEventListenerCallbackId with:event data:data];
+    } else {
+        self.pendingPluginEventName = event;
+        self.pendingPluginEventData = data;
+    }
 }
 
 @end

@@ -38,7 +38,15 @@ NSString *const CALL_CLOSED = @"CLOSED";
 }
 
 - (void)endCall {
-    if (!self.room) { return; }
+    [self endCall:nil];
+}
+
+- (void)endCall:(void (^)(void))completion {
+    self.endCallCompletionHandler = completion;
+    if (!self.room) {
+        if (self.endCallCompletionHandler) { self.endCallCompletionHandler(); }
+        return;
+    }
     [self.room disconnect];
     if (self.delegate) { [self.delegate callEnded]; }
 }
@@ -56,6 +64,12 @@ NSString *const CALL_CLOSED = @"CLOSED";
     } else {
         [self.camera selectSource:TVICameraCaptureSourceFrontCamera];
     }
+}
+
+- (void)stopCamera {
+    if (!self.camera) { return; }
+    [self.camera stopCapture];
+    self.camera = nil;
 }
 
 - (void)disableVideo:(BOOL)isDisabled {
@@ -78,16 +92,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
 
 #pragma mark Private
 
-- (void)connectLocalAudio {
-    /*
-     * The important thing to remember when providing a AudioDevice is that the device must be set
-     * before performing any other actions with the SDK (such as creating Tracks, or connecting to a Room).
-     * In this case we've already initialized our own `DefaultAudioDevice` instance which we will now set.
-     */
-    if (self.isCallKitCall) {
-        self.audioDevice = [TVIDefaultAudioDevice audioDevice];
-        TwilioVideo.audioDevice = self.audioDevice;
-    }
+- (void)createLocalAudio {
     // Set local audio track
     self.localAudioTrack = [TVILocalAudioTrack trackWithOptions:nil
                                                         enabled:YES
@@ -95,7 +100,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
 }
 
 - (void)doConnect {
-    [self connectLocalAudio];
+    [self createLocalAudio];
     TVIConnectOptions *connectOptions = [TVIConnectOptions optionsWithToken:self.accessToken block:^(TVIConnectOptionsBuilder * _Nonnull builder) {
         {
             builder.roomName = self.roomName;
@@ -137,6 +142,8 @@ NSString *const CALL_CLOSED = @"CLOSED";
         [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
             if (error != nil) {
                 NSLog(@"EndCallAction transaction request failed: %@", error.localizedDescription);
+                NSLog(@"Call ended anyway");
+                [self endCall];
                 return;
             }
             NSLog(@"EndCallAction transaction request successful");
@@ -170,6 +177,8 @@ NSString *const CALL_CLOSED = @"CLOSED";
     self.connectionCompletionHandler = nil;
     
     if (self.delegate) { [self.delegate room:room didDisconnectWithError:error]; }
+    
+    if (self.endCallCompletionHandler) { self.endCallCompletionHandler(); }
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{

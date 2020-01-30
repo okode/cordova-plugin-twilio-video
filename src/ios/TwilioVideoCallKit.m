@@ -35,7 +35,7 @@
     return self;
 }
 
-- (void) reportIncomingCall:(UIViewController*)vc uuid:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token caller:(NSString*)caller extras:(NSDictionary*)extras completion:(void (^)(NSError *_Nullable error))completion {
+- (void)reportIncomingCallWith:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token caller:(NSString*)caller extras:(NSDictionary*)extras completion:(void (^)(NSError *_Nullable error))completion {
     CXHandle *callHandle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:caller != nil ? caller : @""];
     CXCallUpdate *callUpdate = [[CXCallUpdate alloc] init];
     [callUpdate setRemoteHandle:callHandle];

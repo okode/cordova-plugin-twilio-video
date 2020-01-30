@@ -31,9 +31,7 @@
     self.callKitProvider = [[CXProvider alloc] initWithConfiguration:config];
     
     [self.callKitProvider setDelegate:self queue:nil];
-    
-    self.callManager = [[TwilioVideoCallManager alloc] init];
-    
+        
     return self;
 }
 
@@ -49,10 +47,9 @@
     [self.callKitProvider reportNewIncomingCallWithUUID:uuid update:callUpdate completion:^(NSError * _Nullable error) {
         if (error == nil) {
             NSLog(@"Incoming call successfully reported.");
-            self.rootViewController = vc;
             TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:uuid room:roomName token:token isCallKitCall:true];
             call.extras = extras;
-            [self.callManager addCall:call];
+            [[TwilioVideoCallManager getInstance] addCall:call];
         } else {
             NSLog(@"Failed to report incoming call successfully: %@", error.localizedDescription);
         }
@@ -63,23 +60,23 @@
 #pragma mark - Callkit delegate
 
 - (void)providerDidReset:(CXProvider *)provider {
-    if (self.anserCall == nil) {
+    if ([TwilioVideoCallManager getInstance].answerCall == nil) {
         return;
     }
     
-    [self.anserCall endCall];
+    [[TwilioVideoCallManager getInstance].answerCall endCall];
 }
 
 - (void)provider:(CXProvider *)provider performAnswerCallAction:(CXAnswerCallAction *)action {
-    TwilioVideoCall *call = [self.callManager callWithUUID:action.callUUID];
+    TwilioVideoCall *call = [[TwilioVideoCallManager getInstance] callWithUUID:action.callUUID];
     
     if (call == nil) {
         [action fail];
         return;
     }
     
-    if (self.anserCall != nil) {
-        [self.anserCall endCall:^{
+    if ([TwilioVideoCallManager getInstance].answerCall != nil) {
+        [[TwilioVideoCallManager getInstance].answerCall endCall:^{
             {
                 NSLog(@"Call ended successfully");
                 [self answerCallWith:call action:action];
@@ -91,9 +88,17 @@
 }
 
 - (void)answerCallWith:(TwilioVideoCall *)call action:(CXAnswerCallAction *)action {
+    [TwilioVideoCallManager getInstance].answerCall = call;
+        
+    [[AVAudioSession sharedInstance] setActive:NO    withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
+                                  error:nil];
     
-    self.anserCall = call;
-    
+    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.loading" with:
+    @{
+        @"callUUID": [call.callUuid UUIDString],
+        @"extras": call.extras
+    }];
+
     /*
      Perform room connect
      */
@@ -111,32 +116,39 @@
                 [action fail];
                 [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
                 @{
-                    @"code": @"NO_REQUIRED_PERMISSIONS"
+                    @"errorCode": @"NO_REQUIRED_PERMISSIONS",
+                    @"callUUID": [call.callUuid UUIDString],
+                    @"extras": call.extras
                 }];
             }
         } else {
             [action fail];
             [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
             @{
-                @"code": @"CONNECTION_ERROR"
+                @"errorCode": @"CONNECTION_ERROR",
+                @"callUUID": [call.callUuid UUIDString],
+                @"extras": call.extras
             }];
         }
     }];
 }
 
 - (void)provider:(CXProvider *)provider performEndCallAction:(CXEndCallAction *)action {
-    TwilioVideoCall *call = [self.callManager callWithUUID:action.callUUID];
+    TwilioVideoCall *call = [[TwilioVideoCallManager getInstance] callWithUUID:action.callUUID];
     if (call == nil) {
         [action fail];
         return;
     }
-    [call endCall];
+    call.isEndCallNotifiedToCallKit = true;
+    [call endCall:^{
+        NSLog(@"Ended call");
+    }];
     [action fulfill];
-    [self.callManager removeCallByUUID:call.callUuid];
+    [[TwilioVideoCallManager getInstance] removeCallByUUID:call.callUuid];
 }
 
 - (void)provider:(CXProvider *)provider performSetMutedCallAction:(CXSetMutedCallAction *)action {
-    TwilioVideoCall *call = [self.callManager callWithUUID:action.callUUID];
+    TwilioVideoCall *call = [[TwilioVideoCallManager getInstance] callWithUUID:action.callUUID];
     if (call == nil) {
         [action fail];
         return;

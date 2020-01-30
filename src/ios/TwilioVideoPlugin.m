@@ -33,6 +33,8 @@
     TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:[NSUUID new] room:room token:token isCallKitCall:false];
     call.config = config;
     
+    [TwilioVideoCallManager getInstance].answerCall = call;
+
     dispatch_async(dispatch_get_main_queue(), ^{
         TwilioVideoViewController *vc = [self getTwilioVideoController: call];
         [self.viewController presentViewController:vc animated:NO completion:^{
@@ -66,7 +68,7 @@
         [config parse: command.arguments[1]];
     }
     
-    TwilioVideoCall *call = [[TwilioVideoCallKit getInstance].callManager callWithUUID:[[NSUUID alloc] initWithUUIDString:callUuid]];
+    TwilioVideoCall *call = [[TwilioVideoCallManager getInstance] callWithUUID:[[NSUUID alloc] initWithUUIDString:callUuid]];
     
     if (call == nil) {
         NSLog(@"Unknown twilio video call");

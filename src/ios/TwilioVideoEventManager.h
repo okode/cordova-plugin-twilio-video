@@ -1,12 +1,12 @@
 #import <Foundation/Foundation.h>
 
 @protocol TwilioVideoEventProducerDelegate <NSObject>
-- (void) onCallEvent:(NSString*)event with:(NSDictionary*)data;
-- (void) onPluginEvent:(NSString*)event with:(NSDictionary*)data;
+- (void)onCallEvent:(NSString*)event with:(NSDictionary*)data;
+- (void)onPluginEvent:(NSString*)event with:(NSDictionary*)data;
 @end
 
 @protocol TwilioVideoActionProducerDelegate <NSObject>
-- (void) onDisconnect;
+- (void)onDisconnect;
 @end
 
 @interface TwilioVideoEventManager : NSObject

@@ -8,24 +8,23 @@
 #import "TwilioVideoEventManager.h"
 #import "TwilioVideoConfig.h"
 
-extern NSString *const CALL_OPENED;
-extern NSString *const CALL_CONNECTED;
-extern NSString *const CALL_CONNECT_FAILURE;
-extern NSString *const CALL_DISCONNECTED;
-extern NSString *const CALL_DISCONNECTED_WITH_ERROR;
-extern NSString *const CALL_PARTICIPANT_CONNECTED;
-extern NSString *const CALL_PARTICIPANT_DISCONNECTED;
-extern NSString *const CALL_AUDIO_TRACK_ADDED;
-extern NSString *const CALL_AUDIO_TRACK_REMOVED;
-extern NSString *const CALL_VIDEO_TRACK_ADDED;
-extern NSString *const CALL_VIDEO_TRACK_REMOVED;
-extern NSString *const CALL_HANG_UP;
-extern NSString *const CALL_CLOSED;
+extern NSString * _Nonnull const CALL_OPENED;
+extern NSString * _Nonnull const CALL_CONNECTED;
+extern NSString * _Nonnull const CALL_CONNECT_FAILURE;
+extern NSString * _Nonnull const CALL_DISCONNECTED;
+extern NSString * _Nonnull const CALL_DISCONNECTED_WITH_ERROR;
+extern NSString * _Nonnull const CALL_PARTICIPANT_CONNECTED;
+extern NSString * _Nonnull const CALL_PARTICIPANT_DISCONNECTED;
+extern NSString * _Nonnull const CALL_AUDIO_TRACK_ADDED;
+extern NSString * _Nonnull const CALL_AUDIO_TRACK_REMOVED;
+extern NSString * _Nonnull const CALL_VIDEO_TRACK_ADDED;
+extern NSString * _Nonnull const CALL_VIDEO_TRACK_REMOVED;
+extern NSString * _Nonnull const CALL_HANG_UP;
+extern NSString * _Nonnull const CALL_CLOSED;
 
 @protocol TwilioVideoCallDelegate <TVIRoomDelegate>
 - (void)audioChanged:(BOOL)isMuted;
 - (void)videoChanged:(BOOL)isDisabled;
-- (void)callEnded;
 @end
 
 @interface TwilioVideoCall: NSObject <TVIRoomDelegate>
@@ -34,45 +33,43 @@ extern NSString *const CALL_CLOSED;
 
 #pragma mark Twilio call context properties
 
-@property (nonatomic, strong) NSString *roomName;
-@property (nonatomic, strong) NSString *accessToken;
-@property (nonatomic, strong) NSUUID *callUuid;
-@property (nonatomic, strong) TwilioVideoConfig *config;
-@property (nonatomic, strong) NSDictionary *extras;
+@property (nonatomic, strong) NSString * _Nullable roomName;
+@property (nonatomic, strong) NSString * _Nullable accessToken;
+@property (nonatomic, strong) NSUUID * _Nullable callUuid;
+@property (nonatomic, strong) TwilioVideoConfig * _Nullable config;
+@property (nonatomic, strong) NSDictionary * _Nullable extras;
 @property BOOL isCallKitCall;
 
 #pragma mark Video SDK components
 
 // @property (nonatomic, strong) TVIDefaultAudioDevice *audioDevice;
-@property (nonatomic, strong) TVICameraCapturer *camera;
-@property (nonatomic, strong) TVILocalVideoTrack *localVideoTrack;
-@property (nonatomic, strong) TVILocalAudioTrack *localAudioTrack;
-@property (nonatomic, strong) TVIRemoteParticipant *remoteParticipant;
-@property (nonatomic, strong) TVIRoom *room;
+@property (nonatomic, strong) TVICameraCapturer * _Nullable camera;
+@property (nonatomic, strong) TVILocalVideoTrack * _Nullable localVideoTrack;
+@property (nonatomic, strong) TVILocalAudioTrack * _Nullable localAudioTrack;
+@property (nonatomic, strong) TVIRemoteParticipant * _Nullable remoteParticipant;
+@property (nonatomic, strong) TVIRoom * _Nullable room;
 
 #pragma mark Connection callback
-@property (nonatomic, strong) void (^connectionCompletionHandler)(BOOL connected);
-@property (nonatomic, strong) void (^endCallCompletionHandler)(void);
+@property (nonatomic, strong) void (^ _Nullable connectionCompletionHandler)(BOOL connected);
+#pragma mark Disconnection callback
+@property (nonatomic, strong) NSMutableArray<void (^)(void)> * _Nullable endCallSubscribers;
+
+#pragma mark Flag
+@property BOOL isEndCallNotifiedToCallKit;
 
 #pragma mark CallKit
-@property (nonatomic, strong) CXCallController *callKitCallController;
+@property (nonatomic, strong) CXCallController * _Nullable callKitCallController;
 
-- (id)initWithUUID:(NSUUID*)uuid room:(NSString*)roomName token:(NSString*)token isCallKitCall:(BOOL)isCallKitCall;
+- (id _Nonnull )initWithUUID:(NSUUID*_Nullable)uuid room:(NSString*_Nullable)roomName token:(NSString*_Nullable)token isCallKitCall:(BOOL)isCallKitCall;
 - (void)connectLocalVideoWithDelegate:(nullable id<TVICameraCapturerDelegate>)delegate;
-- (void)connectToRoom:(void (^)(BOOL connected))completion;
+- (void)connectToRoom:(void (^_Nullable)(BOOL connected))completion;
 - (void)endCall;
-- (void)endCall:(void (^)(void))completion;
+- (void)endCall:(void (^_Nullable)(void))completion;
 - (void)muteAudio:(BOOL)isMuted;
 - (void)switchCamera;
 - (void)stopCamera;
 - (void)disableVideo:(BOOL)isDisabled;
-- (void)performCallKitMuteAction:(BOOL)isMuted;
-- (void)performCallKitEndCallAction;
-/*
-- (void)connectToRoom:(NSString*)room token:(NSString *)token uuid:(NSUUID*)uuid completion:(void (^)(BOOL connected))completion;
-- (void)disconnectRoom;
-- (void)muteAudio:(BOOL)isMuted;
- */
+- (void)performUIMuteAction:(BOOL)isMuted;
 
 @end
 

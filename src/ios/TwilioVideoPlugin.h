@@ -1,7 +1,7 @@
 #import <Cordova/CDV.h>
 #import "TwilioVideoViewController.h"
 #import "TwilioVideoConfig.h"
-#import "TwilioVideoCallKit.h"
+#import "TwilioVideoCallManager.h"
 
 @interface TwilioVideoPlugin : CDVPlugin<TwilioVideoEventProducerDelegate>
 

@@ -29,6 +29,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
     self.isCallKitCall = isCallKitCall;
     self.config = [[TwilioVideoConfig alloc] init];
     self.callKitCallController = [[CXCallController alloc] init];
+    self.endCallSubscribers = [NSMutableArray new];
     return self;
 }
 
@@ -38,17 +39,22 @@ NSString *const CALL_CLOSED = @"CLOSED";
 }
 
 - (void)endCall {
-    [self endCall:nil];
+    [self endCall: nil];
 }
 
 - (void)endCall:(void (^)(void))completion {
-    self.endCallCompletionHandler = completion;
-    if (!self.room) {
-        if (self.endCallCompletionHandler) { self.endCallCompletionHandler(); }
-        return;
+    if (!self.isEndCallNotifiedToCallKit && self.isCallKitCall) {
+        [self performCallKitEndCallAction:^(NSError * _Nullable error) {
+            if (error != nil) {
+                NSLog(@"Call ended anyway");
+                [self disconnectRoom:completion];
+            } else {
+                [self addEndCallSubscriber:completion];
+            }
+        }];
+    } else {
+        [self disconnectRoom:completion];
     }
-    [self.room disconnect];
-    if (self.delegate) { [self.delegate callEnded]; }
 }
 
 - (void)muteAudio:(BOOL)isMuted {
@@ -90,6 +96,23 @@ NSString *const CALL_CLOSED = @"CLOSED";
     }
 }
 
+- (void) performUIMuteAction:(BOOL)isMuted {
+    if (self.isCallKitCall) {
+        CXSetMutedCallAction *muteAction = [[CXSetMutedCallAction alloc] initWithCallUUID:self.callUuid muted:isMuted];
+        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:muteAction];
+        
+        [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+            if (error != nil) {
+                NSLog(@"CXSetMutedCallAction transaction request failed: %@", error.localizedDescription);
+                return;
+            }
+            NSLog(@"CXSetMutedCallAction transaction request successful");
+        }];
+    } else {
+        [self muteAudio:isMuted];
+    }
+}
+
 #pragma mark Private
 
 - (void)createLocalAudio {
@@ -117,40 +140,37 @@ NSString *const CALL_CLOSED = @"CLOSED";
     self.room = [TwilioVideo connectWithOptions:connectOptions delegate:self];
 }
 
-- (void) performCallKitMuteAction:(BOOL)isMuted {
-    if (self.isCallKitCall) {
-        CXSetMutedCallAction *muteAction = [[CXSetMutedCallAction alloc] initWithCallUUID:self.callUuid muted:isMuted];
-        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:muteAction];
-        
-        [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-            if (error != nil) {
-                NSLog(@"CXSetMutedCallAction transaction request failed: %@", error.localizedDescription);
-                return;
-            }
-            NSLog(@"CXSetMutedCallAction transaction request successful");
-        }];
-    } else {
-        [self muteAudio:isMuted];
-    }
+- (void)performCallKitEndCallAction:(void (^)(NSError *_Nullable error))completion {
+    CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:self.callUuid];
+    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:endCallAction];
+    [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+        if (error != nil) {
+            NSLog(@"EndCallAction transaction request failed: %@", error.localizedDescription);
+        } else {
+            NSLog(@"EndCallAction transaction request successful");
+        }
+        if (completion) { completion(error); }
+    }];
 }
 
-- (void) performCallKitEndCallAction {
-    if (self.isCallKitCall) {
-        CXEndCallAction *endCallAction = [[CXEndCallAction alloc] initWithCallUUID:self.callUuid];
-        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:endCallAction];
-        
-        [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-            if (error != nil) {
-                NSLog(@"EndCallAction transaction request failed: %@", error.localizedDescription);
-                NSLog(@"Call ended anyway");
-                [self endCall];
-                return;
-            }
-            NSLog(@"EndCallAction transaction request successful");
-        }];
-    } else {
-        [self endCall];
+- (void)addEndCallSubscriber:(void (^)(void))completion {
+    if (completion == nil) { return; }
+    [self.endCallSubscribers addObject:completion];
+}
+
+- (void)notifyEndCallSubscribers {
+    for (int i = 0; i < [self.endCallSubscribers count]; i++) {
+        [self.endCallSubscribers objectAtIndex:i]();
     }
+}
+        
+- (void)disconnectRoom:(void (^)(void))completion {
+    [self addEndCallSubscriber:completion];
+    if (!self.room) {
+        [self notifyEndCallSubscribers];
+        return;
+    }
+    [self.room disconnect];
 }
 
 #pragma mark - Utils
@@ -178,7 +198,10 @@ NSString *const CALL_CLOSED = @"CLOSED";
     
     if (self.delegate) { [self.delegate room:room didDisconnectWithError:error]; }
     
-    if (self.endCallCompletionHandler) { self.endCallCompletionHandler(); }
+    // Needed notify callkit if the call was remotely disconnected
+    [self performCallKitEndCallAction:nil];
+        
+    [self notifyEndCallSubscribers];
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{

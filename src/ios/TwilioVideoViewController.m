@@ -60,11 +60,11 @@
 #pragma mark - UI listeners
 
 - (IBAction)disconnectButtonPressed:(id)sender {
-    [self.call performCallKitEndCallAction];
+    [self.call endCall];
 }
 
 - (IBAction)micButtonPressed:(id)sender {
-    [self.call performCallKitMuteAction:self.call.localAudioTrack.enabled];
+    [self.call performUIMuteAction:self.call.localAudioTrack.enabled];
 }
 
 - (IBAction)cameraSwitchButtonPressed:(id)sender {
@@ -179,7 +179,7 @@
     }
 }
 
-- (void) dismiss {
+- (void)dismiss {
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CLOSED];
     [self dismissViewControllerAnimated:NO completion:nil];
 }
@@ -212,7 +212,6 @@
     } else {
         [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_DISCONNECTED];
     }
-    [self.call performCallKitEndCallAction];
     [self dismiss];
 }
 
@@ -238,10 +237,6 @@
 
 - (void)videoChanged:(BOOL)isDisabled {
     [self.videoButton setSelected: isDisabled];
-}
-
-- (void)callEnded {
-    NSLog(@"Call ended");
 }
 
 #pragma mark - TVIRemoteParticipantDelegate
@@ -390,7 +385,7 @@
 
 #pragma mark - TwilioVideoActionProducerDelegate
 
-- (void) onDisconnect {
+- (void)onDisconnect {
     [self.call endCall];
 }
 

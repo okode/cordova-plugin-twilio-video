@@ -13,15 +13,10 @@
 @interface TwilioVideoCallKit: NSObject <CXProviderDelegate>
 
 // CallKit components
-@property (nonatomic, strong) CXProvider *callKitProvider;
+@property (nonatomic, strong) CXProvider * _Nullable callKitProvider;
 
-@property (nonatomic, strong) TwilioVideoCallManager *callManager;
-@property (nonatomic, strong) TwilioVideoCall *anserCall;
-
-@property (nonatomic, strong) UIViewController *rootViewController;
-
-+ (instancetype)getInstance;
-- (void) reportIncomingCall:(UIViewController*)vc uuid:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token caller:(NSString*)caller extras:(NSDictionary*)extras completion:(void (^)(NSError *_Nullable error))completion;
++ (instancetype _Nonnull)getInstance;
+- (void) reportIncomingCall:(UIViewController*_Nullable)vc uuid:(NSUUID*_Nullable)uuid roomName:(NSString*_Nullable)roomName token:(NSString*_Nullable)token caller:(NSString*_Nullable)caller extras:(NSDictionary*_Nullable)extras completion:(void (^_Nullable)(NSError *_Nullable error))completion;
 
 @end
 

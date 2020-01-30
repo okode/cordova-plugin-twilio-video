@@ -2,6 +2,15 @@
 
 @implementation TwilioVideoCallManager
 
++ (instancetype)getInstance {
+    static TwilioVideoCallManager *sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[self alloc] init];
+    });
+    return sharedInstance;
+}
+
 -(id)init {
     self = [super init];
     self.calls = [[NSMutableDictionary alloc] init];
@@ -15,7 +24,6 @@
 
 - (void)addCall:(TwilioVideoCall*)call {
     [self.calls setValue:call forKey:call.callUuid.UUIDString];
-    // [self.calls setValue:call forKey:call.callUuid];
 }
 
 - (void)removeCallByUUID:(NSUUID*)uuid {

@@ -3,11 +3,13 @@
 
 @interface TwilioVideoCallManager: NSObject
 
-@property (nonatomic, strong) CXCallController *callKitCallController;
-@property (nonatomic, strong) NSMutableDictionary<NSString*, TwilioVideoCall*> *calls;
+@property (nonatomic, strong) CXCallController * _Nullable callKitCallController;
+@property (nonatomic, strong) NSMutableDictionary<NSString*,TwilioVideoCall*> * _Nullable calls;
+@property (nonatomic, strong) TwilioVideoCall * _Nullable answerCall;
 
-- (TwilioVideoCall*)callWithUUID:(NSUUID*)uuid;
-- (void)addCall:(TwilioVideoCall*)call;
-- (void)removeCallByUUID:(NSUUID*)uuid;
++ (instancetype _Nonnull )getInstance;
+- (TwilioVideoCall*_Nullable)callWithUUID:(NSUUID*_Nonnull)uuid;
+- (void)addCall:(TwilioVideoCall*_Nonnull)call;
+- (void)removeCallByUUID:(NSUUID*_Nonnull)uuid;
 
 @end

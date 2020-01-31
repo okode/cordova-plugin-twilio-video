@@ -41,7 +41,6 @@
             [call connectToRoom:^(BOOL connected) {
                 if (connected) {
                     NSLog(@"Connected twilio video");
-                    [call connectLocalVideoWithDelegate:vc];
                 } else {
                     NSLog(@"Error connecting twilio video");
                 }

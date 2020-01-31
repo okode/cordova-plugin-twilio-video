@@ -1,5 +1,3 @@
-/********* TwilioVideo.m Cordova Plugin Implementation *******/
-
 #import "TwilioVideoPlugin.h"
 #import <AVFoundation/AVFoundation.h>
 
@@ -34,7 +32,6 @@
             [vc connectToRoom:room token:token];
         }];
     });
-
 }
 
 - (void)closeRoom:(CDVInvokedUrlCommand*)command {
@@ -47,21 +44,15 @@
 }
 
 - (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command {
-    AVAuthorizationStatus videoPermissionStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-    AVAudioSessionRecordPermission audioPermissionStatus = [AVAudioSession sharedInstance].recordPermission;
-    BOOL status = videoPermissionStatus == AVAuthorizationStatusAuthorized
-            && audioPermissionStatus == AVAudioSessionRecordPermissionGranted;
-    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:status] callbackId:command.callbackId];
+    BOOL hasRequiredPermissions = [TwilioVideoPermissions hasRequiredPermissions];
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasRequiredPermissions] callbackId:command.callbackId];
 }
 
 - (void)requestPermissions:(CDVInvokedUrlCommand*)command {
-    [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL grantedCamera)
-    {
-        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL grantedAudio) {
-             [self.commandDelegate sendPluginResult:
-              [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:grantedCamera && grantedAudio]
-                                         callbackId:command.callbackId];
-        }];
+    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
+                     [self.commandDelegate sendPluginResult:
+         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:grantedPermissions]
+                                    callbackId:command.callbackId];
     }];
 }
 

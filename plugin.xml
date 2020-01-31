@@ -18,6 +18,8 @@
         </config-file>
         <header-file src="src/ios/TwilioVideoPlugin.h" />
         <source-file src="src/ios/TwilioVideoPlugin.m" />
+        <header-file src="src/ios/TwilioVideoPermissions.h" />
+        <source-file src="src/ios/TwilioVideoPermissions.m" />
         <header-file src="src/ios/TwilioVideoViewController.h" />
         <source-file src="src/ios/TwilioVideoViewController.m" />
         <header-file src="src/ios/TwilioVideoManager.h" />

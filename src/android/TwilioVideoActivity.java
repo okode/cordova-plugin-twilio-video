@@ -97,8 +97,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     private int previousAudioMode;
     private boolean previousMicrophoneMute;
-    private VideoRenderer localVideoView;
     private boolean disconnectedFromOnDestroy;
+    private VideoRenderer localVideoView;
 
 
     @Override
@@ -112,14 +112,14 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         publishEvent(CallEvent.OPENED);
         setContentView(FAKE_R.getLayout("activity_video"));
 
-        primaryVideoView = (VideoView) findViewById(FAKE_R.getId("primary_video_view"));
-        thumbnailVideoView = (VideoView) findViewById(FAKE_R.getId("thumbnail_video_view"));
+        primaryVideoView = findViewById(FAKE_R.getId("primary_video_view"));
+        thumbnailVideoView = findViewById(FAKE_R.getId("thumbnail_video_view"));
 
-        connectActionFab = (FloatingActionButton) findViewById(FAKE_R.getId("connect_action_fab"));
-        switchCameraActionFab = (FloatingActionButton) findViewById(FAKE_R.getId("switch_camera_action_fab"));
-        localVideoActionFab = (FloatingActionButton) findViewById(FAKE_R.getId("local_video_action_fab"));
-        muteActionFab = (FloatingActionButton) findViewById(FAKE_R.getId("mute_action_fab"));
-        switchAudioActionFab = (FloatingActionButton) findViewById(FAKE_R.getId("switch_audio_action_fab"));
+        connectActionFab = findViewById(FAKE_R.getId("connect_action_fab"));
+        switchCameraActionFab = findViewById(FAKE_R.getId("switch_camera_action_fab"));
+        localVideoActionFab = findViewById(FAKE_R.getId("local_video_action_fab"));
+        muteActionFab = findViewById(FAKE_R.getId("mute_action_fab"));
+        switchAudioActionFab = findViewById(FAKE_R.getId("switch_audio_action_fab"));
 
         /*
          * Enable changing the volume using the up/down keys during a conversation

@@ -1,5 +1,3 @@
-/********* TwilioVideo.m Cordova Plugin Implementation *******/
-
 #import "TwilioVideoPlugin.h"
 
 @implementation TwilioVideoPlugin

@@ -22,11 +22,7 @@
 - (id)init {
     self = [super init];
     
-    CXProviderConfiguration *config = [[CXProviderConfiguration alloc] initWithLocalizedName: @"CallKit"];
-    config.maximumCallGroups = 1;
-    config.maximumCallsPerCallGroup = 1;
-    config.supportsVideo = true;
-    config.supportedHandleTypes = [[NSSet alloc] initWithObjects:[NSNumber numberWithInt: CXHandleTypeGeneric], nil];
+    CXProviderConfiguration *config = [self getDefaultCallKitProviderConfig];
     
     self.callKitProvider = [[CXProvider alloc] initWithConfiguration:config];
     
@@ -55,6 +51,18 @@
         }
         completion(error);
     }];
+}
+
+- (CXProviderConfiguration*)getDefaultCallKitProviderConfig {
+    NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
+    CXProviderConfiguration *config = [[CXProviderConfiguration alloc] initWithLocalizedName: appName ? appName : @"TwilioCallKit"];
+    config.maximumCallGroups = 1;
+    config.maximumCallsPerCallGroup = 1;
+    config.supportsVideo = true;
+    UIImage *appIcon = [UIImage imageNamed:@"AppIcon"];
+    config.iconTemplateImageData = UIImagePNGRepresentation(appIcon);
+    config.supportedHandleTypes = [[NSSet alloc] initWithObjects:[NSNumber numberWithInt: CXHandleTypeGeneric], nil];
+    return config;
 }
 
 #pragma mark - Callkit delegate

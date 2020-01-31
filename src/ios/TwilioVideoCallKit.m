@@ -107,28 +107,28 @@
         @"extras": call.extras
     }];
 
+    if (![TwilioVideoPermissions hasRequiredPermissions]) {
+        [action fail];
+        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
+        @{
+            @"errorCode": @"NO_REQUIRED_PERMISSIONS",
+            @"callUUID": [call.callUuid UUIDString],
+            @"extras": call.extras
+        }];
+        return;
+    }
+
     /*
      Perform room connect
      */
     [call connectToRoom:^(BOOL connected) {
         if (connected) {
-            if ([TwilioVideoPermissions hasRequiredPermissions]) {
-                [action fulfillWithDateConnected:[[NSDate alloc] init]];
-                [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.success" with:
-                @{
-                    @"callUUID": [call.callUuid UUIDString],
-                    @"extras": call.extras
-                }];
-            } else {
-                [call endCall];
-                [action fail];
-                [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
-                @{
-                    @"errorCode": @"NO_REQUIRED_PERMISSIONS",
-                    @"callUUID": [call.callUuid UUIDString],
-                    @"extras": call.extras
-                }];
-            }
+            [action fulfillWithDateConnected:[[NSDate alloc] init]];
+            [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.success" with:
+            @{
+                @"callUUID": [call.callUuid UUIDString],
+                @"extras": call.extras
+            }];
         } else {
             [action fail];
             [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
@@ -152,6 +152,11 @@
         NSLog(@"Ended call");
     }];
     [action fulfill];
+    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.callkitend" with:
+    @{
+        @"callUUID": [call.callUuid UUIDString],
+        @"extras": call.extras
+    }];
     [[TwilioVideoCallManager getInstance] removeCallByUUID:call.callUuid];
 }
 

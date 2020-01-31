@@ -20,7 +20,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import com.twilio.video.CameraCapturer;
 import com.twilio.video.CameraCapturer.CameraSource;
@@ -140,7 +139,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         this.config = (CallConfig) intent.getSerializableExtra("config");
 
         Log.d(TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
-        if (!checkPermissionForCameraAndMicrophone()) {
+        if (!hasPermissionForCameraAndMicrophone()) {
             Log.d(TwilioVideo.TAG, "REQUEST PERMISSIONS");
             requestPermissionForCameraAndMicrophone();
         } else {
@@ -170,9 +169,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 createAudioAndVideoTracks();
                 connectToRoom();
             } else {
-                Toast.makeText(this,
-                        FAKE_R.getString("permissions_needed"),
-                        Toast.LENGTH_LONG).show();
+                publishEvent(CallEvent.NO_REQUIRED_PERMISSIONS);
+                finish();
             }
         }
     }
@@ -183,7 +181,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         /*
          * If the local video track was released when the app was put in the background, recreate.
          */
-        if (localVideoTrack == null && checkPermissionForCameraAndMicrophone()) {
+        if (localVideoTrack == null && hasPermissionForCameraAndMicrophone()) {
             localVideoTrack = LocalVideoTrack.create(this,
                     true,
                     cameraCapturer.getVideoCapturer(),
@@ -259,7 +257,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         super.onDestroy();
     }
 
-    private boolean checkPermissionForCameraAndMicrophone() {
+    private boolean hasPermissionForCameraAndMicrophone() {
         int resultCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
         int resultMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
         return resultCamera == PackageManager.PERMISSION_GRANTED &&
@@ -447,10 +445,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 localParticipant = room.getLocalParticipant();
                 publishEvent(CallEvent.CONNECTED);
 
-                for (RemoteParticipant remoteParticipant : room.getRemoteParticipants()) {
-                    addRemoteParticipant(remoteParticipant);
-                    break;
-                }
+                addRemoteParticipant(room.getRemoteParticipants().get(0));
             }
 
             @Override
@@ -477,7 +472,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 if (!disconnectedFromOnDestroy && e != null) {
                     JSONObject data = null;
                     try {
-                        data = new JSONObject().put("code", String.valueOf(e.getCode()));
+                        data = new JSONObject();
+                        data.put("code", String.valueOf(e.getCode()));
+                        data.put("description", e.getExplanation());
                     } catch (JSONException e1) {
                         Log.e(TwilioVideo.TAG, "onDisconnected. Error sending error data");
                     }

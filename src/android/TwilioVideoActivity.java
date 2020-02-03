@@ -169,7 +169,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 createAudioAndVideoTracks();
                 connectToRoom();
             } else {
-                publishEvent(CallEvent.NO_REQUIRED_PERMISSIONS);
+                publishEvent(CallEvent.PERMISSIONS_REQUIRED);
                 finish();
             }
         }

@@ -23,9 +23,9 @@ public class TwilioVideo extends CordovaPlugin {
 
     public static final String TAG = "TwilioPlugin";
     public static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
-    public static final String[] PERMISSIONS_REQUIRED = new String[]{
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO
+    public static final String[] PERMISSIONS_REQUIRED = new String[] {
+      Manifest.permission.CAMERA,
+      Manifest.permission.RECORD_AUDIO
     };
 
     public CallbackContext callbackContext;

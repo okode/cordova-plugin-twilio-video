@@ -1,9 +1,3 @@
-//
-//  TwilioVideoViewController.m
-//
-//  Copyright © 2016-2017 Twilio, Inc. All rights reserved.
-//
-
 #import "TwilioVideoViewController.h"
 
 // CALL EVENTS
@@ -18,6 +12,7 @@ NSString *const AUDIO_TRACK_ADDED = @"AUDIO_TRACK_ADDED";
 NSString *const AUDIO_TRACK_REMOVED = @"AUDIO_TRACK_REMOVED";
 NSString *const VIDEO_TRACK_ADDED = @"VIDEO_TRACK_ADDED";
 NSString *const VIDEO_TRACK_REMOVED = @"VIDEO_TRACK_REMOVED";
+NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 NSString *const HANG_UP = @"HANG_UP";
 NSString *const CLOSED = @"CLOSED";
 
@@ -69,7 +64,15 @@ NSString *const CLOSED = @"CLOSED";
     self.roomName = room;
     self.accessToken = token;
     [self showRoomUI:YES];
-    [self doConnect];
+
+    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
+         if (grantedPermissions) {
+             [self doConnect];
+         } else {
+             [[TwilioVideoManager getInstance] publishEvent: PERMISSIONS_REQUIRED];
+             [self handleConnectionError: [self.config i18nConnectionError]];
+         }
+    }];
 }
 
 - (IBAction)disconnectButtonPressed:(id)sender {

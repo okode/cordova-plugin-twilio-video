@@ -1,6 +1,5 @@
-/********* TwilioVideo.m Cordova Plugin Implementation *******/
-
 #import "TwilioVideoPlugin.h"
+#import <AVFoundation/AVFoundation.h>
 
 @implementation TwilioVideoPlugin
 
@@ -33,7 +32,6 @@
             [vc connectToRoom:room token:token];
         }];
     });
-
 }
 
 - (void)closeRoom:(CDVInvokedUrlCommand*)command {
@@ -43,6 +41,19 @@
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];
         [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
     }
+}
+
+- (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command {
+    BOOL hasRequiredPermissions = [TwilioVideoPermissions hasRequiredPermissions];
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasRequiredPermissions] callbackId:command.callbackId];
+}
+
+- (void)requestPermissions:(CDVInvokedUrlCommand*)command {
+    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
+                     [self.commandDelegate sendPluginResult:
+         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:grantedPermissions]
+                                    callbackId:command.callbackId];
+    }];
 }
 
 #pragma mark - TwilioVideoEventProducerDelegate

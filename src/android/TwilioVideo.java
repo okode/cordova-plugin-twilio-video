@@ -1,5 +1,13 @@
 package org.apache.cordova.twiliovideo;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.LOG;
@@ -9,18 +17,19 @@ import org.apache.cordova.CordovaWebView;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-
 import org.json.JSONObject;
-
 
 public class TwilioVideo extends CordovaPlugin {
 
     public static final String TAG = "TwilioPlugin";
+    public static final String[] PERMISSIONS_REQUIRED = new String[] {
+      Manifest.permission.CAMERA,
+      Manifest.permission.RECORD_AUDIO
+    };
 
-    public CallbackContext callbackContext;
+    private static final int PERMISSIONS_REQUIRED_REQUEST_CODE = 1;
+
+    private CallbackContext callbackContext;
     private CordovaInterface cordova;
     private String roomId;
     private String token;
@@ -32,21 +41,29 @@ public class TwilioVideo extends CordovaPlugin {
         this.cordova = cordova;
     }
 
-    
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
-		this.callbackContext = callbackContext;
-		if (action.equals("openRoom")) {
-		    this.registerCallListener(callbackContext);
-		   	this.openRoom(args);
-		} else if (action.equals("closeRoom")) {
-            this.closeRoom(callbackContext);
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
+        this.callbackContext = callbackContext;
+        switch (action) {
+            case "openRoom":
+                this.registerCallListener(callbackContext);
+                this.openRoom(args);
+                break;
+            case "closeRoom":
+                this.closeRoom(callbackContext);
+                break;
+            case "hasRequiredPermissions":
+                this.hasRequiredPermissions(callbackContext);
+                break;
+            case "requestPermissions":
+                this.requestRequiredPermissions();
+                break;
         }
         return true;
-	}
+    }
 
-	public void openRoom(final JSONArray args) {
+    public void openRoom(final JSONArray args) {
         try {
-    	 	this.token = args.getString(0);
+            this.token = args.getString(0);
             this.roomId = args.getString(1);
             final CordovaPlugin that = this;
             final String token = this.token;
@@ -58,7 +75,7 @@ public class TwilioVideo extends CordovaPlugin {
             LOG.d(TAG, "TOKEN: " + token);
             LOG.d(TAG, "ROOMID: " + roomId);
 
-     		cordova.getThreadPool().execute(new Runnable() {
+            cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     Intent intentTwilioVideo = new Intent(Intent.ACTION_VIEW);
                     intentTwilioVideo.setClass(that.cordova.getActivity().getBaseContext(), TwilioVideoActivity.class);
@@ -68,7 +85,7 @@ public class TwilioVideo extends CordovaPlugin {
                     intentTwilioVideo.putExtra("config", config);
                     that.cordova.getActivity().startActivity(intentTwilioVideo);
                 }
-                    
+
             });
         } catch (JSONException e) {
             Log.e(TAG, "Couldn't open room. No valid input params", e);
@@ -105,6 +122,39 @@ public class TwilioVideo extends CordovaPlugin {
             callbackContext.success();
         } else {
             callbackContext.error("Twilio video is not running");
+        }
+    }
+
+    private void hasRequiredPermissions(CallbackContext callbackContext) {
+
+        boolean hasRequiredPermissions = true;
+        for (String permission : TwilioVideo.PERMISSIONS_REQUIRED) {
+            hasRequiredPermissions = cordova.hasPermission(permission);
+            if (!hasRequiredPermissions) { break; }
+        }
+
+        callbackContext.sendPluginResult(
+            new PluginResult(PluginResult.Status.OK, hasRequiredPermissions)
+        );
+    }
+
+    private void requestRequiredPermissions() {
+        cordova.requestPermissions(this, PERMISSIONS_REQUIRED_REQUEST_CODE, PERMISSIONS_REQUIRED);
+    }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUIRED_REQUEST_CODE) {
+
+            boolean requiredPermissionsGranted = true;
+            for (int grantResult : grantResults) {
+                requiredPermissionsGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
+            }
+
+            PluginResult result = new PluginResult(PluginResult.Status.OK, requiredPermissionsGranted);
+            callbackContext.sendPluginResult(result);
+        } else {
+          callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, false));
         }
     }
 

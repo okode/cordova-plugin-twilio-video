@@ -22,13 +22,14 @@ import org.json.JSONObject;
 public class TwilioVideo extends CordovaPlugin {
 
     public static final String TAG = "TwilioPlugin";
-    public static final int CAMERA_MIC_PERMISSION_REQUEST_CODE = 1;
     public static final String[] PERMISSIONS_REQUIRED = new String[] {
       Manifest.permission.CAMERA,
       Manifest.permission.RECORD_AUDIO
     };
 
-    public CallbackContext callbackContext;
+    private static final int PERMISSIONS_REQUIRED_REQUEST_CODE = 1;
+
+    private CallbackContext callbackContext;
     private CordovaInterface cordova;
     private String roomId;
     private String token;
@@ -54,7 +55,7 @@ public class TwilioVideo extends CordovaPlugin {
                 this.hasRequiredPermissions(callbackContext);
                 break;
             case "requestPermissions":
-                this.requestPermissionForCameraAndMicrophone();
+                this.requestRequiredPermissions();
                 break;
         }
         return true;
@@ -125,25 +126,32 @@ public class TwilioVideo extends CordovaPlugin {
     }
 
     private void hasRequiredPermissions(CallbackContext callbackContext) {
+
+        boolean hasRequiredPermissions = true;
+        for (String permission : TwilioVideo.PERMISSIONS_REQUIRED) {
+            hasRequiredPermissions = cordova.hasPermission(permission);
+            if (!hasRequiredPermissions) { break; }
+        }
+
         callbackContext.sendPluginResult(
-                new PluginResult(PluginResult.Status.OK,
-                        cordova.hasPermission(Manifest.permission.RECORD_AUDIO)
-                        && cordova.hasPermission(Manifest.permission.CAMERA))
+            new PluginResult(PluginResult.Status.OK, hasRequiredPermissions)
         );
     }
 
-    private void requestPermissionForCameraAndMicrophone() {
-        cordova.requestPermissions(this, CAMERA_MIC_PERMISSION_REQUEST_CODE, PERMISSIONS_REQUIRED);
+    private void requestRequiredPermissions() {
+        cordova.requestPermissions(this, PERMISSIONS_REQUIRED_REQUEST_CODE, PERMISSIONS_REQUIRED);
     }
 
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == CAMERA_MIC_PERMISSION_REQUEST_CODE) {
-            boolean cameraAndMicPermissionGranted = true;
+        if (requestCode == PERMISSIONS_REQUIRED_REQUEST_CODE) {
+
+            boolean requiredPermissionsGranted = true;
             for (int grantResult : grantResults) {
-                cameraAndMicPermissionGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
+                requiredPermissionsGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
             }
-            PluginResult result = new PluginResult(PluginResult.Status.OK, cameraAndMicPermissionGranted);
+
+            PluginResult result = new PluginResult(PluginResult.Status.OK, requiredPermissionsGranted);
             callbackContext.sendPluginResult(result);
         } else {
           callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, false));

@@ -70,7 +70,7 @@ NSString *const CLOSED = @"CLOSED";
              [self doConnect];
          } else {
              [[TwilioVideoManager getInstance] publishEvent: PERMISSIONS_REQUIRED];
-             [self dismiss];
+             [self handleConnectionError: [self.config i18nConnectionError]];
          }
     }];
 }

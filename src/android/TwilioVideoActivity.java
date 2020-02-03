@@ -45,6 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collections;
+import java.util.List;
 
 public class TwilioVideoActivity extends AppCompatActivity implements CallActionObserver {
 
@@ -57,6 +58,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
      */
     private static final String LOCAL_AUDIO_TRACK_NAME = "microphone";
     private static final String LOCAL_VIDEO_TRACK_NAME = "camera";
+
+    private static final int PERMISSIONS_REQUEST_CODE = 1;
 
     private static FakeR FAKE_R;
 
@@ -141,7 +144,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         Log.d(TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
         if (!hasPermissionForCameraAndMicrophone()) {
             Log.d(TwilioVideo.TAG, "REQUEST PERMISSIONS");
-            requestPermissionForCameraAndMicrophone();
+            requestPermissions();
         } else {
             Log.d(TwilioVideo.TAG, "PERMISSIONS OK. CREATE LOCAL MEDIA");
             createAudioAndVideoTracks();
@@ -158,19 +161,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        if (requestCode == TwilioVideo.CAMERA_MIC_PERMISSION_REQUEST_CODE) {
-            boolean cameraAndMicPermissionGranted = true;
+        if (requestCode == PERMISSIONS_REQUEST_CODE) {
+            boolean permissionsGranted = true;
 
             for (int grantResult : grantResults) {
-                cameraAndMicPermissionGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
+                permissionsGranted &= grantResult == PackageManager.PERMISSION_GRANTED;
             }
 
-            if (cameraAndMicPermissionGranted) {
+            if (permissionsGranted) {
                 createAudioAndVideoTracks();
                 connectToRoom();
             } else {
                 publishEvent(CallEvent.PERMISSIONS_REQUIRED);
-                finish();
+                TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
             }
         }
     }
@@ -264,11 +267,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 resultMic == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void requestPermissionForCameraAndMicrophone() {
+    private void requestPermissions() {
         ActivityCompat.requestPermissions(
                 this,
                 TwilioVideo.PERMISSIONS_REQUIRED,
-                TwilioVideo.CAMERA_MIC_PERMISSION_REQUEST_CODE);
+                PERMISSIONS_REQUEST_CODE);
 
     }
 
@@ -445,7 +448,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 localParticipant = room.getLocalParticipant();
                 publishEvent(CallEvent.CONNECTED);
 
-                addRemoteParticipant(room.getRemoteParticipants().get(0));
+                final List<RemoteParticipant> remoteParticipants = room.getRemoteParticipants();
+                if (remoteParticipants != null && !remoteParticipants.isEmpty()) {
+                    addRemoteParticipant(remoteParticipants.get(0));
+                }
             }
 
             @Override

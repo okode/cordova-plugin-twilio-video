@@ -51,6 +51,23 @@
     }];
 }
 
+- (BOOL)handleContinueActivity:(NSUserActivity*)userActivity {
+    TwilioVideoCall *answerCall = [TwilioVideoCallManager getInstance].answerCall;
+    if (!answerCall) {
+        NSLog(@"No inprogress twilio video calls");
+        return false;
+    }
+    if (userActivity &&  [userActivity.activityType isEqualToString:@"INStartVideoCallIntent"]) {
+        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.videorequested" with:
+        @{
+            @"callUUID": [answerCall.callUuid UUIDString],
+            @"extras": answerCall.extras
+        }];
+        return true;
+    }
+    return false;
+}
+
 - (CXProviderConfiguration*)getDefaultCallKitProviderConfig {
     NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleDisplayName"];
     CXProviderConfiguration *config = [[CXProviderConfiguration alloc] initWithLocalizedName: appName ? appName : @"TwilioCallKit"];
@@ -121,7 +138,7 @@
      */
     [call connectToRoom:^(BOOL connected) {
         if (connected) {
-            [action fulfillWithDateConnected:[[NSDate alloc] init]];
+            [action fulfill];
             [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.success" with:
             @{
                 @"callUUID": [call.callUuid UUIDString],

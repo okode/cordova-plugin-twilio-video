@@ -4,6 +4,14 @@
 
 #pragma mark - Plugin Initialization
 
+- (id)init {
+    self = [super init];
+    
+    self.pendingPluginEvents = [NSMutableArray new];
+        
+    return self;
+}
+
 - (void)pluginInitialize
 {
     [[TwilioVideoEventManager getInstance] setEventDelegate:self];
@@ -11,10 +19,11 @@
 
 - (void)addListener:(CDVInvokedUrlCommand*)command {
     self.pluginEventListenerCallbackId = command.callbackId;
-    if (self.pendingPluginEventName != nil && self.pendingPluginEventData != nil) {
-        [self sendEvent:self.pluginEventListenerCallbackId with:self.pendingPluginEventName data: self.pendingPluginEventData];
-        self.pendingPluginEventName = nil;
-        self.pendingPluginEventData = nil;
+    if ([self.pendingPluginEvents count] > 0) {
+        for (TwilioVideoPluginEvent *event in self.pendingPluginEvents) {
+            [self sendEvent:self.pluginEventListenerCallbackId with:event.name data: event.data];
+        }
+        [self.pendingPluginEvents removeAllObjects];
     }
 }
 
@@ -123,12 +132,14 @@
     [self sendEvent:self.listenerCallbackID with:event data:data];
 }
 
-- (void)onPluginEvent:(NSString *)event with:(NSDictionary*)data {
+- (void)onPluginEvent:(NSString *)eventName with:(NSDictionary*)data {
     if (self.pluginEventListenerCallbackId) {
-        [self sendEvent:self.pluginEventListenerCallbackId with:event data:data];
+        [self sendEvent:self.pluginEventListenerCallbackId with:eventName data:data];
     } else {
-        self.pendingPluginEventName = event;
-        self.pendingPluginEventData = data;
+        TwilioVideoPluginEvent *event = [[TwilioVideoPluginEvent alloc] init];
+        event.name = eventName;
+        event.data = data;
+        [self.pendingPluginEvents addObject:event];
     }
 }
 

@@ -31,7 +31,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
     return self;
 }
 
-- (void)connectToRoom:(void (^)(BOOL))completion {
+- (void)connectToRoom:(void (^)(BOOL, NSError *))completion {
     self.connectionCompletionHandler = completion;
     [self doConnect];
 }
@@ -186,7 +186,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
         self.remoteParticipant = room.remoteParticipants[0];
     }
     
-    self.connectionCompletionHandler(true);
+    self.connectionCompletionHandler(true, nil);
 
     if (self.delegate) { [self.delegate didConnectToRoom:room]; }
 }
@@ -205,7 +205,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
     self.room = nil;
-    self.connectionCompletionHandler(false);
+    self.connectionCompletionHandler(false, error);
     
     if (self.delegate) { [self.delegate room:room didFailToConnectWithError:error]; }
 }

@@ -45,12 +45,13 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         TwilioVideoViewController *vc = [self getTwilioVideoController: call];
         [self.viewController presentViewController:vc animated:NO completion:^{
-            [call connectToRoom:^(BOOL connected) {
+            [call connectToRoom:^(BOOL connected, NSError * _Nullable error) {
                 if (connected) {
                     NSLog(@"Connected twilio video");
                 } else {
-                    NSLog(@"Error connecting twilio video");
+                    NSLog(@"Error connecting twilio video. Error: %@", error ? error.description : @"");
                 }
+
             }];
         }];
     });

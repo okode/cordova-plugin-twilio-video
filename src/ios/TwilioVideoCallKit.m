@@ -136,7 +136,7 @@
     /*
      Perform room connect
      */
-    [call connectToRoom:^(BOOL connected) {
+    [call connectToRoom:^(BOOL connected, NSError * _Nullable error) {
         if (connected) {
             [action fulfill];
             [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.success" with:
@@ -149,6 +149,7 @@
             [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
             @{
                 @"errorCode": @"CONNECTION_ERROR",
+                @"errorDescription": error ? error.description : nil,
                 @"callUUID": [call.callUuid UUIDString],
                 @"extras": call.extras
             }];

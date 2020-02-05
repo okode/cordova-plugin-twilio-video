@@ -49,7 +49,7 @@ extern NSString * _Nonnull const CALL_CLOSED;
 @property (nonatomic, strong) TVIRoom * _Nullable room;
 
 #pragma mark Connection callback
-@property (nonatomic, strong) void (^ _Nullable connectionCompletionHandler)(BOOL connected);
+@property (nonatomic, strong) void (^ _Nullable connectionCompletionHandler)(BOOL connected, NSError * _Nullable error);
 #pragma mark Disconnection callback
 @property (nonatomic, strong) NSMutableArray<void (^)(void)> * _Nullable endCallSubscribers;
 
@@ -61,7 +61,7 @@ extern NSString * _Nonnull const CALL_CLOSED;
 
 - (id _Nonnull )initWithUUID:(NSUUID*_Nullable)uuid room:(NSString*_Nullable)roomName token:(NSString*_Nullable)token isCallKitCall:(BOOL)isCallKitCall;
 - (void)connectLocalVideoWithDelegate:(nullable id<TVICameraCapturerDelegate>)delegate;
-- (void)connectToRoom:(void (^_Nullable)(BOOL connected))completion;
+- (void)connectToRoom:(void (^_Nullable)(BOOL connected, NSError * _Nullable error))completion;
 - (void)endCall;
 - (void)endCall:(void (^_Nullable)(void))completion;
 - (void)muteAudio:(BOOL)isMuted;

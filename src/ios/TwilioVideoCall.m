@@ -160,6 +160,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
     for (int i = 0; i < [self.endCallSubscribers count]; i++) {
         [self.endCallSubscribers objectAtIndex:i]();
     }
+    [self.endCallSubscribers removeAllObjects];
 }
         
 - (void)disconnectRoom:(void (^)(void))completion {

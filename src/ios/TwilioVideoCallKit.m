@@ -173,11 +173,6 @@
         NSLog(@"Ended call");
     }];
     [action fulfill];
-    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.callkitend" with:
-    @{
-        @"callUUID": [call.callUuid UUIDString],
-        @"extras": call.extras
-    }];
     [[TwilioVideoCallManager getInstance] removeCallByUUID:call.callUuid];	
 }
 

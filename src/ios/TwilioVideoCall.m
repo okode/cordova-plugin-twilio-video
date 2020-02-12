@@ -34,6 +34,8 @@ NSString *const CALL_CLOSED = @"CLOSED";
 - (void)connectToRoom:(void (^)(BOOL, NSError *))completion {
     self.connectionCompletionHandler = completion;
     [self doConnect];
+    // Registering custom actions delegate
+    [[TwilioVideoEventManager getInstance] setActionDelegate:self];
 }
 
 - (void)endCall {
@@ -42,7 +44,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
 
 - (void)endCall:(void (^)(void))completion {
     if (!self.isEndCallEventSent && self.config.hangUpInApp) {
-        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.callend" with:@{
+        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.callhangup" with:@{
             @"callUUID": [self.callUuid UUIDString],
             @"extras": self.extras
         }];
@@ -142,8 +144,6 @@ NSString *const CALL_CLOSED = @"CLOSED";
     }];
     // Connect to the Room using the options we provided.
     self.room = [TwilioVideo connectWithOptions:connectOptions delegate:self];
-    // Registering custom actions delegate
-    [[TwilioVideoEventManager getInstance] setActionDelegate:self];
 }
 
 - (void)performCallKitEndCallAction:(void (^)(NSError *_Nullable error))completion {
@@ -209,6 +209,11 @@ NSString *const CALL_CLOSED = @"CLOSED";
     [self performCallKitEndCallAction:nil];
         
     [self notifyEndCallSubscribers];
+    
+    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.calldisconnected" with:@{
+        @"callUUID": [self.callUuid UUIDString],
+        @"extras": self.extras
+    }];
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{

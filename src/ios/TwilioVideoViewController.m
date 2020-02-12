@@ -48,9 +48,15 @@
     }
     
     [self showRoomUI:YES];
-    [self showLocalVideoTrack];
-    [self setRemoteParticipantDelegate];
-    [self showRemoteParticipantVideoTrack];
+
+    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
+         if (grantedPermissions) {
+             [self doConnect];
+         } else {
+             [[TwilioVideoManager getInstance] publishEvent: PERMISSIONS_REQUIRED];
+             [self handleConnectionError: [self.config i18nConnectionError]];
+         }
+    }];
 }
 
 #pragma mark - UI listeners

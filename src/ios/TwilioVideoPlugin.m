@@ -1,4 +1,5 @@
 #import "TwilioVideoPlugin.h"
+#import <AVFoundation/AVFoundation.h>
 
 @implementation TwilioVideoPlugin
 
@@ -90,6 +91,19 @@
             NSLog(@"Displayed incoming call");
         }];
     });
+}
+
+- (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command {
+    BOOL hasRequiredPermissions = [TwilioVideoPermissions hasRequiredPermissions];
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasRequiredPermissions] callbackId:command.callbackId];
+}
+
+- (void)requestPermissions:(CDVInvokedUrlCommand*)command {
+    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
+                     [self.commandDelegate sendPluginResult:
+         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:grantedPermissions]
+                                    callbackId:command.callbackId];
+    }];
 }
 
 #pragma mark - Private

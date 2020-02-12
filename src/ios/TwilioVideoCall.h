@@ -18,6 +18,7 @@ extern NSString * _Nonnull const CALL_AUDIO_TRACK_ADDED;
 extern NSString * _Nonnull const CALL_AUDIO_TRACK_REMOVED;
 extern NSString * _Nonnull const CALL_VIDEO_TRACK_ADDED;
 extern NSString * _Nonnull const CALL_VIDEO_TRACK_REMOVED;
+extern NSString * _Nonnull const CALL_PERMISSIONS_REQUIRED;
 extern NSString * _Nonnull const CALL_HANG_UP;
 extern NSString * _Nonnull const CALL_CLOSED;
 

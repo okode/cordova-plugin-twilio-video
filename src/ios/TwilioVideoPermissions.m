@@ -8,4 +8,13 @@
     return videoPermissionStatus == AVAuthorizationStatusAuthorized && audioPermissionStatus == AVAudioSessionRecordPermissionGranted;
 }
 
++ (void)requestRequiredPermissions:(void (^)(BOOL))response {
+    [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL grantedCamera)
+    {
+        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL grantedAudio) {
+            if (response) { response(grantedAudio && grantedCamera); }
+        }];
+    }];
+}
+
 @end

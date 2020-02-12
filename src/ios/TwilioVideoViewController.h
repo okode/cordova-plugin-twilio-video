@@ -7,6 +7,7 @@
 @import CallKit;
 #import "TwilioVideoEventManager.h"
 #import "TwilioVideoCall.h"
+#import "TwilioVideoPermissions.h"
 
 @interface TwilioVideoViewController: UIViewController <TwilioVideoCallDelegate, TVIRemoteParticipantDelegate, TVICameraCapturerDelegate>
 
@@ -26,5 +27,3 @@
 @property (nonatomic, weak) IBOutlet UIButton *videoButton;
 
 @end
-
-

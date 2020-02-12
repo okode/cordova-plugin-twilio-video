@@ -2,12 +2,14 @@
 
 #define PRIMARY_COLOR_PROP                  @"primaryColor"
 #define SECONDARY_COLOR_PROP                @"secondaryColor"
+#define HANG_UP_IN_APP_PROP                 @"hangUpInApp"
 
 @implementation TwilioVideoConfig
 -(void) parse:(NSDictionary*)config {
     if (config == NULL || config == (id)[NSNull null]) { return; }
     self.primaryColorHex = [config objectForKey:PRIMARY_COLOR_PROP];
     self.secondaryColorHex = [config objectForKey:SECONDARY_COLOR_PROP];
+    self.hangUpInApp = [config objectForKey:HANG_UP_IN_APP_PROP];
 }
 
 + (UIColor *)colorFromHexString:(NSString *)hexString {

@@ -26,7 +26,7 @@ extern NSString * _Nonnull const CALL_CLOSED;
 - (void)videoChanged:(BOOL)isDisabled;
 @end
 
-@interface TwilioVideoCall: NSObject <TVIRoomDelegate>
+@interface TwilioVideoCall: NSObject <TVIRoomDelegate, TwilioVideoActionProducerDelegate>
     
 @property (nonatomic, weak) _Nullable id <TwilioVideoCallDelegate> delegate;
 
@@ -55,6 +55,7 @@ extern NSString * _Nonnull const CALL_CLOSED;
 
 #pragma mark Flag
 @property BOOL isEndCallNotifiedToCallKit;
+@property BOOL isEndCallEventSent;
 
 #pragma mark CallKit
 @property (nonatomic, strong) CXCallController * _Nullable callKitCallController;

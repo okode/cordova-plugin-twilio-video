@@ -4,9 +4,20 @@
 
 @import CallKit;
 #import "TwilioVideoCallManager.h"
-#import "TwilioVideoViewController.h"
 #import "TwilioVideoEventManager.h"
 #import "TwilioVideoPermissions.h"
+
+@interface TwilioVideoCallKitIncomingCall: NSObject
+@property NSUUID* _Nullable uuid;
+@property NSString* _Nullable roomName;
+@property NSString* _Nullable token;
+@property BOOL hangUpInApp;
+@property NSString* _Nullable caller;
+@property NSDictionary* _Nullable extras;
+@end
+
+@implementation TwilioVideoCallKitIncomingCall
+@end
 
 @interface TwilioVideoCallKit: NSObject <CXProviderDelegate>
 
@@ -14,7 +25,8 @@
 @property (nonatomic, strong) CXProvider * _Nullable callKitProvider;
 
 + (instancetype _Nonnull)getInstance;
-- (void)reportIncomingCallWith:(NSUUID*_Nullable)uuid roomName:(NSString*_Nullable)roomName token:(NSString*_Nullable)token caller:(NSString*_Nullable)caller extras:(NSDictionary*_Nullable)extras completion:(void (^_Nullable)(NSError *_Nullable error))completion;
+- (void)reportIncomingCallWith:(TwilioVideoCallKitIncomingCall*_Nonnull)incomingCall completion:(void (^_Nullable)(NSError *_Nullable error))completion;
+- (void)reportEndCallWith:(NSUUID*_Nullable)uuid;
 - (BOOL)handleContinueActivity:(NSUserActivity* _Nullable)userActivity;
 @end
 

@@ -29,8 +29,8 @@
     return self;
 }
 
-- (void)reportIncomingCallWith:(NSUUID*)uuid roomName:(NSString*)roomName token:(NSString*)token caller:(NSString*)caller extras:(NSDictionary*)extras completion:(void (^)(NSError *_Nullable error))completion {
-    CXHandle *callHandle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:caller != nil ? caller : @""];
+- (void)reportIncomingCallWith:(TwilioVideoCallKitIncomingCall*_Nonnull)incomingCall completion:(void (^_Nullable)(NSError *_Nullable error))completion {
+    CXHandle *callHandle = [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:incomingCall.caller != nil ? incomingCall.caller : @""];
     CXCallUpdate *callUpdate = [[CXCallUpdate alloc] init];
     [callUpdate setRemoteHandle:callHandle];
     [callUpdate setSupportsDTMF:false];
@@ -38,17 +38,22 @@
     [callUpdate setSupportsUngrouping:false];
     [callUpdate setHasVideo:true];
     
-    [self.callKitProvider reportNewIncomingCallWithUUID:uuid update:callUpdate completion:^(NSError * _Nullable error) {
+    [self.callKitProvider reportNewIncomingCallWithUUID:incomingCall.uuid update:callUpdate completion:^(NSError * _Nullable error) {
         if (error == nil) {
             NSLog(@"Incoming call successfully reported.");
-            TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:uuid room:roomName token:token isCallKitCall:true];
-            call.extras = extras;
+            TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:incomingCall.uuid room:incomingCall.roomName token:incomingCall.token isCallKitCall:true];
+            call.extras = incomingCall.extras;
+            call.config.hangUpInApp = incomingCall.hangUpInApp;
             [[TwilioVideoCallManager getInstance] addCall:call];
         } else {
             NSLog(@"Failed to report incoming call successfully: %@", error.localizedDescription);
         }
         completion(error);
     }];
+}
+
+- (void)reportEndCallWith:(NSUUID*)uuid {
+    [self.callKitProvider reportCallWithUUID:uuid endedAtDate:nil reason:CXCallEndedReasonUnanswered];
 }
 
 - (BOOL)handleContinueActivity:(NSUserActivity*)userActivity {
@@ -168,12 +173,12 @@
         NSLog(@"Ended call");
     }];
     [action fulfill];
-    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.callkitend" with:
+    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.callkitend" with:
     @{
         @"callUUID": [call.callUuid UUIDString],
         @"extras": call.extras
     }];
-    [[TwilioVideoCallManager getInstance] removeCallByUUID:call.callUuid];
+    [[TwilioVideoCallManager getInstance] removeCallByUUID:call.callUuid];	
 }
 
 - (void)provider:(CXProvider *)provider performSetMutedCallAction:(CXSetMutedCallAction *)action {

@@ -21,8 +21,6 @@
 
 - (void)viewDidLoad {
     self.call.delegate = self;
-    [[TwilioVideoEventManager getInstance] setActionDelegate:self];
-
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_OPENED];
 
     [self.navigationController setNavigationBarHidden:YES animated:NO];

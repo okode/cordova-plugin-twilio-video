@@ -43,7 +43,7 @@
             NSLog(@"Incoming call successfully reported.");
             TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:incomingCall.uuid room:incomingCall.roomName token:incomingCall.token isCallKitCall:true];
             call.extras = incomingCall.extras;
-            call.config.hangUpInApp = incomingCall.hangUpInApp;
+            call.config = incomingCall.config;
             [[TwilioVideoCallManager getInstance] addCall:call];
         } else {
             NSLog(@"Failed to report incoming call successfully: %@", error.localizedDescription);

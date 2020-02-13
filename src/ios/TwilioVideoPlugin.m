@@ -77,10 +77,6 @@
     self.listenerCallbackID = command.callbackId;
     NSArray *args = command.arguments;
     NSString* callUuid = args[0];
-    TwilioVideoConfig *config = [[TwilioVideoConfig alloc] init];
-    if ([args count] > 1) {
-        [config parse: command.arguments[1]];
-    }
     
     TwilioVideoCall *call = [[TwilioVideoCallManager getInstance] callWithUUID:[[NSUUID alloc] initWithUUIDString:callUuid]];
     
@@ -88,9 +84,7 @@
         NSLog(@"Unknown twilio video call");
         return;
     }
-    
-    call.config = config;
-    
+        
     dispatch_async(dispatch_get_main_queue(), ^{
         TwilioVideoViewController *vc = [self getTwilioVideoController: call];
         [self.viewController presentViewController:vc animated:NO completion:^{

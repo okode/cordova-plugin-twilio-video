@@ -22,14 +22,13 @@ TwilioVideo.closeRoom = function() {
     });
 };
 
-TwilioVideo.displayIncomingCall = function(callUUID, eventCallback, config) {
-    config = config != null ? config : null;
+TwilioVideo.displayIncomingCall = function(callUUID, eventCallback) {
     exec(function(e) {
         console.log("Twilio video event fired: " + e);
         if (eventCallback) {
             eventCallback(e.event, e.data);
         }
-    }, null, 'TwilioVideoPlugin', 'displayIncomingCall', [callUUID, config]);
+    }, null, 'TwilioVideoPlugin', 'displayIncomingCall', [callUUID]);
 };
 
 TwilioVideo.addListener = function(eventCallback) {

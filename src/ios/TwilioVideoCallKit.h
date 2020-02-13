@@ -11,9 +11,9 @@
 @property NSUUID* _Nullable uuid;
 @property NSString* _Nullable roomName;
 @property NSString* _Nullable token;
-@property BOOL hangUpInApp;
 @property NSString* _Nullable caller;
 @property NSDictionary* _Nullable extras;
+@property TwilioVideoConfig* _Nonnull config;
 @end
 
 @implementation TwilioVideoCallKitIncomingCall

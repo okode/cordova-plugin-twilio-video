@@ -46,13 +46,19 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         TwilioVideoViewController *vc = [self getTwilioVideoController: call];
         [self.viewController presentViewController:vc animated:NO completion:^{
-            [call connectToRoom:^(BOOL connected, NSError * _Nullable error) {
-                if (connected) {
-                    NSLog(@"Connected twilio video");
-                } else {
-                    NSLog(@"Error connecting twilio video. Error: %@", error ? error.description : @"");
-                }
-
+            [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
+                 if (grantedPermissions) {
+                     [call connectToRoom:^(BOOL connected, NSError * _Nullable error) {
+                         if (connected) {
+                             NSLog(@"Connected twilio video");
+                         } else {
+                             NSLog(@"Error connecting twilio video. Error: %@", error ? error.description : @"");
+                         }
+                     }];
+                 } else {
+                     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_PERMISSIONS_REQUIRED];
+                     [vc dismiss];
+                 }
             }];
         }];
     });

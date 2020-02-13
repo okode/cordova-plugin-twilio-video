@@ -26,4 +26,6 @@
 @property (nonatomic, weak) IBOutlet UIButton *cameraSwitchButton;
 @property (nonatomic, weak) IBOutlet UIButton *videoButton;
 
+- (void)dismiss;
+
 @end

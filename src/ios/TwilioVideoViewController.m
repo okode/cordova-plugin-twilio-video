@@ -20,13 +20,21 @@
 }
 
 - (void)viewDidLoad {
-    self.call.delegate = self;
-    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_OPENED];
-
-    [self.navigationController setNavigationBarHidden:YES animated:NO];
-    
     [self logMessage:[NSString stringWithFormat:@"TwilioVideo v%@", [TwilioVideo version]]];
     
+    [UIApplication sharedApplication].idleTimerDisabled = true;
+
+    self.call.delegate = self;
+    
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_OPENED];
+    
+    [self setUpViewControllerOnStart];
+    [self initCall];
+}
+
+- (void)setUpViewControllerOnStart {
+    [self.navigationController setNavigationBarHidden:YES animated:NO];
+
     // Disconnect and mic button will be displayed when client is connected to a room.
     self.micButton.hidden = YES;
     [self.micButton setImage:[UIImage imageNamed:@"mic"] forState: UIControlStateNormal];
@@ -46,17 +54,13 @@
         self.videoButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
         self.cameraSwitchButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
     }
-    
-    [self showRoomUI:YES];
+}
 
-    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
-         if (grantedPermissions) {
-             [self doConnect];
-         } else {
-             [[TwilioVideoManager getInstance] publishEvent: PERMISSIONS_REQUIRED];
-             [self handleConnectionError: [self.config i18nConnectionError]];
-         }
-    }];
+- (void)initCall {
+    [self showMicButton:YES];
+    [self showLocalVideoTrack];
+    [self setRemoteParticipantDelegate];
+    [self showRemoteParticipantVideoTrack];
 }
 
 #pragma mark - UI listeners
@@ -151,10 +155,13 @@
 }
 
 // Reset the client ui status
-- (void)showRoomUI:(BOOL)inRoom {
-    self.micButton.hidden = !inRoom;
+- (void)showMicButton:(BOOL)show {
+    self.micButton.hidden = !show;
+    [self updateMicButtonStatus];
+}
+
+- (void)updateMicButtonStatus {
     [self.micButton setSelected:self.call.localAudioTrack ? !self.call.localAudioTrack.isEnabled : false];
-    [UIApplication sharedApplication].idleTimerDisabled = inRoom;
 }
 
 - (void)setRemoteParticipantDelegate {
@@ -208,7 +215,7 @@
 
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
     [self cleanupRemoteParticipant];
-    [self showRoomUI:false];
+    [self showMicButton:false];
     if (error != NULL) {
         [[TwilioVideoEventManager getInstance] publishCallEvent:CALL_DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
     } else {
@@ -218,7 +225,7 @@
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
-    [self showRoomUI:NO];
+    [self showMicButton:false];
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CONNECT_FAILURE];
     [self dismiss];
 }
@@ -383,12 +390,6 @@
 
 - (void)cameraCapturer:(TVICameraCapturer *)capturer didStartWithSource:(TVICameraCaptureSource)source {
     self.previewView.mirror = (source == TVICameraCaptureSourceFrontCamera);
-}
-
-#pragma mark - TwilioVideoActionProducerDelegate
-
-- (void)onDisconnect {
-    [self.call endCall];
 }
 
 @end

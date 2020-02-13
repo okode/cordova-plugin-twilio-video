@@ -25,8 +25,9 @@ declare module TwilioVideo {
      * our own controls from the application that uses the plugin.
      * @param uuid 
      * @param onEvent - (Optional) It will be fired any time that a call event is received
+     * @param onError - (Optional) It will be fired any time that there is an error
      */
-    displayIncomingCall(callUUID: string, onEvent?: Function): void;
+    displayIncomingCall(callUUID: string, onEvent?: Function, onError?: Function): void;
 
     /**
      * Allows you to register a plugin event listener.

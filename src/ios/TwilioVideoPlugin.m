@@ -74,16 +74,19 @@
 }
 
 - (void)displayIncomingCall:(CDVInvokedUrlCommand*)command {
-    self.listenerCallbackID = command.callbackId;
     NSArray *args = command.arguments;
     NSString* callUuid = args[0];
     
     TwilioVideoCall *call = [[TwilioVideoCallManager getInstance] callWithUUID:[[NSUUID alloc] initWithUUIDString:callUuid]];
     
-    if (call == nil) {
-        NSLog(@"Unknown twilio video call");
+    if (call == nil || call.room == nil) {
+        NSLog(@"Unknown twilio video call or disconnected");
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Unknown twilio video call or disconnected"];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
         return;
     }
+    
+    self.listenerCallbackID = command.callbackId;
         
     dispatch_async(dispatch_get_main_queue(), ^{
         TwilioVideoViewController *vc = [self getTwilioVideoController: call];

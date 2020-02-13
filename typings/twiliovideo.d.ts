@@ -29,6 +29,12 @@ declare module TwilioVideo {
     displayIncomingCall(callUUID: string, onEvent?: Function): void;
 
     /**
+     * Allows you to register a plugin event listener.
+     * @param eventCallback 
+     */
+    addListener(eventCallback: (eventName: string, eventData: any) => void):
+
+    /**
      * Check if the plugin has required permissions (Camera and Microphone)
      * @return If user has granted all permissions or not
      */

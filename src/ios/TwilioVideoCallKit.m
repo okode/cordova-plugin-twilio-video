@@ -79,6 +79,7 @@
     CXProviderConfiguration *config = [[CXProviderConfiguration alloc] initWithLocalizedName: appName ? appName : @"TwilioCallKit"];
     config.maximumCallGroups = 1;
     config.maximumCallsPerCallGroup = 1;
+    config.includesCallsInRecents = false;
     config.supportsVideo = true;
     UIImage *appIcon = [UIImage imageNamed:@"AppIcon"];
     config.iconTemplateImageData = UIImagePNGRepresentation(appIcon);

@@ -65,7 +65,9 @@
 }
 
 - (void)closeRoom:(CDVInvokedUrlCommand*)command {
-    if ([[TwilioVideoEventManager getInstance] publishDisconnection]) {
+    NSArray *args = command.arguments;
+    NSString* callUuid = args[0];
+    if ([[TwilioVideoEventManager getInstance] publishDisconnection:callUuid]) {
         [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK] callbackId:command.callbackId];
     } else {
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Twilio video is not running"];

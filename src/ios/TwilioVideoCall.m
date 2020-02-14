@@ -237,8 +237,10 @@ NSString *const CALL_CLOSED = @"CLOSED";
 
 #pragma mark - TwilioVideoActionProducerDelegate
 
-- (void)onDisconnect {
-    [self endCall];
+- (void)onDisconnect:(NSString*)callUUID {
+    if (!callUUID || [[self.callUuid UUIDString] isEqualToString:callUUID]) {
+        [self endCall];
+    }
 }
 
 @end

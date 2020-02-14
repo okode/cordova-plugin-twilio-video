@@ -6,7 +6,7 @@
 @end
 
 @protocol TwilioVideoActionProducerDelegate <NSObject>
-- (void)onDisconnect;
+- (void)onDisconnect:(NSString*)callUUID;
 @end
 
 @interface TwilioVideoEventManager : NSObject
@@ -16,5 +16,5 @@
 - (void)publishCallEvent:(NSString*)event;
 - (void)publishCallEvent:(NSString*)event with:(NSDictionary*)data;
 - (void)publishPluginEvent:(NSString*)event with:(NSDictionary*)data;
-- (BOOL)publishDisconnection;
+- (BOOL)publishDisconnection:(NSString*)callUUID;
 @end

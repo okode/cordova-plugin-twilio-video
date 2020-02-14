@@ -29,9 +29,9 @@
     }
 }
 
-- (BOOL)publishDisconnection {
+- (BOOL)publishDisconnection:(NSString*)callUUID {
     if (self.actionDelegate != NULL) {
-        [self.actionDelegate onDisconnect];
+        [self.actionDelegate onDisconnect:callUUID];
         return true;
     }
     return false;

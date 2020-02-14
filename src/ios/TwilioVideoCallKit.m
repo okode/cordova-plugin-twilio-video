@@ -36,6 +36,7 @@
     [callUpdate setSupportsDTMF:false];
     [callUpdate setSupportsGrouping:false];
     [callUpdate setSupportsUngrouping:false];
+    [callUpdate setSupportsHolding:false];
     [callUpdate setHasVideo:true];
     
     [self.callKitProvider reportNewIncomingCallWithUUID:incomingCall.uuid update:callUpdate completion:^(NSError * _Nullable error) {
@@ -63,7 +64,7 @@
         return false;
     }
     if (userActivity &&  [userActivity.activityType isEqualToString:@"INStartVideoCallIntent"]) {
-        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.videorequested" with:
+        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.videorequested" with:
         @{
             @"callUUID": [answerCall.callUuid UUIDString],
             @"extras": answerCall.extras

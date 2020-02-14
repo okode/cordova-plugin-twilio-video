@@ -21,6 +21,8 @@
 - (void)openRoom:(CDVInvokedUrlCommand*)command;
 - (void)closeRoom:(CDVInvokedUrlCommand*)command;
 - (void)displayIncomingCall:(CDVInvokedUrlCommand*)command;
+- (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command;
+- (void)requestPermissions:(CDVInvokedUrlCommand*)command;
 
 @end
 

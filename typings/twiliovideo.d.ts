@@ -24,7 +24,7 @@ declare module TwilioVideo {
     closeRoom(): Promise<void>;
 
     /**
-     * Check if the plugin has required permissions (Camera and Microphone)
+     * Check if the user granted all required permissions (Camera and Microphone)
      * @return If user has granted all permissions or not
      */
     hasRequiredPermissions(): Promise<boolean>;

@@ -20,8 +20,14 @@ NSString *const CALL_CLOSED = @"CLOSED";
 
 @implementation TwilioVideoCall
 
+- (id)init {
+    @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                   reason:@"-init is not a valid initializer for the class TwilioVideoCall"
+                                 userInfo:nil];
+    return nil;
+}
+
 - (id)initWithUUID:(NSUUID*)uuid room:(NSString*)roomName token:(NSString*)token isCallKitCall:(BOOL)isCallKitCall {
-    self = [self init];
     self.callUuid = uuid;
     self.accessToken = token;
     self.roomName = roomName;
@@ -29,6 +35,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
     self.config = [[TwilioVideoConfig alloc] init];
     self.callKitCallController = [[CXCallController alloc] init];
     self.endCallSubscribers = [NSMutableArray new];
+    self.callState = Initial;
     return self;
 }
 
@@ -44,11 +51,12 @@ NSString *const CALL_CLOSED = @"CLOSED";
 }
 
 - (void)endCall:(void (^)(void))completion {
+    if (!self.room) {
+        completion();
+        return;
+    }
     if (!self.isEndCallEventSent && self.config.hangUpInApp) {
-        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.callhangup" with:@{
-            @"callUUID": [self.callUuid UUIDString],
-            @"extras": self.extras
-        }];
+        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.callhangup" with:[self getMetadata]];
         self.isEndCallEventSent = true;
     } else if (!self.isEndCallNotifiedToCallKit && self.isCallKitCall) {
         [self performCallKitEndCallAction:^(NSError * _Nullable error) {
@@ -65,9 +73,18 @@ NSString *const CALL_CLOSED = @"CLOSED";
 }
 
 - (void)muteAudio:(BOOL)isMuted {
-    if (!self.localAudioTrack) { return; }
-    self.localAudioTrack.enabled = !isMuted;
-    if (self.delegate) { [self.delegate audioChanged:isMuted]; }
+    if (!self.isMuteActionNotifiedToCallKit && self.isCallKitCall) {
+        [self performCallKitMuteAction:isMuted with:^(NSError * _Nullable error) {
+            if (error != nil) {
+                NSLog(@"Mute call anyway");
+                [self setAudioState:isMuted];
+            } else {
+                NSLog(@"Call muted");
+            }
+        }];
+    } else {
+        [self setAudioState:isMuted];
+    }
 }
 
 - (void)switchCamera {
@@ -103,21 +120,12 @@ NSString *const CALL_CLOSED = @"CLOSED";
     }
 }
 
-- (void)performUIMuteAction:(BOOL)isMuted {
-    if (self.isCallKitCall) {
-        CXSetMutedCallAction *muteAction = [[CXSetMutedCallAction alloc] initWithCallUUID:self.callUuid muted:isMuted];
-        CXTransaction *transaction = [[CXTransaction alloc] initWithAction:muteAction];
-        
-        [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
-            if (error != nil) {
-                NSLog(@"CXSetMutedCallAction transaction request failed: %@", error.localizedDescription);
-                return;
-            }
-            NSLog(@"CXSetMutedCallAction transaction request successful");
-        }];
-    } else {
-        [self muteAudio:isMuted];
-    }
+- (NSDictionary*)getMetadata {
+    return @{
+        @"callUUID": [self.callUuid UUIDString],
+        @"businessId": self.businessId ? self.businessId : [NSNull new],
+        @"extras": self.extras ? self.extras : [NSNull new]
+    };
 }
 
 #pragma mark Private
@@ -144,6 +152,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
         }
     }];
     // Connect to the Room using the options we provided.
+    self.callState = Connecting;
     self.room = [TwilioVideo connectWithOptions:connectOptions delegate:self];
 }
 
@@ -181,6 +190,26 @@ NSString *const CALL_CLOSED = @"CLOSED";
     [self.room disconnect];
 }
 
+- (void)performCallKitMuteAction:(BOOL)isMuted with:(void (^)(NSError *_Nullable error))completion {
+    CXSetMutedCallAction *muteAction = [[CXSetMutedCallAction alloc] initWithCallUUID:self.callUuid muted:isMuted];
+    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:muteAction];
+
+    [self.callKitCallController requestTransaction:transaction completion:^(NSError * _Nullable error) {
+        if (error != nil) {
+            NSLog(@"CXSetMutedCallAction transaction request failed: %@", error.localizedDescription);
+        } else {
+            NSLog(@"CXSetMutedCallAction transaction request successful");
+        }
+        if (completion) { completion(error); }
+    }];
+}
+
+- (void)setAudioState:(BOOL)isMuted {
+    if (!self.localAudioTrack) { return; }
+    self.localAudioTrack.enabled = !isMuted;
+    if (self.delegate) { [self.delegate audioChanged:isMuted]; }
+}
+
 #pragma mark - Utils
 
 - (void)logMessage:(NSString *)msg {
@@ -190,6 +219,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
 #pragma mark - TVIRoomDelegate
 
 - (void)didConnectToRoom:(TVIRoom *)room {
+    self.callState = Connected;
     // At the moment, this example only supports rendering one Participant at a time.
     if (room.remoteParticipants.count > 0) {
         self.remoteParticipant = room.remoteParticipants[0];
@@ -201,6 +231,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
 }
 
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
+    self.callState = Disconnected;
     self.room = nil;
     self.connectionCompletionHandler = nil;
     
@@ -211,13 +242,11 @@ NSString *const CALL_CLOSED = @"CLOSED";
         
     [self notifyEndCallSubscribers];
     
-    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.calldisconnected" with:@{
-        @"callUUID": [self.callUuid UUIDString],
-        @"extras": self.extras
-    }];
+    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.calldisconnected" with:[self getMetadata]];
 }
 
-- (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
+- (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error {
+    self.callState = Failed;
     self.room = nil;
     self.connectionCompletionHandler(false, error);
     

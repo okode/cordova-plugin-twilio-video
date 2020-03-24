@@ -8,7 +8,8 @@
 #import "TwilioVideoPermissions.h"
 
 @interface TwilioVideoCallKitIncomingCall: NSObject
-@property NSUUID* _Nullable uuid;
+@property NSUUID* _Nonnull uuid;
+@property NSString* _Nullable businessId;
 @property NSString* _Nullable roomName;
 @property NSString* _Nullable token;
 @property NSString* _Nullable caller;
@@ -28,6 +29,7 @@
 - (void)reportIncomingCallWith:(TwilioVideoCallKitIncomingCall*_Nonnull)incomingCall completion:(void (^_Nullable)(NSError *_Nullable error))completion;
 - (void)reportEndCallWith:(NSUUID*_Nullable)uuid;
 - (BOOL)handleContinueActivity:(NSUserActivity* _Nullable)userActivity;
+
 @end
 
 

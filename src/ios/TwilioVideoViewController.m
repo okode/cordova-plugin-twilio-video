@@ -35,8 +35,6 @@
 - (void)setUpViewControllerOnStart {
     [self.navigationController setNavigationBarHidden:YES animated:NO];
 
-    // Disconnect and mic button will be displayed when client is connected to a room.
-    self.micButton.hidden = YES;
     [self.micButton setImage:[UIImage imageNamed:@"mic"] forState: UIControlStateNormal];
     [self.micButton setImage:[UIImage imageNamed:@"no_mic"] forState: UIControlStateSelected];
     [self.videoButton setImage:[UIImage imageNamed:@"video"] forState: UIControlStateNormal];
@@ -57,7 +55,7 @@
 }
 
 - (void)initCall {
-    [self showMicButton:YES];
+    [self updateMicButtonStatus];
     [self showLocalVideoTrack];
     [self setRemoteParticipantDelegate];
     [self showRemoteParticipantVideoTrack];
@@ -70,7 +68,7 @@
 }
 
 - (IBAction)micButtonPressed:(id)sender {
-    [self.call performUIMuteAction:self.call.localAudioTrack.enabled];
+    [self.call muteAudio:self.call.localAudioTrack.enabled];
 }
 
 - (IBAction)cameraSwitchButtonPressed:(id)sender {
@@ -154,12 +152,6 @@
     [self.view addConstraint:height];
 }
 
-// Reset the client ui status
-- (void)showMicButton:(BOOL)show {
-    self.micButton.hidden = !show;
-    [self updateMicButtonStatus];
-}
-
 - (void)updateMicButtonStatus {
     [self.micButton setSelected:self.call.localAudioTrack ? !self.call.localAudioTrack.isEnabled : false];
 }
@@ -172,13 +164,13 @@
 
 - (void)showRemoteParticipantVideoTrack {
     if (self.call.remoteParticipant && [self.call.remoteParticipant.videoTracks count] > 0) {
-        TVIRemoteVideoTrack *videoTrack = self.call.remoteParticipant.remoteVideoTracks[0].remoteTrack;
         [self setupRemoteView];
+        TVIRemoteVideoTrack *videoTrack = self.call.remoteParticipant.remoteVideoTracks[0].remoteTrack;
         [videoTrack addRenderer:self.remoteView];
     }
 }
 
-- (void)cleanupRemoteParticipant {
+- (void)removeRemoteParticipantVideoTrack {
     if (self.call.remoteParticipant) {
         if ([self.call.remoteParticipant.videoTracks count] > 0) {
             TVIRemoteVideoTrack *videoTrack = self.call.remoteParticipant.remoteVideoTracks[0].remoteTrack;
@@ -193,19 +185,6 @@
     [self dismissViewControllerAnimated:NO completion:nil];
 }
 
-#pragma mark Utils
-
-- (BOOL)isSimulator {
-#if TARGET_IPHONE_SIMULATOR
-    return YES;
-#endif
-    return NO;
-}
-
-- (void)logMessage:(NSString *)msg {
-    NSLog(@"%@", msg);
-}
-
 #pragma mark - TwilioVideoCallDelegate
 
 - (void)didConnectToRoom:(TVIRoom *)room {
@@ -214,8 +193,8 @@
 }
 
 - (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
-    [self cleanupRemoteParticipant];
-    [self showMicButton:false];
+    [self removeRemoteParticipantVideoTrack];
+    [self updateMicButtonStatus];
     if (error != NULL) {
         [[TwilioVideoEventManager getInstance] publishCallEvent:CALL_DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
     } else {
@@ -225,7 +204,7 @@
 }
 
 - (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
-    [self showMicButton:false];
+    [self updateMicButtonStatus];
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CONNECT_FAILURE];
     [self dismiss];
 }
@@ -236,7 +215,7 @@
 }
 
 - (void)room:(TVIRoom *)room participantDidDisconnect:(TVIRemoteParticipant *)participant {
-    [self cleanupRemoteParticipant];
+    [self removeRemoteParticipantVideoTrack];
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_PARTICIPANT_DISCONNECTED];
 }
 
@@ -390,6 +369,19 @@
 
 - (void)cameraCapturer:(TVICameraCapturer *)capturer didStartWithSource:(TVICameraCaptureSource)source {
     self.previewView.mirror = (source == TVICameraCaptureSourceFrontCamera);
+}
+
+#pragma mark Utils
+
+- (BOOL)isSimulator {
+#if TARGET_IPHONE_SIMULATOR
+    return YES;
+#endif
+    return NO;
+}
+
+- (void)logMessage:(NSString *)msg {
+    NSLog(@"%@", msg);
 }
 
 @end

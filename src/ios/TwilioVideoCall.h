@@ -27,22 +27,32 @@ extern NSString * _Nonnull const CALL_CLOSED;
 - (void)videoChanged:(BOOL)isDisabled;
 @end
 
+typedef NS_ENUM(NSUInteger, State) {
+    Initial = 0,
+    Connecting,
+    Connected,
+    Disconnected,
+    Failed
+};
+
 @interface TwilioVideoCall: NSObject <TVIRoomDelegate, TwilioVideoActionProducerDelegate>
     
 @property (nonatomic, weak) _Nullable id <TwilioVideoCallDelegate> delegate;
 
 #pragma mark Twilio call context properties
 
+@property (nonatomic, strong) NSUUID * _Nonnull callUuid;
+@property (nonatomic, strong) NSString * _Nullable businessId;
 @property (nonatomic, strong) NSString * _Nullable roomName;
 @property (nonatomic, strong) NSString * _Nullable accessToken;
-@property (nonatomic, strong) NSUUID * _Nullable callUuid;
 @property (nonatomic, strong) TwilioVideoConfig * _Nullable config;
 @property (nonatomic, strong) NSDictionary * _Nullable extras;
 @property BOOL isCallKitCall;
+@property BOOL isAnsweredByCallKit;
+@property State callState;
 
 #pragma mark Video SDK components
 
-// @property (nonatomic, strong) TVIDefaultAudioDevice *audioDevice;
 @property (nonatomic, strong) TVICameraCapturer * _Nullable camera;
 @property (nonatomic, strong) TVILocalVideoTrack * _Nullable localVideoTrack;
 @property (nonatomic, strong) TVILocalAudioTrack * _Nullable localAudioTrack;
@@ -54,9 +64,10 @@ extern NSString * _Nonnull const CALL_CLOSED;
 #pragma mark Disconnection callback
 @property (nonatomic, strong) NSMutableArray<void (^)(void)> * _Nullable endCallSubscribers;
 
-#pragma mark Flag
+#pragma mark Flags
 @property BOOL isEndCallNotifiedToCallKit;
 @property BOOL isEndCallEventSent;
+@property BOOL isMuteActionNotifiedToCallKit;
 
 #pragma mark CallKit
 @property (nonatomic, strong) CXCallController * _Nullable callKitCallController;
@@ -70,7 +81,7 @@ extern NSString * _Nonnull const CALL_CLOSED;
 - (void)switchCamera;
 - (void)stopCamera;
 - (void)disableVideo:(BOOL)isDisabled;
-- (void)performUIMuteAction:(BOOL)isMuted;
+- (NSDictionary*_Nonnull)getMetadata;
 
 @end
 

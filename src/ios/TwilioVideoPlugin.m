@@ -33,13 +33,15 @@
     NSArray *args = command.arguments;
     NSString* token = args[0];
     NSString* room = args[1];
+    NSDictionary* extras = command.arguments[2];
     TwilioVideoConfig *config = [[TwilioVideoConfig alloc] init];
     if ([args count] > 2) {
-        [config parse: command.arguments[2]];
+        [config parse: extras];
     }
     
     TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:[NSUUID new] room:room token:token isCallKitCall:false];
     call.config = config;
+    call.businessId = extras ? [extras objectForKey:@"businessId"] : nil;
     
     [TwilioVideoCallManager getInstance].answerCall = call;
 

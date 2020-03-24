@@ -3,7 +3,6 @@
 
 @interface TwilioVideoCallManager: NSObject
 
-@property (nonatomic, strong) CXCallController * _Nullable callKitCallController;
 @property (nonatomic, strong) NSMutableDictionary<NSString*,TwilioVideoCall*> * _Nullable calls;
 @property (nonatomic, strong) TwilioVideoCall * _Nullable answerCall;
 

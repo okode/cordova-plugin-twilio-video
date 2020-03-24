@@ -42,10 +42,18 @@
     [self.callKitProvider reportNewIncomingCallWithUUID:incomingCall.uuid update:callUpdate completion:^(NSError * _Nullable error) {
         if (error == nil) {
             NSLog(@"Incoming call successfully reported.");
-            TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:incomingCall.uuid room:incomingCall.roomName token:incomingCall.token isCallKitCall:true];
-            call.extras = incomingCall.extras;
-            call.config = incomingCall.config;
-            [[TwilioVideoCallManager getInstance] addCall:call];
+            if ([self isBusinessCallAlreadyAnswered: incomingCall.businessId]) {
+                NSLog(@"Ending call with businessId %@ because it was picked up previously", incomingCall.businessId);
+                [self reportEndCallWith:incomingCall.uuid];
+            } else {
+                NSLog(@"Setting up call");
+                TwilioVideoCall *call = [[TwilioVideoCall alloc] initWithUUID:incomingCall.uuid room:incomingCall.roomName token:incomingCall.token isCallKitCall:true];
+                call.extras = incomingCall.extras;
+                call.config = incomingCall.config;
+                call.businessId = incomingCall.businessId;
+                [[TwilioVideoCallManager getInstance] addCall:call];
+                [self startHangUpDaemonIfCallNotAnswered:call];
+            }
         } else {
             NSLog(@"Failed to report incoming call successfully: %@", error.localizedDescription);
         }
@@ -54,7 +62,7 @@
 }
 
 - (void)reportEndCallWith:(NSUUID*)uuid {
-    [self.callKitProvider reportCallWithUUID:uuid endedAtDate:nil reason:CXCallEndedReasonUnanswered];
+    [self.callKitProvider reportCallWithUUID:uuid endedAtDate:nil reason:CXCallEndedReasonAnsweredElsewhere];
 }
 
 - (BOOL)handleContinueActivity:(NSUserActivity*)userActivity {
@@ -64,11 +72,7 @@
         return false;
     }
     if (userActivity &&  [userActivity.activityType isEqualToString:@"INStartVideoCallIntent"]) {
-        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.videorequested" with:
-        @{
-            @"callUUID": [answerCall.callUuid UUIDString],
-            @"extras": answerCall.extras
-        }];
+        [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.videorequested" with:[answerCall getMetadata]];
         return true;
     }
     return false;
@@ -85,6 +89,26 @@
     config.iconTemplateImageData = UIImagePNGRepresentation(appIcon);
     config.supportedHandleTypes = [[NSSet alloc] initWithObjects:[NSNumber numberWithInt: CXHandleTypeGeneric], nil];
     return config;
+}
+
+- (BOOL)isBusinessCallAlreadyAnswered:(NSString*)businessId {
+    if (!businessId) { return false; }
+    TwilioVideoCall *answerCall = [TwilioVideoCallManager getInstance].answerCall;
+    BOOL isAnswerCallConnectingOrConnected =
+        answerCall &&
+        (answerCall.callState == Initial
+        || answerCall.callState == Connecting
+        || answerCall.callState == Connected);
+    return isAnswerCallConnectingOrConnected && [answerCall.businessId isEqualToString:businessId] ;
+}
+
+- (void)startHangUpDaemonIfCallNotAnswered:(TwilioVideoCall*)call {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 30 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+        if (!call.isAnsweredByCallKit) {
+            NSLog(@"Call %@ not answered so it was hanged up", call.callUuid);
+            [self reportEndCallWith:call.callUuid];
+        }
+    });
 }
 
 #pragma mark - Callkit delegate
@@ -105,6 +129,8 @@
         return;
     }
     
+    call.isAnsweredByCallKit = true;
+        
     if ([TwilioVideoCallManager getInstance].answerCall != nil) {
         [[TwilioVideoCallManager getInstance].answerCall endCall:^{
             {
@@ -123,19 +149,14 @@
     [[AVAudioSession sharedInstance] setActive:NO    withOptions:AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
                                   error:nil];
     
-    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.loading" with:
-    @{
-        @"callUUID": [call.callUuid UUIDString],
-        @"extras": call.extras
-    }];
+    [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.loading" with:[call getMetadata]];
 
     if (![TwilioVideoPermissions hasRequiredPermissions]) {
         [action fail];
         [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
         @{
             @"errorCode": @"NO_REQUIRED_PERMISSIONS",
-            @"callUUID": [call.callUuid UUIDString],
-            @"extras": call.extras
+            @"call": [call getMetadata]
         }];
         return;
     }
@@ -146,19 +167,14 @@
     [call connectToRoom:^(BOOL connected, NSError * _Nullable error) {
         if (connected) {
             [action fulfill];
-            [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.success" with:
-            @{
-                @"callUUID": [call.callUuid UUIDString],
-                @"extras": call.extras
-            }];
+            [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.success" with:[call getMetadata]];
         } else {
             [action fail];
             [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.incomingcall.error" with:
             @{
                 @"errorCode": @"CONNECTION_ERROR",
-                @"errorDescription": error ? error.description : nil,
-                @"callUUID": [call.callUuid UUIDString],
-                @"extras": call.extras
+                @"errorDescription": error ? error.description : [NSNull new],
+                @"call": [call getMetadata]
             }];
         }
     }];
@@ -184,6 +200,7 @@
         [action fail];
         return;
     }
+    call.isMuteActionNotifiedToCallKit = true;
     [call muteAudio:action.isMuted];
     [action fulfill];
 }

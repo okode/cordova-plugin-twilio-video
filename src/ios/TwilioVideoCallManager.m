@@ -11,7 +11,7 @@
     return sharedInstance;
 }
 
--(id)init {
+- (id)init {
     self = [super init];
     self.calls = [[NSMutableDictionary alloc] init];
     return self;

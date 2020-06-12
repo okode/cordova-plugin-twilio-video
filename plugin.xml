@@ -26,6 +26,8 @@
         <source-file src="src/ios/TwilioVideoManager.m" />
         <header-file src="src/ios/TwilioVideoConfig.h" />
         <source-file src="src/ios/TwilioVideoConfig.m" />
+        <header-file src="src/ios/TwilioVideoUtils.h" />
+        <source-file src="src/ios/TwilioVideoUtils.m" />
         <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
         <resource-file src="src/ios/Resources/end_call.png" target="Resources/end_call.png" />
         <resource-file src="src/ios/Resources/end_call@2x.png" target="Resources/end_call@2x.png" />

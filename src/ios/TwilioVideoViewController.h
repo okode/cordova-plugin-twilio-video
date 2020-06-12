@@ -3,6 +3,7 @@
 #import "TwilioVideoManager.h"
 #import "TwilioVideoConfig.h"
 #import "TwilioVideoPermissions.h"
+#import "TwilioVideoUtils.h"
 
 @interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraSourceDelegate, TwilioVideoActionProducerDelegate>
 

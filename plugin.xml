@@ -88,7 +88,6 @@
         <source-file src="src/android/TwilioVideoUtils.java" target-dir="src/org/apache/cordova/twiliovideo" />
 
         <framework src="com.google.android.gms:play-services-gcm:+" />
-        <framework src="com.android.support:appcompat-v7:26+" />
         <framework src="src/android/twiliovideo.gradle" custom="true" type="gradleReference" />
         
         <resource-file src="src/android/res/drawable/ic_call_black_24dp.xml" target="res/drawable/ic_call_black_24dp.xml" />

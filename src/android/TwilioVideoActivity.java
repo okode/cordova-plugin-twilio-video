@@ -13,11 +13,11 @@ import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
@@ -41,7 +41,6 @@ import com.twilio.video.VideoRenderer;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collections;
@@ -297,7 +296,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private void connectToRoom() {
         configureAudio(true);
         ConnectOptions.Builder connectOptionsBuilder = new ConnectOptions.Builder(accessToken)
-                .roomName(this.roomId);
+                .roomName(this.roomId)
+                .enableIceGatheringOnAnyAddressPorts(true);
 
         /*
          * Add local audio track to connect options to share with participants.
@@ -456,13 +456,13 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
-                publishEvent(CallEvent.CONNECT_FAILURE);
+                publishEvent(CallEvent.CONNECT_FAILURE, TwilioVideoUtils.convertToJSON(e));
                 TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
             }
 
             @Override
-            public void onReconnecting(@NonNull Room room, @NonNull TwilioException twilioException) {
-                publishEvent(CallEvent.RECONNECTING);
+            public void onReconnecting(@NonNull Room room, @NonNull TwilioException e) {
+                publishEvent(CallEvent.RECONNECTING, TwilioVideoUtils.convertToJSON(e));
             }
 
             @Override
@@ -476,15 +476,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
-                    JSONObject data = null;
-                    try {
-                        data = new JSONObject();
-                        data.put("code", String.valueOf(e.getCode()));
-                        data.put("description", e.getExplanation());
-                    } catch (JSONException e1) {
-                        Log.e(TwilioVideo.TAG, "onDisconnected. Error sending error data");
-                    }
-                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR, data);
+                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR, TwilioVideoUtils.convertToJSON(e));
                     TwilioVideoActivity.this.handleConnectionError(config.getI18nDisconnectedWithError());
                 } else {
                     publishEvent(CallEvent.DISCONNECTED);

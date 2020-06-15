@@ -5,6 +5,8 @@ Cordova Plugin for Twilio Video
 
 **⚡️ CallKit support on [Capacitor projects⚡️](https://capacitor.ionicframework.com/)**
 
+**Important**: This plugin only works on Cordova/Capacitor projects that are using Android with AndroidX. So, if you don't want to have dependency with AndroidX in your Android project for some reason, please use a plugin version earlier than 4.0.
+
 ## Installation
 
 ### Cordova project
@@ -59,10 +61,14 @@ First of all, make your app be able to receive VOIP notifications and once you r
 
 ## Troubleshooting guide
 
-Q: I get this compilation error on Android
-```
-ERROR: Manifest merger failed : Attribute application@appComponentFactory value=(android.support.v4.app.CoreComponentFactory) from [com.android.support:support-compat:28.0.0] AndroidManifest.xml:22:18-91
-```
-A: First, check if your project compiles without this plugin. In that case, verify that any of your transitive dependencies bring AndroidX library because this plugin is not compatible with AndroidX as it uses old Android Support Libraries. At this moment, most Cordova plugins don't use AndroidX library so when Cordova forces plugins community to use AndroidX, we will do it. Anyway, if it is a requirement to compile with AndroiX, try <a href="https://github.com/mikehardy/jetifier">Jetifier<a>.
+Q: I get compilation errors on Android
+
+A: First, check if your project compiles without this plugin. In that case, verify the plugin version you are using on your project because since 4.0 version we just support Cordova/Capacitor projects that are using Android with AndroidX. Below 4.0 version, take into account that this plugin is not compatible with AndroidX as it uses old Android Support Libraries. In that case, to migrate the plugin code to AndroidX, you can do the following:
+
+- Doing what @neerajsaxena0711 says here if you are working on a Cordova project: https://github.com/okode/cordova-plugin-twilio-video/issues/13#issuecomment-639301160
+
+- Or using Jetifier if you are using this plugin on a Capacitor project:
+https://github.com/mikehardy/jetifier
+
 
 

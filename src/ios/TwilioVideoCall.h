@@ -6,12 +6,15 @@
 @import TwilioVideo;
 #import "TwilioVideoEventManager.h"
 #import "TwilioVideoConfig.h"
+#import "TwilioVideoUtils.h"
 
 extern NSString * _Nonnull const CALL_OPENED;
 extern NSString * _Nonnull const CALL_CONNECTED;
 extern NSString * _Nonnull const CALL_CONNECT_FAILURE;
 extern NSString * _Nonnull const CALL_DISCONNECTED;
 extern NSString * _Nonnull const CALL_DISCONNECTED_WITH_ERROR;
+extern NSString * _Nonnull const CALL_RECONNECTING;
+extern NSString * _Nonnull const CALL_RECONNECTED;
 extern NSString * _Nonnull const CALL_PARTICIPANT_CONNECTED;
 extern NSString * _Nonnull const CALL_PARTICIPANT_DISCONNECTED;
 extern NSString * _Nonnull const CALL_AUDIO_TRACK_ADDED;
@@ -53,7 +56,7 @@ typedef NS_ENUM(NSUInteger, State) {
 
 #pragma mark Video SDK components
 
-@property (nonatomic, strong) TVICameraCapturer * _Nullable camera;
+@property (nonatomic, strong) TVICameraSource * _Nullable camera;
 @property (nonatomic, strong) TVILocalVideoTrack * _Nullable localVideoTrack;
 @property (nonatomic, strong) TVILocalAudioTrack * _Nullable localAudioTrack;
 @property (nonatomic, strong) TVIRemoteParticipant * _Nullable remoteParticipant;
@@ -68,17 +71,19 @@ typedef NS_ENUM(NSUInteger, State) {
 @property BOOL isEndCallNotifiedToCallKit;
 @property BOOL isEndCallEventSent;
 @property BOOL isMuteActionNotifiedToCallKit;
+@property BOOL hasFrontAndBackCameraReady;
 
 #pragma mark CallKit
 @property (nonatomic, strong) CXCallController * _Nullable callKitCallController;
 
 - (id _Nonnull )initWithUUID:(NSUUID*_Nullable)uuid room:(NSString*_Nullable)roomName token:(NSString*_Nullable)token isCallKitCall:(BOOL)isCallKitCall;
-- (void)connectLocalVideoWithDelegate:(nullable id<TVICameraCapturerDelegate>)delegate;
+- (BOOL)connectLocalVideoWithRenderer:(nonnull TVIVideoView*)view
+                             delegate:(nullable id<TVICameraSourceDelegate>)delegate;
 - (void)connectToRoom:(void (^_Nullable)(BOOL connected, NSError * _Nullable error))completion;
 - (void)endCall;
 - (void)endCall:(void (^_Nullable)(void))completion;
 - (void)muteAudio:(BOOL)isMuted;
-- (void)switchCamera;
+- (void)switchCameraWithRenderer:(nonnull TVIVideoView*)view;
 - (void)stopCamera;
 - (void)disableVideo:(BOOL)isDisabled;
 - (NSDictionary*_Nonnull)getMetadata;

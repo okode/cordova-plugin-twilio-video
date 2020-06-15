@@ -8,7 +8,7 @@ import com.twilio.video.Camera2Capturer;
 import com.twilio.video.CameraCapturer;
 import com.twilio.video.VideoCapturer;
 
-import org.webrtc.Camera2Enumerator;
+import tvi.webrtc.Camera2Enumerator;
 
 /*
  * Simple wrapper class that uses Camera2Capturer with supported devices.

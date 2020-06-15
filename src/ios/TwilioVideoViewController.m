@@ -20,7 +20,7 @@
 }
 
 - (void)viewDidLoad {
-    [self logMessage:[NSString stringWithFormat:@"TwilioVideo v%@", [TwilioVideo version]]];
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"TwilioVideo v%@", [TwilioVideoSDK sdkVersion]]];
     
     [UIApplication sharedApplication].idleTimerDisabled = true;
 
@@ -72,7 +72,11 @@
 }
 
 - (IBAction)cameraSwitchButtonPressed:(id)sender {
-    [self.call switchCamera];
+    [self.call switchCameraWithRenderer:self.previewView];
+}
+
+- (IBAction)localVideoViewTapped:(id)sender {
+    [self.call switchCameraWithRenderer:self.previewView];
 }
 
 - (IBAction)videoButtonPressed:(id)sender {
@@ -83,27 +87,23 @@
 
 - (void)showLocalVideoTrack {
     // TVICameraCapturer is not supported with the Simulator.
-    if ([self isSimulator]) {
+    if ([TwilioVideoUtils isSimulator]) {
         [self.previewView removeFromSuperview];
         return;
     }
     
-    [self.call connectLocalVideoWithDelegate:self];
+    BOOL isLocalVideoConnected = [self.call connectLocalVideoWithRenderer:self.previewView delegate:self];
     
-    if (!self.call.localVideoTrack) {
-        [self logMessage:@"Failed to add video track"];
-    } else {
-        // Add renderer to video track for local preview
-        [self.call.localVideoTrack addRenderer:self.previewView];
-        
-        [self logMessage:@"Video track created"];
-        
-        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self.call
-                                                                              action:@selector(switchCamera)];
-        
+    if (isLocalVideoConnected) {
         self.videoButton.hidden = NO;
-        self.cameraSwitchButton.hidden = NO;
-        [self.previewView addGestureRecognizer:tap];
+
+        if (self.call.hasFrontAndBackCameraReady) {
+                            
+            UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self
+                                                                                action:@selector(localVideoViewTapped:)];
+            [self.previewView addGestureRecognizer:tap];
+            self.cameraSwitchButton.hidden = NO;
+        }
     }
 }
 
@@ -187,34 +187,42 @@
 
 #pragma mark - TwilioVideoCallDelegate
 
-- (void)didConnectToRoom:(TVIRoom *)room {
+- (void)didConnectToRoom:(nonnull TVIRoom *)room {
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CONNECTED];
     [self setRemoteParticipantDelegate];
 }
 
-- (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
+- (void)room:(nonnull TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
     [self removeRemoteParticipantVideoTrack];
     [self updateMicButtonStatus];
     if (error != NULL) {
-        [[TwilioVideoEventManager getInstance] publishCallEvent:CALL_DISCONNECTED_WITH_ERROR with:@{ @"code": [NSString stringWithFormat:@"%ld",[error code]] }];
+        [[TwilioVideoEventManager getInstance] publishCallEvent:CALL_DISCONNECTED_WITH_ERROR with:[TwilioVideoUtils convertErrorToDictionary:error]];
     } else {
         [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_DISCONNECTED];
     }
     [self dismiss];
 }
 
-- (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error{
+- (void)room:(nonnull TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error {
     [self updateMicButtonStatus];
-    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CONNECT_FAILURE];
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_CONNECT_FAILURE with:[TwilioVideoUtils convertErrorToDictionary:error]];
     [self dismiss];
 }
 
-- (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {
+- (void)room:(nonnull TVIRoom *)room isReconnectingWithError:(nonnull NSError *)error {
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_RECONNECTING with:[TwilioVideoUtils convertErrorToDictionary:error]];
+}
+
+- (void)didReconnectToRoom:(nonnull TVIRoom *)room {
+    [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_RECONNECTED];
+}
+
+- (void)room:(nonnull TVIRoom *)room participantDidConnect:(nonnull TVIRemoteParticipant *)participant {
     [self setRemoteParticipantDelegate];
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_PARTICIPANT_CONNECTED];
 }
 
-- (void)room:(TVIRoom *)room participantDidDisconnect:(TVIRemoteParticipant *)participant {
+- (void)room:(nonnull TVIRoom *)room participantDidDisconnect:(nonnull TVIRemoteParticipant *)participant {
     [self removeRemoteParticipantVideoTrack];
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_PARTICIPANT_DISCONNECTED];
 }
@@ -227,52 +235,48 @@
     [self.videoButton setSelected: isDisabled];
 }
 
+
 #pragma mark - TVIRemoteParticipantDelegate
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-      publishedVideoTrack:(TVIRemoteVideoTrackPublication *)publication {
-    
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didPublishVideoTrack:(nonnull TVIRemoteVideoTrackPublication *)publication {
+
     // Remote Participant has offered to share the video Track.
     
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ published %@ video track .",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ published %@ video track .",
                       participant.identity, publication.trackName]];
 }
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-    unpublishedVideoTrack:(TVIRemoteVideoTrackPublication *)publication {
-    
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didUnpublishVideoTrack:(nonnull TVIRemoteVideoTrackPublication *)publication {
+
     // Remote Participant has stopped sharing the video Track.
     
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ unpublished %@ video track.",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ unpublished %@ video track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-      publishedAudioTrack:(TVIRemoteAudioTrackPublication *)publication {
-    
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didPublishAudioTrack:(nonnull TVIRemoteAudioTrackPublication *)publication {
+
     // Remote Participant has offered to share the audio Track.
     
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ published %@ audio track.",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ published %@ audio track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-    unpublishedAudioTrack:(TVIRemoteAudioTrackPublication *)publication {
-    
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didUnpublishAudioTrack:(nonnull TVIRemoteAudioTrackPublication *)publication {
+
     // Remote Participant has stopped sharing the audio Track.
     
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ unpublished %@ audio track.",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ unpublished %@ audio track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)subscribedToVideoTrack:(TVIRemoteVideoTrack *)videoTrack
-                   publication:(TVIRemoteVideoTrackPublication *)publication
-                forParticipant:(TVIRemoteParticipant *)participant {
-    
+- (void)didSubscribeToVideoTrack:(nonnull TVIRemoteVideoTrack *)videoTrack
+                     publication:(nonnull TVIRemoteVideoTrackPublication *)publication
+                  forParticipant:(nonnull TVIRemoteParticipant *)participant {
     // We are subscribed to the remote Participant's audio Track. We will start receiving the
     // remote Participant's video frames now.
     
-    [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ video track for Participant %@",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Subscribed to %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
     
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_VIDEO_TRACK_ADDED];
@@ -283,14 +287,14 @@
     }
 }
 
-- (void)unsubscribedFromVideoTrack:(TVIRemoteVideoTrack *)videoTrack
-                       publication:(TVIRemoteVideoTrackPublication *)publication
-                    forParticipant:(TVIRemoteParticipant *)participant {
-    
+- (void)didUnsubscribeFromVideoTrack:(nonnull TVIRemoteVideoTrack *)videoTrack
+                         publication:(nonnull TVIRemoteVideoTrackPublication *)publication
+                      forParticipant:(nonnull TVIRemoteParticipant *)participant {
+
     // We are unsubscribed from the remote Participant's video Track. We will no longer receive the
     // remote Participant's video.
     
-    [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ video track for Participant %@",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
     
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_VIDEO_TRACK_REMOVED];
@@ -301,87 +305,77 @@
     }
 }
 
-- (void)subscribedToAudioTrack:(TVIRemoteAudioTrack *)audioTrack
-                   publication:(TVIRemoteAudioTrackPublication *)publication
-                forParticipant:(TVIRemoteParticipant *)participant {
-    
+- (void)didSubscribeToAudioTrack:(nonnull TVIRemoteAudioTrack *)audioTrack
+                     publication:(nonnull TVIRemoteAudioTrackPublication *)publication
+                  forParticipant:(nonnull TVIRemoteParticipant *)participant {
+
     // We are subscribed to the remote Participant's audio Track. We will start receiving the
     // remote Participant's audio now.
     
-    [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ audio track for Participant %@",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Subscribed to %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
     
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_AUDIO_TRACK_ADDED];
 }
 
-- (void)unsubscribedFromAudioTrack:(TVIRemoteAudioTrack *)audioTrack
-                       publication:(TVIRemoteAudioTrackPublication *)publication
-                    forParticipant:(TVIRemoteParticipant *)participant {
-    
+- (void)didUnsubscribeFromAudioTrack:(nonnull TVIRemoteAudioTrack *)audioTrack
+                         publication:(nonnull TVIRemoteAudioTrackPublication *)publication
+                      forParticipant:(nonnull TVIRemoteParticipant *)participant {
+
     // We are unsubscribed from the remote Participant's audio Track. We will no longer receive the
     // remote Participant's audio.
     
-    [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ audio track for Participant %@",
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
     
     [[TwilioVideoEventManager getInstance] publishCallEvent: CALL_AUDIO_TRACK_REMOVED];
 }
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-        enabledVideoTrack:(TVIRemoteVideoTrackPublication *)publication {
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ enabled %@ video track.",
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didEnableVideoTrack:(nonnull TVIRemoteVideoTrackPublication *)publication {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ enabled %@ video track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-       disabledVideoTrack:(TVIRemoteVideoTrackPublication *)publication {
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ disabled %@ video track.",
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didDisableVideoTrack:(nonnull TVIRemoteVideoTrackPublication *)publication {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ disabled %@ video track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-        enabledAudioTrack:(TVIRemoteAudioTrackPublication *)publication {
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ enabled %@ audio track.",
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didEnableAudioTrack:(nonnull TVIRemoteAudioTrackPublication *)publication {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ enabled %@ audio track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)remoteParticipant:(TVIRemoteParticipant *)participant
-       disabledAudioTrack:(TVIRemoteAudioTrackPublication *)publication {
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ disabled %@ audio track.",
+- (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didDisableAudioTrack:(nonnull TVIRemoteAudioTrackPublication *)publication {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ disabled %@ audio track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)failedToSubscribeToAudioTrack:(TVIRemoteAudioTrackPublication *)publication
-                                error:(NSError *)error
-                       forParticipant:(TVIRemoteParticipant *)participant {
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ failed to subscribe to %@ audio track.",
+- (void)didFailToSubscribeToAudioTrack:(nonnull TVIRemoteAudioTrackPublication *)publication
+                                 error:(nonnull NSError *)error
+                        forParticipant:(nonnull TVIRemoteParticipant *)participant {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ failed to subscribe to %@ audio track.",
                       participant.identity, publication.trackName]];
 }
 
-- (void)failedToSubscribeToVideoTrack:(TVIRemoteVideoTrackPublication *)publication
-                                error:(NSError *)error
-                       forParticipant:(TVIRemoteParticipant *)participant {
-    [self logMessage:[NSString stringWithFormat:@"Participant %@ failed to subscribe to %@ video track.",
+- (void)didFailToSubscribeToVideoTrack:(nonnull TVIRemoteVideoTrackPublication *)publication
+                                 error:(nonnull NSError *)error
+                        forParticipant:(nonnull TVIRemoteParticipant *)participant {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Participant %@ failed to subscribe to %@ video track.",
                       participant.identity, publication.trackName]];
 }
 
-#pragma mark - TVICameraCapturerDelegate
+#pragma mark - TVIVideoViewDelegate
 
-- (void)cameraCapturer:(TVICameraCapturer *)capturer didStartWithSource:(TVICameraCaptureSource)source {
-    self.previewView.mirror = (source == TVICameraCaptureSourceFrontCamera);
+- (void)videoView:(nonnull TVIVideoView *)view videoDimensionsDidChange:(CMVideoDimensions)dimensions {
+    NSLog(@"Dimensions changed to: %d x %d", dimensions.width, dimensions.height);
+    [self.view setNeedsLayout];
 }
 
-#pragma mark Utils
+#pragma mark - TVICameraSourceDelegate
 
-- (BOOL)isSimulator {
-#if TARGET_IPHONE_SIMULATOR
-    return YES;
-#endif
-    return NO;
-}
-
-- (void)logMessage:(NSString *)msg {
-    NSLog(@"%@", msg);
+- (void)cameraSource:(nonnull TVICameraSource *)source didFailWithError:(nonnull NSError *)error {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Capture failed with error.\ncode = %lu error = %@", error.code, error.localizedDescription]];
 }
 
 @end

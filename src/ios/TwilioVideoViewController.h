@@ -8,8 +8,9 @@
 #import "TwilioVideoEventManager.h"
 #import "TwilioVideoCall.h"
 #import "TwilioVideoPermissions.h"
+#import "TwilioVideoUtils.h"
 
-@interface TwilioVideoViewController: UIViewController <TwilioVideoCallDelegate, TVIRemoteParticipantDelegate, TVICameraCapturerDelegate>
+@interface TwilioVideoViewController: UIViewController <TwilioVideoCallDelegate, TVIRemoteParticipantDelegate, TVICameraSourceDelegate, TVIVideoViewDelegate>
 
 #pragma mark UI Element Outlets and handles
 

@@ -9,6 +9,8 @@ NSString *const CALL_CONNECTED = @"CONNECTED";
 NSString *const CALL_CONNECT_FAILURE = @"CONNECT_FAILURE";
 NSString *const CALL_DISCONNECTED = @"DISCONNECTED";
 NSString *const CALL_DISCONNECTED_WITH_ERROR = @"DISCONNECTED_WITH_ERROR";
+NSString *const CALL_RECONNECTING = @"RECONNECTING";
+NSString *const CALL_RECONNECTED = @"RECONNECTED";
 NSString *const CALL_PARTICIPANT_CONNECTED = @"PARTICIPANT_CONNECTED";
 NSString *const CALL_PARTICIPANT_DISCONNECTED = @"PARTICIPANT_DISCONNECTED";
 NSString *const CALL_AUDIO_TRACK_ADDED = @"AUDIO_TRACK_ADDED";
@@ -87,13 +89,27 @@ NSString *const CALL_CLOSED = @"CLOSED";
     }
 }
 
-- (void)switchCamera {
+- (void)switchCameraWithRenderer:(nonnull TVIVideoView*)view {
     if (!self.camera) { return; }
-    if (self.camera.source == TVICameraCaptureSourceFrontCamera) {
-        [self.camera selectSource:TVICameraCaptureSourceBackCameraWide];
+    
+    AVCaptureDevice *newDevice = nil;
+    
+    if (self.camera.device.position == AVCaptureDevicePositionFront) {
+        newDevice = [TVICameraSource captureDeviceForPosition:AVCaptureDevicePositionBack];
     } else {
-        [self.camera selectSource:TVICameraCaptureSourceFrontCamera];
+        newDevice = [TVICameraSource captureDeviceForPosition:AVCaptureDevicePositionFront];
     }
+    
+    if (newDevice != nil) {
+        [self.camera selectCaptureDevice:newDevice completion:^(AVCaptureDevice *device, TVIVideoFormat *format, NSError *error) {
+            if (error != nil) {
+                [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Error selecting capture device.\ncode = %lu error = %@", error.code, error.localizedDescription]];
+            } else {
+                view.mirror = (device.position == AVCaptureDevicePositionFront);
+            }
+        }];
+    }
+
 }
 
 - (void)stopCamera {
@@ -108,16 +124,49 @@ NSString *const CALL_CLOSED = @"CLOSED";
     if (self.delegate) { [self.delegate videoChanged:isDisabled]; }
 }
 
-- (void)connectLocalVideoWithDelegate:(nullable id<TVICameraCapturerDelegate>)delegate {
+- (BOOL)connectLocalVideoWithRenderer:(nonnull TVIVideoView*)view
+    delegate:(nullable id<TVICameraSourceDelegate>)delegate {
     // Set local video track
-    self.camera = [[TVICameraCapturer alloc] initWithSource:TVICameraCaptureSourceFrontCamera delegate:delegate];
-    self.localVideoTrack = [TVILocalVideoTrack trackWithCapturer:self.camera
-                                                         enabled:YES
-                                                     constraints:nil
-                                                            name:@"Camera"];
-    if (self.localVideoTrack && self.room && self.room.localParticipant) {
-        [self.room.localParticipant publishVideoTrack:self.localVideoTrack];
-    }
+    AVCaptureDevice *frontCamera = [TVICameraSource captureDeviceForPosition:AVCaptureDevicePositionFront];
+    AVCaptureDevice *backCamera = [TVICameraSource captureDeviceForPosition:AVCaptureDevicePositionBack];
+    
+    if (frontCamera != nil || backCamera != nil) {
+        self.camera = [[TVICameraSource alloc] initWithDelegate:delegate];
+        self.localVideoTrack = [TVILocalVideoTrack trackWithSource:self.camera
+                                                             enabled:YES
+                                                                name:@"Camera"];
+        if (!self.localVideoTrack) {
+            NSLog(@"Failed to add video track");
+            return false;
+        } else {
+            NSLog(@"Video track created");
+            
+            // Add renderer to video track for local preview
+            [self.localVideoTrack addRenderer:view];
+
+            if (frontCamera != nil && backCamera != nil) { self.hasFrontAndBackCameraReady = true; }
+                        
+            [self.camera startCaptureWithDevice:frontCamera != nil ? frontCamera : backCamera
+                 completion:^(AVCaptureDevice *device, TVIVideoFormat *format, NSError *error) {
+                     if (error != nil) {
+                         [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Start capture failed with error.\ncode = %lu error = %@", error.code, error.localizedDescription]];
+                     } else {
+                         view.mirror = (device.position == AVCaptureDevicePositionFront);
+                     }
+            }];
+
+            // Publish video if room is already created/connected
+            if (self.room && self.room.localParticipant) {
+                [self.room.localParticipant publishVideoTrack:self.localVideoTrack];
+            }
+            
+            return true;
+        }
+    } else {
+        NSLog(@"No front or back capture device found!");
+        return false;
+   }
+
 }
 
 - (NSDictionary*)getMetadata {
@@ -134,7 +183,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
     // Set local audio track
     self.localAudioTrack = [TVILocalAudioTrack trackWithOptions:nil
                                                         enabled:YES
-                                                           name:@"Microphone"];
+                                                            name:@"Microphone"];
 }
 
 - (void)doConnect {
@@ -153,7 +202,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
     }];
     // Connect to the Room using the options we provided.
     self.callState = Connecting;
-    self.room = [TwilioVideo connectWithOptions:connectOptions delegate:self];
+    self.room = [TwilioVideoSDK connectWithOptions:connectOptions delegate:self];
 }
 
 - (void)performCallKitEndCallAction:(void (^)(NSError *_Nullable error))completion {
@@ -210,15 +259,9 @@ NSString *const CALL_CLOSED = @"CLOSED";
     if (self.delegate) { [self.delegate audioChanged:isMuted]; }
 }
 
-#pragma mark - Utils
-
-- (void)logMessage:(NSString *)msg {
-    NSLog(@"%@", msg);
-}
-
 #pragma mark - TVIRoomDelegate
 
-- (void)didConnectToRoom:(TVIRoom *)room {
+- (void)didConnectToRoom:(nonnull TVIRoom *)room {
     self.callState = Connected;
     // At the moment, this example only supports rendering one Participant at a time.
     if (room.remoteParticipants.count > 0) {
@@ -230,7 +273,8 @@ NSString *const CALL_CLOSED = @"CLOSED";
     if (self.delegate) { [self.delegate didConnectToRoom:room]; }
 }
 
-- (void)room:(TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
+- (void)room:(nonnull TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Disconnected from room %@, error = %@", room.name, error]];
     self.callState = Disconnected;
     self.room = nil;
     self.connectionCompletionHandler = nil;
@@ -245,12 +289,20 @@ NSString *const CALL_CLOSED = @"CLOSED";
     [[TwilioVideoEventManager getInstance] publishPluginEvent:@"twiliovideo.calldisconnected" with:[self getMetadata]];
 }
 
-- (void)room:(TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error {
+- (void)room:(nonnull TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error {
     self.callState = Failed;
     self.room = nil;
     self.connectionCompletionHandler(false, error);
     
     if (self.delegate) { [self.delegate room:room didFailToConnectWithError:error]; }
+}
+
+- (void)room:(nonnull TVIRoom *)room isReconnectingWithError:(nonnull NSError *)error {
+    if (self.delegate) { [self.delegate room:room isReconnectingWithError:error]; }
+}
+
+- (void)didReconnectToRoom:(nonnull TVIRoom *)room {
+    if (self.delegate) { [self.delegate didReconnectToRoom:room]; }
 }
 
 - (void)room:(TVIRoom *)room participantDidConnect:(TVIRemoteParticipant *)participant {
@@ -259,7 +311,7 @@ NSString *const CALL_CLOSED = @"CLOSED";
 }
 
 - (void)room:(TVIRoom *)room participantDidDisconnect:(TVIRemoteParticipant *)participant {
-    [self logMessage:[NSString stringWithFormat:@"Room %@ participant %@ disconnected", room.name, participant.identity]];
+    [TwilioVideoUtils logMessage:[NSString stringWithFormat:@"Room %@ participant %@ disconnected", room.name, participant.identity]];
     if (self.delegate) { [self.delegate room:room participantDidDisconnect:participant]; }
     self.remoteParticipant = nil;
 }

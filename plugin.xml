@@ -48,7 +48,7 @@
         <resource-file src="src/ios/Resources/switch_camera@2x.png" target="Resources/switch_camera@2x.png" />
         <resource-file src="src/ios/Resources/switch_camera@3x.png" target="Resources/switch_camera@3x.png" />
 
-        <framework src="TwilioVideo" type="podspec" spec="2.5.6"/>
+        <framework src="TwilioVideo" type="podspec" spec="3.4.0"/>
         <podspec>
             <config>
                 <source url="https://cdn.cocoapods.org/"/>

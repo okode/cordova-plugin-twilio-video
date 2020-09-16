@@ -7,6 +7,7 @@
 #define i18n_ACCEPT_PROP                    @"i18nAccept"
 #define HANDLE_ERROR_IN_APP                 @"handleErrorInApp"
 #define HANG_UP_IN_APP                      @"hangUpInApp"
+#define VIDEO_STATUS                      @"videoStatus"
 
 @implementation TwilioVideoConfig
 -(void) parse:(NSDictionary*)config {
@@ -27,6 +28,7 @@
     }
     self.handleErrorInApp = [config objectForKey:HANDLE_ERROR_IN_APP];
     self.hangUpInApp = [config objectForKey:HANG_UP_IN_APP];
+    self.videoStatus = [config objectForKey:VIDEO_STATUS];
 }
 
 + (UIColor *)colorFromHexString:(NSString *)hexString {

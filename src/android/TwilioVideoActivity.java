@@ -284,6 +284,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 true,
                 cameraCapturer.getVideoCapturer(),
                 LOCAL_VIDEO_TRACK_NAME);
+
+        changeVideoStatus(config.isActiveLocalVideo());
         this.moveLocalVideoToThumbnailView();
     }
 
@@ -783,18 +785,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                  */
                 if (localVideoTrack != null) {
                     boolean enable = !localVideoTrack.isEnabled();
-                    localVideoTrack.enable(enable);
-                    int icon;
-                    if (enable) {
-                        icon = FAKE_R.getDrawable("ic_videocam_green_24px");
-                        switchCameraActionFab.show();
-                    } else {
-                        icon = FAKE_R.getDrawable("ic_videocam_off_red_24px");
-                        switchCameraActionFab.hide();
-                    }
-
-                    localVideoActionFab.setImageDrawable(
-                            ContextCompat.getDrawable(TwilioVideoActivity.this, icon));
+                    changeVideoStatus(enable);
                 }
             }
         };
@@ -843,6 +834,21 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             audioManager.abandonAudioFocus(null);
             audioManager.setMicrophoneMute(previousMicrophoneMute);
         }
+    }
+
+    private void changeVideoStatus(boolean enable) {
+        localVideoTrack.enable(enable);
+        int icon;
+        if (enable) {
+            icon = FAKE_R.getDrawable("ic_videocam_green_24px");
+            switchCameraActionFab.show();
+        } else {
+            icon = FAKE_R.getDrawable("ic_videocam_off_red_24px");
+            switchCameraActionFab.hide();
+        }
+
+        localVideoActionFab.setImageDrawable(
+                ContextCompat.getDrawable(TwilioVideoActivity.this, icon));
     }
 
     private void requestAudioFocus() {

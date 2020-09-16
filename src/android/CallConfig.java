@@ -17,6 +17,7 @@ public class CallConfig implements Serializable {
     private static final String i18n_ACCEPT_PROP = "i18nAccept";
     private static final String HANDLE_ERROR_IN_APP = "handleErrorInApp";
     private static final String HANG_UP_IN_APP = "hangUpInApp";
+    private static final String VIDEO_STATUS = "videoStatus";
 
     private static final String i18n_CONNECTION_ERROR_DEF_TEXT = "It was not possible to join the room";
     private static final String i18n_DISCONNECTED_WITH_ERROR_DEF_TEXT = "Disconnected";
@@ -29,6 +30,7 @@ public class CallConfig implements Serializable {
     private String i18nAccept;
     private boolean handleErrorInApp;
     private boolean hangUpInApp;
+    private boolean videoStatus;
 
     public void parse(JSONObject config) {
         if (config == null) { return; }
@@ -48,6 +50,7 @@ public class CallConfig implements Serializable {
         }
         this.handleErrorInApp = config.optBoolean(HANDLE_ERROR_IN_APP, false);
         this.hangUpInApp = config.optBoolean(HANG_UP_IN_APP, false);
+        this.videoStatus = config.optBoolean(VIDEO_STATUS, true);
     }
 
     public String getPrimaryColorHex() {
@@ -76,5 +79,9 @@ public class CallConfig implements Serializable {
 
     public boolean isHangUpInApp() {
         return hangUpInApp;
+    }
+
+    public boolean isActiveLocalVideo() {
+        return videoStatus;
     }
 }

@@ -17,6 +17,9 @@
     TwilioVideoConfig *config = [[TwilioVideoConfig alloc] init];
     if ([args count] > 2) {
         [config parse: command.arguments[2]];
+        config.videoStatus = [
+          command.arguments[2][@"videoStatus"] intValue
+        ] == 0 ? false : true;
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{

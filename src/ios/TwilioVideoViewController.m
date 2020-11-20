@@ -391,6 +391,13 @@ NSString *const CLOSED = @"CLOSED";
 }
 
 - (void)room:(nonnull TVIRoom *)room participantDidDisconnect:(nonnull TVIRemoteParticipant *)participant {
+    TVIRemoteParticipant *)participant {
+    if ([self.config hangUpInApp]) {
+        [[TwilioVideoManager getInstance] publishEvent: HANG_UP];
+    } else {
+        [self onDisconnect];
+    }
+        
     if (self.remoteParticipant == participant) {
         [self cleanupRemoteParticipant];
     }

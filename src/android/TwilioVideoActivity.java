@@ -40,9 +40,11 @@ import com.twilio.video.Video;
 import com.twilio.video.VideoRenderer;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
+import com.twilio.video.OpusCodec;
 
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -299,6 +301,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         configureAudio(true);
         ConnectOptions.Builder connectOptionsBuilder = new ConnectOptions.Builder(accessToken)
                 .roomName(this.roomId)
+                .region("de1")
+                .preferAudioCodecs(Arrays.asList(new OpusCodec()))
                 .enableIceGatheringOnAnyAddressPorts(true);
 
         /*

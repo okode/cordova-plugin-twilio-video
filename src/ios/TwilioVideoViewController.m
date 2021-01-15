@@ -100,10 +100,14 @@ NSString *const CLOSED = @"CLOSED";
 }
 
 - (IBAction)videoButtonPressed:(id)sender {
-    if(self.localVideoTrack){
-        self.localVideoTrack.enabled = !self.localVideoTrack.isEnabled;
-        [self.videoButton setSelected: !self.localVideoTrack.isEnabled];
-    }
+    [TwilioVideoPermissions hasVideoPermissions:^(BOOL havePermission) {
+         if (havePermission) {
+             if(self.localVideoTrack){
+                 self.localVideoTrack.enabled = !self.localVideoTrack.isEnabled;
+                 [self.videoButton setSelected: !self.localVideoTrack.isEnabled];
+             }
+         }
+    }];
 }
 
 #pragma mark - Private

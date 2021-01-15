@@ -3,5 +3,6 @@
 
 @interface TwilioVideoPermissions : NSObject
 + (BOOL)hasRequiredPermissions;
++ (void)hasVideoPermissions:(void (^)(BOOL))response;
 + (void)requestRequiredPermissions:(void (^)(BOOL))response;
 @end

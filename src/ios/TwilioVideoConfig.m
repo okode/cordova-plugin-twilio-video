@@ -25,8 +25,10 @@
     if (self.i18nAccept == NULL) {
         self.i18nAccept = @"Accept";
     }
-    self.handleErrorInApp = [config objectForKey:HANDLE_ERROR_IN_APP];
-    self.hangUpInApp = [config objectForKey:HANG_UP_IN_APP];
+    NSNumber *handleErrorInApp = [config objectForKey:HANDLE_ERROR_IN_APP];
+    self.handleErrorInApp = handleErrorInApp ? [handleErrorInApp boolValue] : false;
+    NSNumber *hangUpInApp = [config objectForKey:HANG_UP_IN_APP];
+    self.hangUpInApp = hangUpInApp ? [hangUpInApp boolValue] : false;
 }
 
 + (UIColor *)colorFromHexString:(NSString *)hexString {

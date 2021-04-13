@@ -67,7 +67,7 @@ public class TwilioVideo extends CordovaPlugin {
             final String token = this.token;
             final String roomId = this.roomId;
             if (args.length() > 2) {
-                this.config.parse(args.getJSONObject(2));
+                this.config.parse(args.optJSONObject(2));
             }
 
             LOG.d(TAG, "TOKEN: " + token);

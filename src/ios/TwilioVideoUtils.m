@@ -3,7 +3,7 @@
 @implementation TwilioVideoUtils
 
 + (NSDictionary*)convertErrorToDictionary:(NSError*)error {
-    return @{ @"code": [NSString stringWithFormat:@"%ld",[error code]], @"description": [error localizedDescription] };
+    return @{ @"code": [NSNumber numberWithInteger:[error code]], @"description": [error localizedDescription] };
 }
 
 @end

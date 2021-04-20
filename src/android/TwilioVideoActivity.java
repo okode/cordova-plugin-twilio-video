@@ -223,6 +223,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     @Override
     public void onBackPressed() {
+        if (config.isDisableBackButton()) { return; }
         super.onBackPressed();
         overridePendingTransition(0, 0);
     }

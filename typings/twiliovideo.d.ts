@@ -4,8 +4,8 @@ declare module TwilioVideo {
      * It opens Twilio Video controller and tries to start the videocall.
      * All videocall UI controls will be positioned on the current view, so we can put
      * our own controls from the application that uses the plugin.
-     * @param token 
-     * @param roomName 
+     * @param token
+     * @param roomName
      * @param onEvent - (Optional) It will be fired any time that a call event is received
      * @param {Object} config - (Optional) Call configuraiton
      * @param config.primaryColor - Hex primary color that the app will use
@@ -15,6 +15,7 @@ declare module TwilioVideo {
      * @param config.i18nAccept - Accept translation
      * @param config.handleErrorInApp - (Default = false) Flag to indicate the application will manage any error in the app by events emitted by the plugin
      * @param config.hangUpInApp - (Default = false) Flag to indicate the application should hang up the call by calling 'closeRoom'
+     * @param config.disableBackButton - (Only Android) (Default = false) Flag to disable back button
      */
     openRoom(token: string, roomName: string, onEvent?: Function, config?: any): void;
 

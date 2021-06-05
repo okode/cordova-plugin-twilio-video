@@ -32,6 +32,7 @@
 @property (nonatomic, weak) IBOutlet UILabel *roomLine;
 @property (nonatomic, weak) IBOutlet UIButton *cameraSwitchButton;
 @property (nonatomic, weak) IBOutlet UIButton *videoButton;
+@property (nonatomic, weak) IBOutlet UIButton *attachmentButton;
 
 - (void)connectToRoom:(NSString*)room token: (NSString *)token;
 

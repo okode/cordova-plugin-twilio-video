@@ -17,6 +17,7 @@ NSString *const VIDEO_TRACK_REMOVED = @"VIDEO_TRACK_REMOVED";
 NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 NSString *const HANG_UP = @"HANG_UP";
 NSString *const CLOSED = @"CLOSED";
+NSString *const ATTACHMENT = @"ATTACHMENT";
 
 @implementation TwilioVideoViewController
 
@@ -97,6 +98,10 @@ NSString *const CLOSED = @"CLOSED";
 
 - (IBAction)cameraSwitchButtonPressed:(id)sender {
     [self flipCamera];
+}
+
+- (IBAction)cameraAttachmentButtonPressed:(id)sender {
+    [[TwilioVideoManager getInstance] publishEvent: ATTACHMENT];
 }
 
 - (IBAction)videoButtonPressed:(id)sender {

@@ -46,6 +46,7 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
     [self.micButton setImage:[UIImage imageNamed:@"no_mic"] forState: UIControlStateSelected];
     [self.videoButton setImage:[UIImage imageNamed:@"video"] forState: UIControlStateNormal];
     [self.videoButton setImage:[UIImage imageNamed:@"no_video"] forState: UIControlStateSelected];
+    [self.attachmentButton setImage:[UIImage imageNamed:@"attach"] forState: UIControlStateSelected];
 
     // Customize button colors
     NSString *primaryColor = [self.config primaryColorHex];
@@ -58,6 +59,8 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
         self.micButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
         self.videoButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
         self.cameraSwitchButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
+        self.attachmentButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
+
     }
     
     [self setupAlertCtrl];

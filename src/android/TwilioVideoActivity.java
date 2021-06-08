@@ -1,26 +1,25 @@
 package org.apache.cordova.twiliovideo;
 
 import android.Manifest;
-import android.app.AlertDialog;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.twilio.video.CameraCapturer;
 import com.twilio.video.CameraCapturer.CameraSource;
 import com.twilio.video.ConnectOptions;
@@ -43,10 +42,27 @@ import com.twilio.video.VideoView;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
-public class TwilioVideoActivity extends AppCompatActivity implements CallActionObserver {
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+
+import static org.apache.cordova.twiliovideo.CallEvent.ATTACHMENT;
+
+public class TwilioVideoActivity extends AppCompatActivity implements org.apache.cordova.twiliovideo.CallActionObserver {
 
     /*
      * Audio and video tracks can be created with names. This feature is useful for categorizing
@@ -58,9 +74,14 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private static final String LOCAL_AUDIO_TRACK_NAME = "microphone";
     private static final String LOCAL_VIDEO_TRACK_NAME = "camera";
 
+    private static final int CAMERA_REQUEST = 1888;
+    private static final int GALLERY_REQUEST = 1889;
+    private static final int MY_CAMERA_PERMISSION_CODE = 100;
+    private static final int MY_GALLERY_PERMISSION_CODE = 101;
+
     private static final int PERMISSIONS_REQUEST_CODE = 1;
 
-    private static FakeR FAKE_R;
+    private static org.apache.cordova.twiliovideo.FakeR FAKE_R;
 
     /*
      * Access token used to connect. This field will be set either from the console generated token
@@ -68,7 +89,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
      */
     private String accessToken;
     private String roomId;
-    private CallConfig config;
+    private org.apache.cordova.twiliovideo.CallConfig config;
 
     /*
      * A Room represents communication between a local participant and one or more participants.
@@ -86,7 +107,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     /*
      * Android application UI elements
      */
-    private CameraCapturerCompat cameraCapturer;
+    private org.apache.cordova.twiliovideo.CameraCapturerCompat cameraCapturer;
     private LocalAudioTrack localAudioTrack;
     private LocalVideoTrack localVideoTrack;
     private FloatingActionButton connectActionFab;
@@ -94,6 +115,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private FloatingActionButton localVideoActionFab;
     private FloatingActionButton muteActionFab;
     private FloatingActionButton switchAudioActionFab;
+    private FloatingActionButton attachment_fab;
     private AudioManager audioManager;
     private String participantIdentity;
 
@@ -101,17 +123,18 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private boolean previousMicrophoneMute;
     private boolean disconnectedFromOnDestroy;
     private VideoRenderer localVideoView;
+    String imageFilePath;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        TwilioVideoManager.getInstance().setActionListenerObserver(this);
+        org.apache.cordova.twiliovideo.TwilioVideoManager.getInstance().setActionListenerObserver(this);
 
-        FAKE_R = new FakeR(this);
+        FAKE_R = new org.apache.cordova.twiliovideo.FakeR(this);
 
-        publishEvent(CallEvent.OPENED);
+        publishEvent(org.apache.cordova.twiliovideo.CallEvent.OPENED);
         setContentView(FAKE_R.getLayout("activity_video"));
 
         primaryVideoView = findViewById(FAKE_R.getId("primary_video_view"));
@@ -121,6 +144,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         switchCameraActionFab = findViewById(FAKE_R.getId("switch_camera_action_fab"));
         localVideoActionFab = findViewById(FAKE_R.getId("local_video_action_fab"));
         muteActionFab = findViewById(FAKE_R.getId("mute_action_fab"));
+        attachment_fab = findViewById(FAKE_R.getId("attachment_fab"));
         switchAudioActionFab = findViewById(FAKE_R.getId("switch_audio_action_fab"));
 
         /*
@@ -138,14 +162,14 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
         this.accessToken = intent.getStringExtra("token");
         this.roomId = intent.getStringExtra("roomId");
-        this.config = (CallConfig) intent.getSerializableExtra("config");
+        this.config = (org.apache.cordova.twiliovideo.CallConfig) intent.getSerializableExtra("config");
 
-        Log.d(TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
+        Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
         if (!hasPermissionForCameraAndMicrophone()) {
-            Log.d(TwilioVideo.TAG, "REQUEST PERMISSIONS");
+            Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "REQUEST PERMISSIONS");
             requestPermissions();
         } else {
-            Log.d(TwilioVideo.TAG, "PERMISSIONS OK. CREATE LOCAL MEDIA");
+            Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "PERMISSIONS OK. CREATE LOCAL MEDIA");
             createAudioAndVideoTracks();
             connectToRoom();
         }
@@ -160,6 +184,25 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+
+        if (requestCode == MY_CAMERA_PERMISSION_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCameraIntent();
+            } else {
+                Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
+            }
+        }
+
+        if (requestCode == MY_GALLERY_PERMISSION_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent pickPhoto = new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(pickPhoto, GALLERY_REQUEST);
+            } else {
+                Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
+            }
+        }
+
         if (requestCode == PERMISSIONS_REQUEST_CODE) {
             boolean permissionsGranted = true;
 
@@ -171,7 +214,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 createAudioAndVideoTracks();
                 connectToRoom();
             } else {
-                publishEvent(CallEvent.PERMISSIONS_REQUIRED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.PERMISSIONS_REQUIRED);
                 TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
             }
         }
@@ -223,7 +266,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     @Override
     public void onBackPressed() {
-        if (config.isDisableBackButton()) { return; }
+        if (config.isDisableBackButton()) {
+            return;
+        }
         super.onBackPressed();
         overridePendingTransition(0, 0);
     }
@@ -253,9 +298,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             localVideoTrack = null;
         }
 
-        publishEvent(CallEvent.CLOSED);
+        publishEvent(org.apache.cordova.twiliovideo.CallEvent.CLOSED);
 
-        TwilioVideoManager.getInstance().setActionListenerObserver(null);
+        org.apache.cordova.twiliovideo.TwilioVideoManager.getInstance().setActionListenerObserver(null);
 
         super.onDestroy();
     }
@@ -270,7 +315,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private void requestPermissions() {
         ActivityCompat.requestPermissions(
                 this,
-                TwilioVideo.PERMISSIONS_REQUIRED,
+                org.apache.cordova.twiliovideo.TwilioVideo.PERMISSIONS_REQUIRED,
                 PERMISSIONS_REQUEST_CODE);
 
     }
@@ -280,7 +325,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         localAudioTrack = LocalAudioTrack.create(this, true, LOCAL_AUDIO_TRACK_NAME);
 
         // Share your camera
-        cameraCapturer = new CameraCapturerCompat(this, getAvailableCameraSource());
+        cameraCapturer = new org.apache.cordova.twiliovideo.CameraCapturerCompat(this, getAvailableCameraSource());
         localVideoTrack = LocalVideoTrack.create(this,
                 true,
                 cameraCapturer.getVideoCapturer(),
@@ -345,6 +390,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         localVideoActionFab.setOnClickListener(localVideoClickListener());
         muteActionFab.show();
         muteActionFab.setOnClickListener(muteClickListener());
+        attachment_fab.show();
+        attachment_fab.setOnClickListener(attachmentClickListener());
         switchAudioActionFab.show();
         switchAudioActionFab.setOnClickListener(switchAudioClickListener());
     }
@@ -447,7 +494,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onConnected(Room room) {
                 localParticipant = room.getLocalParticipant();
-                publishEvent(CallEvent.CONNECTED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.CONNECTED);
 
                 final List<RemoteParticipant> remoteParticipants = room.getRemoteParticipants();
                 if (remoteParticipants != null && !remoteParticipants.isEmpty()) {
@@ -457,18 +504,18 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
-                publishEvent(CallEvent.CONNECT_FAILURE, TwilioVideoUtils.convertToJSON(e));
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.CONNECT_FAILURE, org.apache.cordova.twiliovideo.TwilioVideoUtils.convertToJSON(e));
                 TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
             }
 
             @Override
             public void onReconnecting(@NonNull Room room, @NonNull TwilioException e) {
-                publishEvent(CallEvent.RECONNECTING, TwilioVideoUtils.convertToJSON(e));
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.RECONNECTING, org.apache.cordova.twiliovideo.TwilioVideoUtils.convertToJSON(e));
             }
 
             @Override
             public void onReconnected(@NonNull Room room) {
-                publishEvent(CallEvent.RECONNECTED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.RECONNECTED);
             }
 
             @Override
@@ -477,22 +524,22 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
-                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR, TwilioVideoUtils.convertToJSON(e));
+                    publishEvent(org.apache.cordova.twiliovideo.CallEvent.DISCONNECTED_WITH_ERROR, org.apache.cordova.twiliovideo.TwilioVideoUtils.convertToJSON(e));
                     TwilioVideoActivity.this.handleConnectionError(config.getI18nDisconnectedWithError());
                 } else {
-                    publishEvent(CallEvent.DISCONNECTED);
+                    publishEvent(org.apache.cordova.twiliovideo.CallEvent.DISCONNECTED);
                 }
             }
 
             @Override
             public void onParticipantConnected(Room room, RemoteParticipant participant) {
-                publishEvent(CallEvent.PARTICIPANT_CONNECTED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.PARTICIPANT_CONNECTED);
                 addRemoteParticipant(participant);
             }
 
             @Override
             public void onParticipantDisconnected(Room room, RemoteParticipant participant) {
-                publishEvent(CallEvent.PARTICIPANT_DISCONNECTED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.PARTICIPANT_DISCONNECTED);
                 removeRemoteParticipant(participant);
             }
 
@@ -502,7 +549,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                  * Indicates when media shared to a Room is being recorded. Note that
                  * recording is only available in our Group Rooms developer preview.
                  */
-                Log.d(TwilioVideo.TAG, "onRecordingStarted");
+                Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "onRecordingStarted");
             }
 
             @Override
@@ -511,7 +558,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                  * Indicates when media shared to a Room is no longer being recorded. Note that
                  * recording is only available in our Group Rooms developer preview.
                  */
-                Log.d(TwilioVideo.TAG, "onRecordingStopped");
+                Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "onRecordingStopped");
             }
         };
     }
@@ -521,7 +568,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onAudioTrackPublished(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
-                Log.i(TwilioVideo.TAG, String.format("onAudioTrackPublished: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onAudioTrackPublished: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
                                 "subscribed=%b, name=%s]",
@@ -534,7 +581,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onAudioTrackUnpublished(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
-                Log.i(TwilioVideo.TAG, String.format("onAudioTrackUnpublished: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onAudioTrackUnpublished: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
                                 "subscribed=%b, name=%s]",
@@ -547,19 +594,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onAudioTrackSubscribed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, RemoteAudioTrack remoteAudioTrack) {
-                Log.i(TwilioVideo.TAG, String.format("onAudioTrackSubscribed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onAudioTrackSubscribed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
                         remoteParticipant.getIdentity(),
                         remoteAudioTrack.isEnabled(),
                         remoteAudioTrack.isPlaybackEnabled(),
                         remoteAudioTrack.getName()));
-                publishEvent(CallEvent.AUDIO_TRACK_ADDED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.AUDIO_TRACK_ADDED);
             }
 
             @Override
             public void onAudioTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, TwilioException twilioException) {
-                Log.i(TwilioVideo.TAG, String.format("onAudioTrackSubscriptionFailed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onAudioTrackSubscriptionFailed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteAudioTrackPublication: sid=%b, name=%s]" +
                                 "[TwilioException: code=%d, message=%s]",
@@ -572,19 +619,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onAudioTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, RemoteAudioTrack remoteAudioTrack) {
-                Log.i(TwilioVideo.TAG, String.format("onAudioTrackUnsubscribed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onAudioTrackUnsubscribed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
                         remoteParticipant.getIdentity(),
                         remoteAudioTrack.isEnabled(),
                         remoteAudioTrack.isPlaybackEnabled(),
                         remoteAudioTrack.getName()));
-                publishEvent(CallEvent.AUDIO_TRACK_REMOVED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.AUDIO_TRACK_REMOVED);
             }
 
             @Override
             public void onVideoTrackPublished(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
-                Log.i(TwilioVideo.TAG, String.format("onVideoTrackPublished: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onVideoTrackPublished: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
                                 "subscribed=%b, name=%s]",
@@ -597,7 +644,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onVideoTrackUnpublished(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
-                Log.i(TwilioVideo.TAG, String.format("onVideoTrackUnpublished: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onVideoTrackUnpublished: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
                                 "subscribed=%b, name=%s]",
@@ -610,19 +657,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onVideoTrackSubscribed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, RemoteVideoTrack remoteVideoTrack) {
-                Log.i(TwilioVideo.TAG, String.format("onVideoTrackSubscribed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onVideoTrackSubscribed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteVideoTrack: enabled=%b, name=%s]",
                         remoteParticipant.getIdentity(),
                         remoteVideoTrack.isEnabled(),
                         remoteVideoTrack.getName()));
-                publishEvent(CallEvent.VIDEO_TRACK_ADDED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.VIDEO_TRACK_ADDED);
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
             @Override
             public void onVideoTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, TwilioException twilioException) {
-                Log.i(TwilioVideo.TAG, String.format("onVideoTrackSubscriptionFailed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onVideoTrackSubscriptionFailed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteVideoTrackPublication: sid=%b, name=%s]" +
                                 "[TwilioException: code=%d, message=%s]",
@@ -635,19 +682,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onVideoTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, RemoteVideoTrack remoteVideoTrack) {
-                Log.i(TwilioVideo.TAG, String.format("onVideoTrackUnsubscribed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onVideoTrackUnsubscribed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteVideoTrack: enabled=%b, name=%s]",
                         remoteParticipant.getIdentity(),
                         remoteVideoTrack.isEnabled(),
                         remoteVideoTrack.getName()));
-                publishEvent(CallEvent.VIDEO_TRACK_REMOVED);
+                publishEvent(org.apache.cordova.twiliovideo.CallEvent.VIDEO_TRACK_REMOVED);
                 removeParticipantVideo(remoteVideoTrack);
             }
 
             @Override
             public void onDataTrackPublished(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication) {
-                Log.i(TwilioVideo.TAG, String.format("onDataTrackPublished: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onDataTrackPublished: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
                                 "subscribed=%b, name=%s]",
@@ -660,7 +707,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onDataTrackUnpublished(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication) {
-                Log.i(TwilioVideo.TAG, String.format("onDataTrackUnpublished: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onDataTrackUnpublished: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
                                 "subscribed=%b, name=%s]",
@@ -673,7 +720,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onDataTrackSubscribed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, RemoteDataTrack remoteDataTrack) {
-                Log.i(TwilioVideo.TAG, String.format("onDataTrackSubscribed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onDataTrackSubscribed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteDataTrack: enabled=%b, name=%s]",
                         remoteParticipant.getIdentity(),
@@ -683,7 +730,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onDataTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, TwilioException twilioException) {
-                Log.i(TwilioVideo.TAG, String.format("onDataTrackSubscriptionFailed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onDataTrackSubscriptionFailed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteDataTrackPublication: sid=%b, name=%s]" +
                                 "[TwilioException: code=%d, message=%s]",
@@ -696,7 +743,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onDataTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, RemoteDataTrack remoteDataTrack) {
-                Log.i(TwilioVideo.TAG, String.format("onDataTrackUnsubscribed: " +
+                Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, String.format("onDataTrackUnsubscribed: " +
                                 "[RemoteParticipant: identity=%s], " +
                                 "[RemoteDataTrack: enabled=%b, name=%s]",
                         remoteParticipant.getIdentity(),
@@ -732,7 +779,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             public void onClick(View v) {
                 if (config.isHangUpInApp()) {
                     // Propagating the event to the web side in order to allow developers to do something else before disconnecting the room
-                    publishEvent(CallEvent.HANG_UP);
+                    publishEvent(org.apache.cordova.twiliovideo.CallEvent.HANG_UP);
                 } else {
                     onDisconnect();
                 }
@@ -822,6 +869,21 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         };
     }
 
+    private View.OnClickListener attachmentClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /*
+                 * Enable/disable the local audio track. The results of this operation are
+                 * signaled to other Participants in the same Room. When an audio track is
+                 * disabled, the audio is muted.
+                 */
+                selectImage();
+
+            }
+        };
+    }
+
     private void configureAudio(boolean enable) {
         if (enable) {
             previousAudioMode = audioManager.getMode();
@@ -872,11 +934,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     private void handleConnectionError(String message) {
         if (config.isHandleErrorInApp()) {
-            Log.i(TwilioVideo.TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
+            Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
             this.finish();
             return;
         }
-        Log.i(TwilioVideo.TAG, "Connection error handled by the plugin");
+        Log.i(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "Connection error handled by the plugin");
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(message)
                 .setCancelable(false)
@@ -909,12 +971,118 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         overridePendingTransition(0, 0);
     }
 
-    private void publishEvent(CallEvent event) {
-        TwilioVideoManager.getInstance().publishEvent(event);
+    private void publishEvent(org.apache.cordova.twiliovideo.CallEvent event) {
+        org.apache.cordova.twiliovideo.TwilioVideoManager.getInstance().publishEvent(event);
     }
 
-    private void publishEvent(CallEvent event, JSONObject data) {
-        TwilioVideoManager.getInstance().publishEvent(event, data);
+    private void publishEvent(String event) {
+        org.apache.cordova.twiliovideo.TwilioVideoManager.getInstance().publishEvent(event);
+    }
+
+    private void publishEvent(org.apache.cordova.twiliovideo.CallEvent event, JSONObject data) {
+        org.apache.cordova.twiliovideo.TwilioVideoManager.getInstance().publishEvent(event, data);
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK) {
+            Uri imageUri = (Uri.parse(imageFilePath));
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                byte[] byteArray = byteArrayOutputStream.toByteArray();
+                String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                publishEvent(ATTACHMENT+"--"+encoded);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        }
+
+        if (requestCode == GALLERY_REQUEST && resultCode == Activity.RESULT_OK) {
+
+            Uri imageUri = Objects.requireNonNull(data).getData();
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                byte[] byteArray = byteArrayOutputStream.toByteArray();
+                String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
+                publishEvent(ATTACHMENT+"--"+encoded);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        String timeStamp =
+                new SimpleDateFormat("yyyyMMdd_HHmmss",
+                        Locale.getDefault()).format(new Date());
+        String imageFileName = "IMG_" + timeStamp + "_";
+        File storageDir =
+                getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        imageFilePath = image.getAbsolutePath();
+        return image;
+    }
+
+    private void openCameraIntent() {
+        Intent pictureIntent = new Intent(
+                MediaStore.ACTION_IMAGE_CAPTURE);
+        if (pictureIntent.resolveActivity(getPackageManager()) != null) {
+            //Create a file to store the image
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                Log.e("exception", "" + ex.getMessage());
+            }
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        BuildConfig.APPLICATION_ID + ".provider", photoFile);
+                pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                        photoURI);
+                startActivityForResult(pictureIntent,
+                        CAMERA_REQUEST);
+            }
+        }
+    }
+
+    private void selectImage() {
+        final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Add Photo!");
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                if (options[item].equals("Take Photo")) {
+                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                        requestPermissions(new String[]{Manifest.permission.CAMERA}, MY_CAMERA_PERMISSION_CODE);
+                    } else {
+                        openCameraIntent();
+                    }
+                } else if (options[item].equals("Choose from Gallery")) {
+                    Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    startActivityForResult(intent, GALLERY_REQUEST);
+                } else if (options[item].equals("Cancel")) {
+                    dialog.dismiss();
+                }
+            }
+        });
+        builder.show();
     }
 
 }

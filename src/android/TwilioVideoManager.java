@@ -4,8 +4,8 @@ import org.json.JSONObject;
 
 public class TwilioVideoManager {
 
-    private CallEventObserver eventListener;
-    private CallActionObserver actionListener;
+    private org.apache.cordova.twiliovideo.CallEventObserver eventListener;
+    private org.apache.cordova.twiliovideo.CallActionObserver actionListener;
     private static TwilioVideoManager instance;
 
     public static TwilioVideoManager getInstance() {
@@ -15,23 +15,34 @@ public class TwilioVideoManager {
         return instance;
     }
 
-    public void setEventObserver(CallEventObserver listener) {
+    public void setEventObserver(org.apache.cordova.twiliovideo.CallEventObserver listener) {
         this.eventListener = listener;
     }
 
-    public void setActionListenerObserver(CallActionObserver listener) {
+    public void setActionListenerObserver(org.apache.cordova.twiliovideo.CallActionObserver listener) {
         this.actionListener = listener;
     }
 
-    public void publishEvent(CallEvent event) {
+    public void publishEvent(org.apache.cordova.twiliovideo.CallEvent event) {
         publishEvent(event, null);
     }
 
-    public void publishEvent(CallEvent event, JSONObject data) {
+    public void publishEvent(String event) {
+        publishEvent(event, null);
+    }
+
+    public void publishEvent(org.apache.cordova.twiliovideo.CallEvent event, JSONObject data) {
         if (hasEventListener()) {
             eventListener.onEvent(event.name(), data);
         }
     }
+
+    public void publishEvent(String event, JSONObject data) {
+        if (hasEventListener()) {
+            eventListener.onEvent(event, data);
+        }
+    }
+
 
     public boolean publishDisconnection() {
         if (hasActionListener()) {

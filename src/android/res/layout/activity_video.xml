@@ -62,6 +62,16 @@
             app:backgroundTint="#3e4666"
             />
 
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/attachment_fab"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fabSize="mini"
+                android:layout_margin="@dimen/fab_margin"
+                android:src="@drawable/attach"
+                app:backgroundTint="#3e4666"
+                />
+
 
 
     </LinearLayout>

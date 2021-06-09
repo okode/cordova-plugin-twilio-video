@@ -68,7 +68,7 @@
                 android:layout_height="wrap_content"
                 app:fabSize="mini"
                 android:layout_margin="@dimen/fab_margin"
-                android:src="@drawable/attachicon"
+                android:src="@drawable/ic_attach_black_24dp"
                 app:backgroundTint="#3e4666"
                 />
 

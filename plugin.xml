@@ -77,16 +77,6 @@
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/TwilioTheme.AppCompat.Light.Translucent"></activity>
-           <provider
-                   android:name="androidx.core.content.FileProvider"
-                   android:authorities="org.apache.cordova.twiliovideo.provider"
-                   android:exported="false"
-                   android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths">
-             </meta-data>
-    </provider>
         </config-file>
         <source-file src="src/android/FakeR.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />

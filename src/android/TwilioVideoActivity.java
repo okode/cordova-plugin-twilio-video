@@ -877,11 +877,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*
-                 * Enable/disable the local audio track. The results of this operation are
-                 * signaled to other Participants in the same Room. When an audio track is
-                 * disabled, the audio is muted.
-                 */
+
                 selectImage();
 
             }
@@ -1055,7 +1051,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
             }
             if (photoFile != null) {
                 Uri photoURI = FileProvider.getUriForFile(this,
-                        BuildConfig.APPLICATION_ID + ".provider", photoFile);
+                        BuildConfig.APPLICATION_ID + ".fileprovider", photoFile);
                 pictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
                         photoURI);
                 startActivityForResult(pictureIntent,

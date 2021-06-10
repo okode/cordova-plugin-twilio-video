@@ -68,23 +68,23 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
 
 - (void) setupAlertCtrl
 {
-    self.alertCtrl = [UIAlertController alertControllerWithTitle:@"Select Image"
+    self.alertCtrl = [UIAlertController alertControllerWithTitle:@""
                                                          message:nil
                                                   preferredStyle:UIAlertControllerStyleActionSheet];
     //Create an action
-    UIAlertAction *camera = [UIAlertAction actionWithTitle:@"From camera"
+    UIAlertAction *camera = [UIAlertAction actionWithTitle:@"Tire uma nova foto"
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action)
                                                     {
                                                         [self handleCamera];
                                                     }];
-    UIAlertAction *imageGallery = [UIAlertAction actionWithTitle:@"From Photo Library"
+    UIAlertAction *imageGallery = [UIAlertAction actionWithTitle:@"Selecione uma foto da Galeria"
                                                      style:UIAlertActionStyleDefault
                                                    handler:^(UIAlertAction *action)
                                                     {
                                                         [self handleImageGallery];
                                                     }];
-    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancel"
+    UIAlertAction *cancel = [UIAlertAction actionWithTitle:@"Cancelar"
                                                            style:UIAlertActionStyleCancel
                                                          handler:^(UIAlertAction *action)
                                    {

@@ -1061,7 +1061,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
     }
 
     private void selectImage() {
-        final CharSequence[] options = {"Choose from Gallery", "Cancel"};
+        final CharSequence[] options = {"Selecione uma foto da Galeria", "Cancelar"};
         AlertDialog.Builder builder = new AlertDialog.Builder(TwilioVideoActivity.this);
         builder.setTitle("Add Photo!");
         builder.setItems(options, new DialogInterface.OnClickListener() {
@@ -1074,10 +1074,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
                     } else {
                         openCameraIntent();
                     }
-                } else if (options[item].equals("Choose from Gallery")) {
+                } else if (options[item].equals("Selecione uma foto da Galeria")) {
                     Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                     startActivityForResult(intent, GALLERY_REQUEST);
-                } else if (options[item].equals("Cancel")) {
+                } else if (options[item].equals("Cancelar")) {
                     dialog.dismiss();
                 }
             }

@@ -104,7 +104,7 @@ public class TwilioVideo extends CordovaPlugin {
                     eventData.putOpt("event", event);
                     eventData.putOpt("data", data);
                 } catch (JSONException e) {
-                    Log.e(TAG, "Failed to create event: " + event);
+                    Log.e(TAG, "Failed to create event: " + e.getMessage());
                     return;
                 }
 

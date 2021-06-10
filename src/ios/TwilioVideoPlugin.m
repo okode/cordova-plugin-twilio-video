@@ -60,14 +60,14 @@
 
 - (void)onCallEvent:(NSString *)event with:(NSDictionary*)data {
     if (!self.listenerCallbackID) {
-        NSLog(@"Listener callback unavailable.  event %@", event);
+        // NSLog(@"Listener callback unavailable.  event %@", event);
         return;
     }
     
     if (data != NULL) {
-        NSLog(@"Event received %@ with data %@", event, data);
+        // NSLog(@"Event received %@ with data %@", event, data);
     } else {
-        NSLog(@"Event received %@", event);
+        // NSLog(@"Event received %@", event);
     }
     
     NSMutableDictionary *message = [NSMutableDictionary dictionary];

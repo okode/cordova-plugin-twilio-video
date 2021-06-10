@@ -97,7 +97,7 @@ public class TwilioVideo extends CordovaPlugin {
         TwilioVideoManager.getInstance().setEventObserver(new CallEventObserver() {
             @Override
             public void onEvent(String event, JSONObject data) {
-                Log.i(TAG, String.format("Event received: %s with data: %s", event, data));
+                // Log.i(TAG, String.format("Event received: %s with data: %s", event, data));
 
                 JSONObject eventData = new JSONObject();
                 try {

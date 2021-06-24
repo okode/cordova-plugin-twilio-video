@@ -18,6 +18,18 @@
         android:layout_margin="@dimen/fab_margin"
         android:src="@drawable/ic_call_white_24px"
         app:backgroundTint="#f76c6c" />
+
+     <com.google.android.material.floatingactionbutton.FloatingActionButton
+             android:id="@+id/connect_action_chat"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_gravity="bottom|end"
+             android:layout_marginRight="80dp"
+             android:layout_margin="@dimen/fab_margin"
+             android:src="@drawable/chat"
+             app:maxImageSize="84dp"
+             app:backgroundTint="#f76c6c" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -68,7 +80,7 @@
                 android:layout_height="wrap_content"
                 app:fabSize="mini"
                 android:layout_margin="@dimen/fab_margin"
-                android:src="@drawable/ic_attach_black_24dp"
+                android:src="@drawable/attach"
                 app:backgroundTint="#3e4666"
                 />
 

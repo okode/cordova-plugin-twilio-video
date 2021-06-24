@@ -93,6 +93,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
      */
     private String accessToken;
     private String roomId;
+    private String userId;
     private org.apache.cordova.twiliovideo.CallConfig config;
 
     /*
@@ -115,6 +116,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
     private LocalAudioTrack localAudioTrack;
     private LocalVideoTrack localVideoTrack;
     private FloatingActionButton connectActionFab;
+    private FloatingActionButton chatActionFab;
     private FloatingActionButton switchCameraActionFab;
     private FloatingActionButton localVideoActionFab;
     private FloatingActionButton muteActionFab;
@@ -145,6 +147,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         thumbnailVideoView = findViewById(FAKE_R.getId("thumbnail_video_view"));
 
         connectActionFab = findViewById(FAKE_R.getId("connect_action_fab"));
+        chatActionFab = findViewById(FAKE_R.getId("connect_action_chat"));
         switchCameraActionFab = findViewById(FAKE_R.getId("switch_camera_action_fab"));
         localVideoActionFab = findViewById(FAKE_R.getId("local_video_action_fab"));
         muteActionFab = findViewById(FAKE_R.getId("mute_action_fab"));
@@ -168,6 +171,14 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         this.roomId = intent.getStringExtra("roomId");
         this.config = (org.apache.cordova.twiliovideo.CallConfig) intent.getSerializableExtra("config");
 
+        if ( this.roomId.contains(":")){
+            String[] separated =  this.roomId.split(":");
+            this.roomId =  separated[0];
+            this.userId =  separated[1] ;
+        }else {
+            this.userId = "";
+        }
+
         Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
         if (!hasPermissionForCameraAndMicrophone()) {
             Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "REQUEST PERMISSIONS");
@@ -182,6 +193,18 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
          * Set the initial state of the UI
          */
         initializeUI();
+
+        chatActionFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String webUrl = "https://siriolibanes.stg.iron.fit/chat/"+this.userId+"/"+this.roomId
+                Intent i= new Intent(getApplicationContext(), WebViewActivity.class);
+                i.putExtra("webUrl",webUrl);
+                i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(i);
+
+            }
+        });
     }
 
     @Override

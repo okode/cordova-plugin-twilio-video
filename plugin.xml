@@ -80,10 +80,12 @@
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
             <activity android:name="org.apache.cordova.twiliovideo.TwilioVideoActivity" android:configChanges="orientation|screenSize" android:theme="@style/TwilioTheme.AppCompat.Light.Translucent"></activity>
+            <activity android:name="org.apache.cordova.twiliovideo.WebViewActivity" android:configChanges="orientation|screenSize" android:theme="@style/TwilioTheme.AppCompat.Light.Translucent"></activity>
         </config-file>
         <source-file src="src/android/FakeR.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/WebViewActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoManager.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEventObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
@@ -105,11 +107,14 @@
         <resource-file src="src/android/res/drawable/ic_videocam_off_red_24px.xml" target="res/drawable/ic_videocam_off_red_24px.xml" />
 		<resource-file src="src/android/res/drawable/ic_phonelink_ring_white_24dp.xml" target="res/drawable/ic_phonelink_ring_white_24dp.xml" />
 		<resource-file src="src/android/res/drawable/ic_volume_up_white_24dp.xml" target="res/drawable/ic_volume_up_white_24dp.xml" />
-        <resource-file src="src/android/res/drawable/ic_attach_black_24dp.xml" target="res/drawable/ic_attach_black_24dp.xml" />
+        <resource-file src="src/android/res/drawable/attach.png" target="res/drawable/attach.png" />
+        <resource-file src="src/android/res/drawable/chat.png" target="res/drawable/chat.png" />
+        <resource-file src="src/android/res/drawable/close.png" target="res/drawable/close.png" />
         <resource-file src="src/android/res/drawable/ic_volume_headhphones_white_24dp.xml" target="res/drawable/ic_volume_headhphones_white_24dp.xml" />
 
         <resource-file src="src/android/res/layout/activity_video.xml" target="res/layout/activity_video.xml" />
         <resource-file src="src/android/res/layout/content_video.xml" target="res/layout/content_video.xml" />
+        <resource-file src="src/android/res/layout/activity_webview.xml" target="res/layout/activity_webview.xml" />
 
         <resource-file src="src/android/res/values/dimens.xml" target="res/values/dimens.xml" />
         <resource-file src="src/android/res/values/styles.xml" target="res/values/styles.xml" />

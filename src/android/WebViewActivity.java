@@ -11,6 +11,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.content.Intent
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -40,7 +41,7 @@ public class WebViewActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
 
-        this.webUrl = intent.getStringExtra("webUrl");
+        webUrl = intent.getStringExtra("webUrl");
 
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -49,7 +50,7 @@ public class WebViewActivity extends AppCompatActivity {
             }
         });
 
-        startWebView(webView, this.webUrl);
+        startWebView(webView, webUrl);
     }
 
     @SuppressLint("SetJavaScriptEnabled")

@@ -173,10 +173,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
 
         if ( this.roomId.contains(":")){
             String[] separated =  this.roomId.split(":");
-            this.roomId =  separated[0];
-            this.userId =  separated[1] ;
+            roomId =  separated[0];
+            userId =  separated[1] ;
         }else {
-            this.userId = "";
+           userId = "";
         }
 
         Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
@@ -197,7 +197,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         chatActionFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String webUrl = "https://siriolibanes.stg.iron.fit/chat/"+this.userId+"/"+this.roomId
+                String webUrl = "https://siriolibanes.stg.iron.fit/chat/"+userId+"/"+roomId
                 Intent i= new Intent(getApplicationContext(), WebViewActivity.class);
                 i.putExtra("webUrl",webUrl);
                 i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

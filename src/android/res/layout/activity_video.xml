@@ -25,9 +25,9 @@
              android:layout_height="wrap_content"
              android:layout_gravity="bottom|end"
              android:layout_marginRight="80dp"
-             android:layout_margin="@dimen/fab_margin"
+             android:layout_marginBottom="16dp"
              android:src="@drawable/chat"
-             app:maxImageSize="84dp"
+             app:maxImageSize="24dp"
              app:backgroundTint="#f76c6c" />
 
     <LinearLayout

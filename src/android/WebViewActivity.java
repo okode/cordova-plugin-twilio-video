@@ -28,10 +28,12 @@ public class WebViewActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
+       /* requestWindowFeature(Window.FEATURE_NO_TITLE); //will hide the title
         getSupportActionBar().hide(); // hide the title bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN); //enable full screen
+                WindowManager.LayoutParams.FLAG_FULLSCREEN); //enable full screen*/
+
+        FAKE_R = new org.apache.cordova.twiliovideo.FakeR(this);
 
         setContentView(FAKE_R.getLayout("activity_webview"));
 

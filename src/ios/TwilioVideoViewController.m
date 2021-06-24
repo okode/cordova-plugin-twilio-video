@@ -148,7 +148,7 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
 #pragma mark - Public
 
 - (void)connectToRoom:(NSString*)room token:(NSString *)token {
-    if (room containsString:@":") {
+    if ([room containsString:@":"]) {
         NSArray *arr = [room componentsSeparatedByString:@":"];
         
         if (arr.count > 0) {

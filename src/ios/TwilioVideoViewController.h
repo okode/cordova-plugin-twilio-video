@@ -13,6 +13,8 @@
 @property (nonatomic, strong) NSString *accessToken;
 @property (nonatomic, strong) TwilioVideoConfig *config;
 @property (nonatomic, strong) NSString *userId;
+@property (nonatomic, strong) NSString *productURL;
+
 
 #pragma mark Video SDK components
 

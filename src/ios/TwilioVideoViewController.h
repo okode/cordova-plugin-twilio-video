@@ -4,13 +4,15 @@
 #import "TwilioVideoConfig.h"
 #import "TwilioVideoPermissions.h"
 #import "TwilioVideoUtils.h"
+#import <WebKit/WebKit.h>
 
-@interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraSourceDelegate, TwilioVideoActionProducerDelegate,UIImagePickerControllerDelegate, UINavigationControllerDelegate>
+@interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraSourceDelegate, TwilioVideoActionProducerDelegate,UIImagePickerControllerDelegate, UINavigationControllerDelegate, WKNavigationDelegate>
 
 // Configure access token manually for testing in `ViewDidLoad`, if desired! Create one manually in the console.
 @property (nonatomic, strong) NSString *roomName;
 @property (nonatomic, strong) NSString *accessToken;
 @property (nonatomic, strong) TwilioVideoConfig *config;
+@property (nonatomic, strong) NSString *userId;
 
 #pragma mark Video SDK components
 
@@ -33,7 +35,10 @@
 @property (nonatomic, weak) IBOutlet UIButton *cameraSwitchButton;
 @property (nonatomic, weak) IBOutlet UIButton *videoButton;
 @property (nonatomic, weak) IBOutlet UIButton *attachmentButton;
+@property (nonatomic, weak) IBOutlet UIButton *chatButton;
 
+@property(strong,nonatomic) WKWebView *webView;
+@property (strong, nonatomic) NSString *chatURL;
 
 @property (strong, nonatomic) UIAlertController *alertCtrl;
 @property (strong, nonatomic) UIImagePickerController *imagePicker;

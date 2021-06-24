@@ -47,6 +47,7 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
     [self.videoButton setImage:[UIImage imageNamed:@"video"] forState: UIControlStateNormal];
     [self.videoButton setImage:[UIImage imageNamed:@"no_video"] forState: UIControlStateSelected];
     [self.attachmentButton setImage:[UIImage imageNamed:@"attach"] forState: UIControlStateSelected];
+    [self.chatButton setImage:[UIImage imageNamed:@"chat"] forState: UIControlStateSelected];
 
     // Customize button colors
     NSString *primaryColor = [self.config primaryColorHex];
@@ -60,6 +61,7 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
         self.videoButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
         self.cameraSwitchButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
         self.attachmentButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
+        self.chatButton.backgroundColor = [TwilioVideoConfig colorFromHexString:secondaryColor];
 
     }
     
@@ -146,7 +148,20 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
 #pragma mark - Public
 
 - (void)connectToRoom:(NSString*)room token:(NSString *)token {
-    self.roomName = room;
+    if (room containsString:@":") {
+        NSArray *arr = [room componentsSeparatedByString:@":"];
+        
+        if (arr.count > 0) {
+            self.roomName = arr[0];
+            
+            if (arr.count > 1) {
+                self.userId = arr[1];
+            }
+        }
+    } else {
+        self.roomName = room;
+    }
+    
     self.accessToken = token;
     [self showRoomUI:YES];
 
@@ -191,6 +206,70 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
     if(self.localVideoTrack){
         self.localVideoTrack.enabled = !self.localVideoTrack.isEnabled;
         [self.videoButton setSelected: !self.localVideoTrack.isEnabled];
+    }
+}
+
+- (IBAction)chatButtonPressed:(id)sender {
+    [self openWebView];
+}
+
+- (void) openWebView {
+    self.productURL = [NSString stringWithFormat:@"https://siriolibanes.stg.iron.fit/chat/%@/%@", self.userId, self.roomName];
+    
+    NSURL *url = [NSURL URLWithString:self.productURL];
+    NSURLRequest *request = [NSURLRequest requestWithURL:url];
+    
+    _webView = [[WKWebView alloc] initWithFrame:self.view.frame];
+    [_webView loadRequest:request];
+    _webView.navigationDelegate = self;
+    _webView.frame = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height - 30);
+    [self animateViewHeight:_webView withAnimationType:kCATransitionFromTop isChatClose:NO];
+    
+    [self createCloseButton];
+}
+
+- (void) createCloseButton {
+    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+    [button addTarget:self action:@selector(btnCloseClicked:) forControlEvents:UIControlEventTouchUpInside];
+    [button setImage:[UIImage imageNamed:@"close.png"] forState:UIControlStateNormal];
+    button.frame = CGRectMake(_webView.frame.size.width - 50, 30.0, 40.0, 40.0);
+    [_webView addSubview:button];
+}
+
+- (void)btnCloseClicked:(UIButton*)button{
+    [self animateViewHeight:self.view withAnimationType:kCATransitionFromBottom isChatClose:YES];
+}
+
+- (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {
+    NSLog(@"finish load");
+}
+
+- (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error {
+    NSLog(@"fail to load with error : %@", error.localizedDescription);
+}
+
+- (void)animateViewHeight:(UIView*)animateView withAnimationType:(NSString*)animType isChatClose:(BOOL)isClose {
+    CATransition *animation = [CATransition animation];
+    [animation setType:kCATransitionPush];
+    [animation setSubtype:animType];
+    [animation setDuration:0.5];
+    [animation setTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+    [[animateView layer] addAnimation:animation forKey:kCATransition];
+    
+    if (isClose) {
+        for (id child in [animateView subviews]) {
+            if ([child isMemberOfClass:[WKWebView class]]) {
+                [child removeFromSuperview];
+            }
+        }
+        
+        for (id child in [_webView subviews]) {
+            if ([child isMemberOfClass:[UIButton class]]) {
+                [child removeFromSuperview];
+            }
+        }
+    } else {
+        [self.view addSubview:animateView];
     }
 }
 

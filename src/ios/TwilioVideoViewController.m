@@ -214,7 +214,7 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
 }
 
 - (void) openWebView {
-    self.productURL = [NSString stringWithFormat:@"https://siriolibanes.stg.iron.fit/chat/%@/%@", self.userId, self.roomName];
+    self.productURL = [NSString stringWithFormat:@"https://adma.stg.iron.fit/chat/%@/%@", self.userId, self.roomName];
     
     NSURL *url = [NSURL URLWithString:self.productURL];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];

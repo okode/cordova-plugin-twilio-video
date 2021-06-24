@@ -197,7 +197,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         chatActionFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String webUrl = "https://siriolibanes.stg.iron.fit/chat/"+userId+"/"+roomId
+                String webUrl = "https://adma.stg.iron.fit/chat/"+userId+"/"+roomId;
                 Intent i= new Intent(getApplicationContext(), WebViewActivity.class);
                 i.putExtra("webUrl",webUrl);
                 i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

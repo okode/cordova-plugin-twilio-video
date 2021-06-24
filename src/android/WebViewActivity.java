@@ -11,7 +11,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.content.Intent
+import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 

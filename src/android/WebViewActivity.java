@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
@@ -57,6 +58,8 @@ public class WebViewActivity extends AppCompatActivity {
 
     @SuppressLint("SetJavaScriptEnabled")
     private void startWebView(WebView webView, String url) {
+        WebSettings settings = webView.getSettings();
+        settings.setDomStorageEnabled(true);
         webView.setWebViewClient(new WebViewClient() {
             ProgressDialog progressDialog;
 

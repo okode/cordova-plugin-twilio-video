@@ -259,7 +259,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
                     cameraCapturer.getVideoCapturer(),
                     LOCAL_VIDEO_TRACK_NAME);
             localVideoTrack.addRenderer(thumbnailVideoView);
-
+            int icon = FAKE_R.getDrawable("ic_videocam_green_24px");
+            switchCameraActionFab.show();
+            localVideoActionFab.setImageDrawable(
+                    ContextCompat.getDrawable(TwilioVideoActivity.this, icon));
             /*
              * If connected to a Room then share the local video track.
              */

@@ -16,8 +16,8 @@
           android:layout_margin="20dp"
           android:layout_gravity="right"
           android:src="@drawable/close"
-          android:layout_width = "40dp"
-          android:layout_height = "40dp"/>
+          android:layout_width = "24dp"
+          android:layout_height = "24dp"/>
 
   <ProgressBar
           android:id="@+id/progressBar"

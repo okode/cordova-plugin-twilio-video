@@ -222,7 +222,7 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
     _webView = [[WKWebView alloc] initWithFrame:self.view.frame];
     [_webView loadRequest:request];
     _webView.navigationDelegate = self;
-    _webView.frame = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height);
+    _webView.frame = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height+40);
     [self animateViewHeight:_webView withAnimationType:kCATransitionFromTop isChatClose:NO];
     
     [self createCloseButton];

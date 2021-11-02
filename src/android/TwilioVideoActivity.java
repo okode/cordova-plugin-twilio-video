@@ -21,8 +21,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.twilio.video.CameraCapturer;
-import com.twilio.video.CameraCapturer.CameraSource;
 import com.twilio.video.ConnectOptions;
 import com.twilio.video.LocalAudioTrack;
 import com.twilio.video.LocalParticipant;
@@ -37,7 +35,6 @@ import com.twilio.video.RemoteVideoTrackPublication;
 import com.twilio.video.Room;
 import com.twilio.video.TwilioException;
 import com.twilio.video.Video;
-import com.twilio.video.VideoRenderer;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 
@@ -95,13 +92,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private FloatingActionButton muteActionFab;
     private FloatingActionButton switchAudioActionFab;
     private AudioManager audioManager;
-    private String participantIdentity;
+    private String remoteParticipantIdentity;
 
     private int previousAudioMode;
     private boolean previousMicrophoneMute;
     private boolean disconnectedFromOnDestroy;
-    private VideoRenderer localVideoView;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,9 +181,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         if (localVideoTrack == null && hasPermissionForCameraAndMicrophone()) {
             localVideoTrack = LocalVideoTrack.create(this,
                     true,
-                    cameraCapturer.getVideoCapturer(),
+                    cameraCapturer,
                     LOCAL_VIDEO_TRACK_NAME);
-            localVideoTrack.addRenderer(thumbnailVideoView);
+            localVideoTrack.addSink(thumbnailVideoView);
 
             /*
              * If connected to a Room then share the local video track.
@@ -272,7 +267,6 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 this,
                 TwilioVideo.PERMISSIONS_REQUIRED,
                 PERMISSIONS_REQUEST_CODE);
-
     }
 
     private void createAudioAndVideoTracks() {
@@ -280,18 +274,12 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         localAudioTrack = LocalAudioTrack.create(this, true, LOCAL_AUDIO_TRACK_NAME);
 
         // Share your camera
-        cameraCapturer = new CameraCapturerCompat(this, getAvailableCameraSource());
+        cameraCapturer = new CameraCapturerCompat(this, CameraCapturerCompat.Source.FRONT_CAMERA);
         localVideoTrack = LocalVideoTrack.create(this,
                 true,
-                cameraCapturer.getVideoCapturer(),
+                cameraCapturer,
                 LOCAL_VIDEO_TRACK_NAME);
         this.moveLocalVideoToThumbnailView();
-    }
-
-    private CameraSource getAvailableCameraSource() {
-        return (CameraCapturer.isSourceAvailable(CameraSource.FRONT_CAMERA)) ?
-                (CameraSource.FRONT_CAMERA) :
-                (CameraSource.BACK_CAMERA);
     }
 
     private void connectToRoom() {
@@ -362,7 +350,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
      * Called when participant joins the room
      */
     private void addRemoteParticipant(RemoteParticipant participant) {
-        participantIdentity = participant.getIdentity();
+        remoteParticipantIdentity = participant.getIdentity();
 
 
         /*
@@ -392,38 +380,35 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private void addRemoteParticipantVideo(VideoTrack videoTrack) {
         primaryVideoView.setVisibility(View.VISIBLE);
         primaryVideoView.setMirror(false);
-        videoTrack.addRenderer(primaryVideoView);
+        videoTrack.addSink(primaryVideoView);
     }
 
     private void moveLocalVideoToThumbnailView() {
         if (thumbnailVideoView.getVisibility() == View.GONE) {
             thumbnailVideoView.setVisibility(View.VISIBLE);
             if (localVideoTrack != null) {
-                localVideoTrack.removeRenderer(primaryVideoView);
-                localVideoTrack.addRenderer(thumbnailVideoView);
-            }
-            if (localVideoView != null && thumbnailVideoView != null) {
-                localVideoView = thumbnailVideoView;
+                localVideoTrack.removeSink(primaryVideoView);
+                localVideoTrack.addSink(thumbnailVideoView);
             }
             thumbnailVideoView.setMirror(cameraCapturer.getCameraSource() ==
-                    CameraSource.FRONT_CAMERA);
+                CameraCapturerCompat.Source.FRONT_CAMERA);
         }
     }
 
     /*
      * Called when participant leaves the room
      */
-    private void removeRemoteParticipant(RemoteParticipant participant) {
-        if (!participant.getIdentity().equals(participantIdentity)) {
+    private void removeRemoteParticipant(RemoteParticipant remoteParticipant) {
+        if (!remoteParticipant.getIdentity().equals(remoteParticipantIdentity)) {
             return;
         }
 
         /*
          * Remove participant renderer
          */
-        if (participant.getRemoteVideoTracks().size() > 0) {
+        if (!remoteParticipant.getRemoteVideoTracks().isEmpty()) {
             RemoteVideoTrackPublication remoteVideoTrackPublication =
-                    participant.getRemoteVideoTracks().get(0);
+              remoteParticipant.getRemoteVideoTracks().get(0);
 
             /*
              * Remove video only if subscribed to participant track
@@ -436,7 +421,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     private void removeParticipantVideo(VideoTrack videoTrack) {
         primaryVideoView.setVisibility(View.GONE);
-        videoTrack.removeRenderer(primaryVideoView);
+        videoTrack.removeSink(primaryVideoView);
     }
 
     /*
@@ -745,13 +730,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onClick(View v) {
                 if (cameraCapturer != null) {
-                    CameraSource cameraSource = cameraCapturer.getCameraSource();
+                    CameraCapturerCompat.Source cameraSource = cameraCapturer.getCameraSource();
                     cameraCapturer.switchCamera();
-                    if (thumbnailVideoView.getVisibility() == View.VISIBLE) {
-                        thumbnailVideoView.setMirror(cameraSource == CameraSource.BACK_CAMERA);
-                    } else {
-                        primaryVideoView.setMirror(cameraSource == CameraSource.BACK_CAMERA);
-                    }
+                    thumbnailVideoView.setMirror(cameraSource == CameraCapturerCompat.Source.BACK_CAMERA);
                 }
             }
         };

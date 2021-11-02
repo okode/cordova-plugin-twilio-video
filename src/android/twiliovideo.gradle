@@ -3,7 +3,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.twilio:video-android:5.8.0'
+    implementation 'com.twilio:video-android:7.0.1'
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.google.android.material:material:1.1.0-rc02'
 }

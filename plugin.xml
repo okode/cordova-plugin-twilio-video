@@ -43,18 +43,17 @@
         <resource-file src="src/ios/Resources/video@3x.png" target="Resources/video@3x.png" />
         <resource-file src="src/ios/Resources/no_video.png" target="Resources/no_video.png" />
         <resource-file src="src/ios/Resources/no_video@2x.png" target="Resources/no_video@2x.png" />
-        <resource-file src="src/ios/Resources/no_video@3x.png" target="Resources/no_video@3x.png" />
+        <resource-file src="src/ios/Resources/no_video@3x.png" target="Resourc/no_video@3x.png" />
         <resource-file src="src/ios/Resources/switch_camera.png" target="Resources/switch_camera.png" />
         <resource-file src="src/ios/Resources/switch_camera@2x.png" target="Resources/switch_camera@2x.png" />
         <resource-file src="src/ios/Resources/switch_camera@3x.png" target="Resources/switch_camera@3x.png" />
 
-        <framework src="TwilioVideo" type="podspec" spec="3.7.0"/>
-        <podspec>
-            <config>
+        <framework src="TwilioVideo" type="podspec" spec="4.6.1"/>
+        <podspec>d1            <config>
                 <source url="https://cdn.cocoapods.org/"/>
             </config>
             <pods>
-                <pod name="TwilioVideo" spec="3.7.0"/>
+                <pod name="TwilioVideo" spec="4.6.1"/>
             </pods>
         </podspec>
 

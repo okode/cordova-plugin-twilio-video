@@ -72,7 +72,7 @@ NSString *const CLOSED = @"CLOSED";
              [self doConnect];
          } else {
              [[TwilioVideoManager getInstance] publishEvent: PERMISSIONS_REQUIRED];
-             [self handleConnectionError: [self.config i18nConnectionError]];
+             [self handleConnectionError];
          }
     }];
 }
@@ -291,29 +291,9 @@ NSString *const CLOSED = @"CLOSED";
     NSLog(@"%@", msg);
 }
 
-- (void)handleConnectionError: (NSString*)message {
-    if ([self.config handleErrorInApp]) {
-        [self logMessage: @"Error handling disabled for the plugin. This error should be handled in the hybrid app"];
-        [self dismiss];
-        return;
-    }
-    [self logMessage: @"Connection error handled by the plugin"];
-    UIAlertController * alert = [UIAlertController
-                                 alertControllerWithTitle:NULL
-                                 message: message
-                                 preferredStyle:UIAlertControllerStyleAlert];
-
-    //Add Buttons
-
-    UIAlertAction* yesButton = [UIAlertAction
-                                actionWithTitle:[self.config i18nAccept]
-                                style:UIAlertActionStyleDefault
-                                handler: ^(UIAlertAction * action) {
-                                    [self dismiss];
-                                }];
-
-    [alert addAction:yesButton];
-    [self presentViewController:alert animated:YES completion:nil];
+- (void)handleConnectionError {
+    [self logMessage: @"Connection error happened. Finishing videocall..."];
+    [self dismiss];
 }
 
 - (void) dismiss {
@@ -351,7 +331,7 @@ NSString *const CLOSED = @"CLOSED";
     self.room = nil;
 
     [self showRoomUI:NO];
-    [self handleConnectionError: [self.config i18nConnectionError]];
+    [self handleConnectionError];
 }
 
 - (void)room:(nonnull TVIRoom *)room didDisconnectWithError:(nullable NSError *)error {
@@ -363,7 +343,7 @@ NSString *const CLOSED = @"CLOSED";
     [self showRoomUI:NO];
     if (error != NULL) {
         [[TwilioVideoManager getInstance] publishEvent:DISCONNECTED_WITH_ERROR with:[TwilioVideoUtils convertErrorToDictionary:error]];
-        [self handleConnectionError: [self.config i18nDisconnectedWithError]];
+        [self handleConnectionError];
     } else {
         [[TwilioVideoManager getInstance] publishEvent: DISCONNECTED];
         [self dismiss];

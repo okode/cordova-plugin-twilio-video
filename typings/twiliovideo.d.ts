@@ -10,10 +10,6 @@ declare module TwilioVideo {
      * @param {Object} config - (Optional) Call configuraiton
      * @param config.primaryColor - Hex primary color that the app will use
      * @param config.secondaryColor - Hex secondary color that the app will use
-     * @param config.i18nConnectionError - Message shown when it is not possible to join the room
-     * @param config.i18nDisconnectedWithError - Message show when the client is disconnected due to an error
-     * @param config.i18nAccept - Accept translation
-     * @param config.handleErrorInApp - (Default = false) Flag to indicate the application will manage any error in the app by events emitted by the plugin
      * @param config.hangUpInApp - (Default = false) Flag to indicate the application should hang up the call by calling 'closeRoom'
      * @param config.disableBackButton - (Only Android) (Default = false) Flag to disable back button
      */

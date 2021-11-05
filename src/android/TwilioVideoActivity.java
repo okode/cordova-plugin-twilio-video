@@ -2,7 +2,6 @@ package org.apache.cordova.twiliovideo;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -182,7 +181,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 connectToRoom();
             } else {
                 publishEvent(CallEvent.PERMISSIONS_REQUIRED);
-                TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
+                TwilioVideoActivity.this.handleConnectionError();
             }
         }
     }
@@ -503,7 +502,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
                 publishEvent(CallEvent.CONNECT_FAILURE, TwilioVideoUtils.convertToJSON(e));
-                TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
+                TwilioVideoActivity.this.handleConnectionError();
             }
 
             @Override
@@ -523,7 +522,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
                     publishEvent(CallEvent.DISCONNECTED_WITH_ERROR, TwilioVideoUtils.convertToJSON(e));
-                    TwilioVideoActivity.this.handleConnectionError(config.getI18nDisconnectedWithError());
+                    TwilioVideoActivity.this.handleConnectionError();
                 } else {
                     publishEvent(CallEvent.DISCONNECTED);
                 }
@@ -854,23 +853,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         };
     }
 
-    private void handleConnectionError(String message) {
-        if (config.isHandleErrorInApp()) {
-            Log.i(TwilioVideo.TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
-            this.finish();
-            return;
-        }
-        Log.i(TwilioVideo.TAG, "Connection error handled by the plugin");
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message)
-            .setCancelable(false)
-            .setPositiveButton(config.getI18nAccept(), new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int id) {
-                    TwilioVideoActivity.this.finish();
-                }
-            });
-        AlertDialog alert = builder.create();
-        alert.show();
+    private void handleConnectionError() {
+        Log.i(TwilioVideo.TAG, "Connection error happened. Finishing videocall...");
+        this.finish();
     }
 
     @Override

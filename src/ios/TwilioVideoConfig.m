@@ -2,10 +2,6 @@
 
 #define PRIMARY_COLOR_PROP                  @"primaryColor"
 #define SECONDARY_COLOR_PROP                @"secondaryColor"
-#define i18n_CONNECTION_ERROR_PROP          @"i18nConnectionError"
-#define i18n_DISCONNECTED_WITH_ERROR_PROP   @"i18nDisconnectedWithError"
-#define i18n_ACCEPT_PROP                    @"i18nAccept"
-#define HANDLE_ERROR_IN_APP                 @"handleErrorInApp"
 #define HANG_UP_IN_APP                      @"hangUpInApp"
 
 @implementation TwilioVideoConfig
@@ -13,20 +9,6 @@
     if (config == NULL || config == (id)[NSNull null]) { return; }
     self.primaryColorHex = [config objectForKey:PRIMARY_COLOR_PROP];
     self.secondaryColorHex = [config objectForKey:SECONDARY_COLOR_PROP];
-    self.i18nConnectionError = [config objectForKey:i18n_CONNECTION_ERROR_PROP];
-    if (self.i18nConnectionError == NULL) {
-        self.i18nConnectionError = @"It was not possible to join the room";
-    }
-    self.i18nDisconnectedWithError = [config objectForKey:i18n_DISCONNECTED_WITH_ERROR_PROP];
-    if (self.i18nDisconnectedWithError == NULL) {
-        self.i18nDisconnectedWithError = @"Disconnected";
-    }
-    self.i18nAccept = [config objectForKey:i18n_ACCEPT_PROP];
-    if (self.i18nAccept == NULL) {
-        self.i18nAccept = @"Accept";
-    }
-    NSNumber *handleErrorInApp = [config objectForKey:HANDLE_ERROR_IN_APP];
-    self.handleErrorInApp = handleErrorInApp ? [handleErrorInApp boolValue] : false;
     NSNumber *hangUpInApp = [config objectForKey:HANG_UP_IN_APP];
     self.hangUpInApp = hangUpInApp ? [hangUpInApp boolValue] : false;
 }

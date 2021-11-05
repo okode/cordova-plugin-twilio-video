@@ -37,6 +37,22 @@ window.twiliovideo.openRoom(token, room)
 ### Methods
 Have a look at <a href="typings/twiliovideo.d.ts">definitions file</a> where the API is documented.
 
+## Customization at project level
+
+### Android
+
+- Set custom audio device names
+
+Add this lines to the 'strings.xml` of your project and use the desired string values:
+
+```
+    <string name="twilio_audio_bluetooth_device_name">Auricular bluetooth</string>
+    <string name="twilio_audio_wired_headset_device_name">Auricular con cable</string>
+    <string name="twilio_audio_speakerphone_device_name">Altavoz</string>
+    <string name="twilio_audio_earpiece_device_name">Auricular del teléfono</string>
+```
+Note: this example translates audio device names to Spanish.
+
 ## Troubleshooting guide
 
 Q: I get compilation errors on Android

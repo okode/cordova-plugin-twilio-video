@@ -1,19 +1,27 @@
 declare module TwilioVideo {
   interface TwilioVideoPlugin {
     /**
-     * It opens Twilio Video controller and tries to start the videocall.
-     * All videocall UI controls will be positioned on the current view, so we can put
-     * our own controls from the application that uses the plugin.
+     * It opens a native Twilio Video controller and tries to start the videocall with the provided
+     * configuration. All native videocall UI controls will be positioned above the current web view
+     * by using a transparent native layout. In this way, we can put our own controls from the web
+     * application that uses this plugin.
+     *
      * @param token
      * @param roomName
-     * @param onEvent - (Optional) It will be fired any time that a call event is received
-     * @param {Object} config - (Optional) Call configuraiton
-     * @param config.primaryColor - Hex primary color that the app will use
-     * @param config.secondaryColor - Hex secondary color that the app will use
-     * @param config.hangUpInApp - (Default = false) Flag to indicate the application should hang up the call by calling 'closeRoom'
-     * @param config.disableBackButton - (Only Android) (Default = false) Flag to disable back button
+     * @param {Object} config - (Optional) Videocall configuration.
+     * @param config.primaryColor - Hex primary brand color for your project.
+     * @param config.secondaryColor - Hex secondary brand color for your project.
+     * @param config.hangUpInApp - (Default = false) Flag to handle videocall close from web side by explicitly calling 'closeRoom'.
+     *                              Example: Useful when it is needed to invoke a backend service before closing the Twilio videocall.
+     * @param config.disableBackButton - (Only Android) (Default = false) Flag to disable back button while the videocall is running.
+     * @param {Callback} onEvent - (Optional) It will be fired any time that a videocall event is received.
      */
-    openRoom(token: string, roomName: string, onEvent?: Function, config?: any): void;
+    openRoom(
+      token: string,
+      roomName: string,
+      config?: any,
+      onEvent?: (event: { name: string, data?: any }) => void
+    ): void;
 
     /**
      * It closes the videocall room if it is running

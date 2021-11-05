@@ -598,7 +598,6 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                     remoteAudioTrack.isEnabled(),
                     remoteAudioTrack.isPlaybackEnabled(),
                     remoteAudioTrack.getName()));
-                publishEvent(CallEvent.AUDIO_TRACK_ADDED);
             }
 
             @Override
@@ -623,7 +622,6 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                     remoteAudioTrack.isEnabled(),
                     remoteAudioTrack.isPlaybackEnabled(),
                     remoteAudioTrack.getName()));
-                publishEvent(CallEvent.AUDIO_TRACK_REMOVED);
             }
 
             @Override
@@ -660,7 +658,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                     remoteParticipant.getIdentity(),
                     remoteVideoTrack.isEnabled(),
                     remoteVideoTrack.getName()));
-                publishEvent(CallEvent.VIDEO_TRACK_ADDED);
+                publishEvent(CallEvent.REMOTE_VIDEO_TRACK_ADDED);
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
@@ -685,7 +683,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                     remoteParticipant.getIdentity(),
                     remoteVideoTrack.isEnabled(),
                     remoteVideoTrack.getName()));
-                publishEvent(CallEvent.VIDEO_TRACK_REMOVED);
+                publishEvent(CallEvent.REMOTE_VIDEO_TRACK_REMOVED);
                 removeParticipantVideo(remoteVideoTrack);
             }
 

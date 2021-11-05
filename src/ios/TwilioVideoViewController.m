@@ -10,13 +10,11 @@ NSString *const RECONNECTING = @"RECONNECTING";
 NSString *const RECONNECTED = @"RECONNECTED";
 NSString *const PARTICIPANT_CONNECTED = @"PARTICIPANT_CONNECTED";
 NSString *const PARTICIPANT_DISCONNECTED = @"PARTICIPANT_DISCONNECTED";
-NSString *const AUDIO_TRACK_ADDED = @"AUDIO_TRACK_ADDED";
-NSString *const AUDIO_TRACK_REMOVED = @"AUDIO_TRACK_REMOVED";
-NSString *const VIDEO_TRACK_ADDED = @"VIDEO_TRACK_ADDED";
-NSString *const VIDEO_TRACK_REMOVED = @"VIDEO_TRACK_REMOVED";
-NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
+NSString *const REMOTE_VIDEO_TRACK_ADDED = @"REMOTE_VIDEO_TRACK_ADDED";
+NSString *const REMOTE_VIDEO_TRACK_REMOVED = @"REMOTE_VIDEO_TRACK_REMOVED";
 NSString *const HANG_UP = @"HANG_UP";
 NSString *const CLOSED = @"CLOSED";
+NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 
 @implementation TwilioVideoViewController
 
@@ -421,7 +419,7 @@ NSString *const CLOSED = @"CLOSED";
 
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: VIDEO_TRACK_ADDED];
+    [[TwilioVideoManager getInstance] publishEvent: REMOTE_VIDEO_TRACK_ADDED];
 
     if (self.remoteParticipant == participant) {
         [self setupRemoteView];
@@ -438,7 +436,7 @@ NSString *const CLOSED = @"CLOSED";
 
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: VIDEO_TRACK_REMOVED];
+    [[TwilioVideoManager getInstance] publishEvent: REMOTE_VIDEO_TRACK_REMOVED];
 
     if (self.remoteParticipant == participant) {
         [videoTrack removeRenderer:self.remoteView];
@@ -455,7 +453,6 @@ NSString *const CLOSED = @"CLOSED";
 
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: AUDIO_TRACK_ADDED];
 }
 
 - (void)didUnsubscribeFromAudioTrack:(nonnull TVIRemoteAudioTrack *)audioTrack
@@ -467,7 +464,6 @@ NSString *const CLOSED = @"CLOSED";
 
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ audio track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: AUDIO_TRACK_REMOVED];
 }
 
 - (void)remoteParticipant:(nonnull TVIRemoteParticipant *)participant didEnableVideoTrack:(nonnull TVIRemoteVideoTrackPublication *)publication {

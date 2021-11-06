@@ -1,7 +1,5 @@
 package org.apache.cordova.twiliovideo;
 
-import org.json.JSONObject;
-
 public class TwilioVideoManager {
 
     private CallEventObserver eventListener;
@@ -24,12 +22,8 @@ public class TwilioVideoManager {
     }
 
     public void publishEvent(CallEvent event) {
-        publishEvent(event, null);
-    }
-
-    public void publishEvent(CallEvent event, JSONObject data) {
         if (hasEventListener()) {
-            eventListener.onEvent(event.name(), data);
+            eventListener.onEvent(event);
         }
     }
 

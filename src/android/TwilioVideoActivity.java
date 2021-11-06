@@ -36,14 +36,27 @@ import com.twilio.video.Video;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 
-import org.json.JSONObject;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function2;
+
+import static org.apache.cordova.twiliovideo.CallEventId.CLOSED;
+import static org.apache.cordova.twiliovideo.CallEventId.CONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.CONNECT_FAILURE;
+import static org.apache.cordova.twiliovideo.CallEventId.DISCONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.DISCONNECTED_WITH_ERROR;
+import static org.apache.cordova.twiliovideo.CallEventId.HANG_UP;
+import static org.apache.cordova.twiliovideo.CallEventId.OPENED;
+import static org.apache.cordova.twiliovideo.CallEventId.PARTICIPANT_CONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.PARTICIPANT_DISCONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.PERMISSIONS_REQUIRED;
+import static org.apache.cordova.twiliovideo.CallEventId.RECONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.RECONNECTING;
+import static org.apache.cordova.twiliovideo.CallEventId.REMOTE_VIDEO_TRACK_ADDED;
+import static org.apache.cordova.twiliovideo.CallEventId.REMOTE_VIDEO_TRACK_REMOVED;
 
 public class TwilioVideoActivity extends AppCompatActivity implements CallActionObserver, AudioManager.OnAudioFocusChangeListener {
 
@@ -80,7 +93,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     /*
      * A Room represents communication between a local participant and one or more participants.
      */
-    private Room room;
+    private static Room room;
     private LocalParticipant localParticipant;
 
     /*
@@ -111,6 +124,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     private boolean disconnectedFromOnDestroy;
 
+    public static Room getVideocallRoomInstance() {
+        return room;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,7 +136,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
         FAKE_R = new FakeR(this);
 
-        publishEvent(CallEvent.OPENED);
+        publishEvent(CallEvent.of(OPENED));
         setContentView(FAKE_R.getLayout("activity_video"));
 
         primaryVideoView = findViewById(FAKE_R.getId("primary_video_view"));
@@ -180,8 +197,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 createAudioAndVideoTracks();
                 connectToRoom();
             } else {
-                publishEvent(CallEvent.PERMISSIONS_REQUIRED);
-                TwilioVideoActivity.this.handleConnectionError();
+                publishEvent(CallEvent.of(PERMISSIONS_REQUIRED));
+                handleConnectionError();
             }
         }
     }
@@ -255,6 +272,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         if (room != null && room.getState() != Room.State.DISCONNECTED) {
             room.disconnect();
             disconnectedFromOnDestroy = true;
+            room = null;
         }
 
         /*
@@ -270,7 +288,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             localVideoTrack = null;
         }
 
-        publishEvent(CallEvent.CLOSED);
+        publishEvent(CallEvent.of(CLOSED));
 
         TwilioVideoManager.getInstance().setActionListenerObserver(null);
 
@@ -287,8 +305,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     }
 
     private boolean hasPermissionForCameraAndMicrophone() {
-        int resultCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        int resultMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+        int resultCamera = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.CAMERA);
+        int resultMic = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.RECORD_AUDIO);
         return resultCamera == PackageManager.PERMISSION_GRANTED &&
             resultMic == PackageManager.PERMISSION_GRANTED;
     }
@@ -302,10 +322,12 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     private void createAudioAndVideoTracks() {
         // Share your microphone
-        localAudioTrack = LocalAudioTrack.create(this, true, LOCAL_AUDIO_TRACK_NAME);
+        localAudioTrack = LocalAudioTrack.create(this, true,
+            LOCAL_AUDIO_TRACK_NAME);
 
         // Share your camera
-        cameraCapturer = new CameraCapturerCompat(this, CameraCapturerCompat.Source.FRONT_CAMERA);
+        cameraCapturer = new CameraCapturerCompat(this,
+            CameraCapturerCompat.Source.FRONT_CAMERA);
         localVideoTrack = LocalVideoTrack.create(this,
             true,
             cameraCapturer,
@@ -400,7 +422,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
      * The actions performed during disconnect.
      */
     private void setDisconnectAction() {
-        connectActionFab.setImageDrawable(ContextCompat.getDrawable(this, FAKE_R.getDrawable("ic_call_end_white_24px")));
+        connectActionFab.setImageDrawable(ContextCompat.getDrawable(this,
+            FAKE_R.getDrawable("ic_call_end_white_24px")));
         connectActionFab.show();
         connectActionFab.setOnClickListener(disconnectClickListener());
     }
@@ -491,7 +514,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onConnected(Room room) {
                 localParticipant = room.getLocalParticipant();
-                publishEvent(CallEvent.CONNECTED);
+                publishEvent(CallEvent.of(CONNECTED).withRoomCtx(room));
 
                 final List<RemoteParticipant> remoteParticipants = room.getRemoteParticipants();
                 if (remoteParticipants != null && !remoteParticipants.isEmpty()) {
@@ -501,18 +524,18 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
-                publishEvent(CallEvent.CONNECT_FAILURE, TwilioVideoUtils.convertToJSON(e));
+                publishEvent(CallEvent.ofError(CONNECT_FAILURE, e).withRoomCtx(room));
                 TwilioVideoActivity.this.handleConnectionError();
             }
 
             @Override
             public void onReconnecting(@NonNull Room room, @NonNull TwilioException e) {
-                publishEvent(CallEvent.RECONNECTING, TwilioVideoUtils.convertToJSON(e));
+                publishEvent(CallEvent.ofError(RECONNECTING, e).withRoomCtx(room));
             }
 
             @Override
             public void onReconnected(@NonNull Room room) {
-                publishEvent(CallEvent.RECONNECTED);
+                publishEvent(CallEvent.of(RECONNECTED).withRoomCtx(room));
             }
 
             @Override
@@ -521,22 +544,22 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
-                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR, TwilioVideoUtils.convertToJSON(e));
-                    TwilioVideoActivity.this.handleConnectionError();
+                    publishEvent(CallEvent.ofError(DISCONNECTED_WITH_ERROR, e).withRoomCtx(room));
+                    handleConnectionError();
                 } else {
-                    publishEvent(CallEvent.DISCONNECTED);
+                    publishEvent(CallEvent.of(DISCONNECTED).withRoomCtx(room));
                 }
             }
 
             @Override
             public void onParticipantConnected(Room room, RemoteParticipant participant) {
-                publishEvent(CallEvent.PARTICIPANT_CONNECTED);
+                publishEvent(CallEvent.of(PARTICIPANT_CONNECTED).withRoomCtx(room));
                 addRemoteParticipant(participant);
             }
 
             @Override
             public void onParticipantDisconnected(Room room, RemoteParticipant participant) {
-                publishEvent(CallEvent.PARTICIPANT_DISCONNECTED);
+                publishEvent(CallEvent.of(PARTICIPANT_DISCONNECTED).withRoomCtx(room));
                 removeRemoteParticipant(participant);
             }
 
@@ -564,7 +587,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         return new RemoteParticipant.Listener() {
 
             @Override
-            public void onAudioTrackPublished(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
+            public void onAudioTrackPublished(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackPublished: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
@@ -577,7 +603,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onAudioTrackUnpublished(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
+            public void onAudioTrackUnpublished(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackUnpublished: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
@@ -590,7 +619,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onAudioTrackSubscribed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, RemoteAudioTrack remoteAudioTrack) {
+            public void onAudioTrackSubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication,
+                RemoteAudioTrack remoteAudioTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackSubscribed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
@@ -601,7 +634,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onAudioTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, TwilioException twilioException) {
+            public void onAudioTrackSubscriptionFailed(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication,
+                TwilioException twilioException
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackSubscriptionFailed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteAudioTrackPublication: sid=%b, name=%s]" +
@@ -614,7 +651,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onAudioTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, RemoteAudioTrack remoteAudioTrack) {
+            public void onAudioTrackUnsubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication,
+                RemoteAudioTrack remoteAudioTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackUnsubscribed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
@@ -625,7 +666,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onVideoTrackPublished(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
+            public void onVideoTrackPublished(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackPublished: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
@@ -638,7 +682,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onVideoTrackUnpublished(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
+            public void onVideoTrackUnpublished(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackUnpublished: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
@@ -651,19 +698,27 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onVideoTrackSubscribed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, RemoteVideoTrack remoteVideoTrack) {
+            public void onVideoTrackSubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication,
+                RemoteVideoTrack remoteVideoTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackSubscribed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteVideoTrack: enabled=%b, name=%s]",
                     remoteParticipant.getIdentity(),
                     remoteVideoTrack.isEnabled(),
                     remoteVideoTrack.getName()));
-                publishEvent(CallEvent.REMOTE_VIDEO_TRACK_ADDED);
+                publishEvent(CallEvent.of(REMOTE_VIDEO_TRACK_ADDED).withRoomCtx(room));
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
             @Override
-            public void onVideoTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, TwilioException twilioException) {
+            public void onVideoTrackSubscriptionFailed(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication,
+                TwilioException twilioException
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackSubscriptionFailed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteVideoTrackPublication: sid=%b, name=%s]" +
@@ -676,19 +731,26 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onVideoTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, RemoteVideoTrack remoteVideoTrack) {
+            public void onVideoTrackUnsubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication,
+                RemoteVideoTrack remoteVideoTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackUnsubscribed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteVideoTrack: enabled=%b, name=%s]",
                     remoteParticipant.getIdentity(),
                     remoteVideoTrack.isEnabled(),
                     remoteVideoTrack.getName()));
-                publishEvent(CallEvent.REMOTE_VIDEO_TRACK_REMOVED);
+                publishEvent(CallEvent.of(REMOTE_VIDEO_TRACK_REMOVED).withRoomCtx(room));
                 removeParticipantVideo(remoteVideoTrack);
             }
 
             @Override
-            public void onDataTrackPublished(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication) {
+            public void onDataTrackPublished(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackPublished: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
@@ -701,7 +763,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onDataTrackUnpublished(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication) {
+            public void onDataTrackUnpublished(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackUnpublished: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
@@ -714,7 +779,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onDataTrackSubscribed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, RemoteDataTrack remoteDataTrack) {
+            public void onDataTrackSubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication,
+                RemoteDataTrack remoteDataTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackSubscribed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteDataTrack: enabled=%b, name=%s]",
@@ -724,7 +793,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onDataTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, TwilioException twilioException) {
+            public void onDataTrackSubscriptionFailed(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication,
+                TwilioException twilioException
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackSubscriptionFailed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteDataTrackPublication: sid=%b, name=%s]" +
@@ -737,7 +810,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onDataTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, RemoteDataTrack remoteDataTrack) {
+            public void onDataTrackUnsubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication,
+                RemoteDataTrack remoteDataTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackUnsubscribed: " +
                         "[RemoteParticipant: identity=%s], " +
                         "[RemoteDataTrack: enabled=%b, name=%s]",
@@ -747,23 +824,27 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             }
 
             @Override
-            public void onAudioTrackEnabled(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
-
+            public void onAudioTrackEnabled(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication) {
             }
 
             @Override
-            public void onAudioTrackDisabled(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
-
+            public void onAudioTrackDisabled(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication) {
             }
 
             @Override
-            public void onVideoTrackEnabled(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
-
+            public void onVideoTrackEnabled(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication) {
             }
 
             @Override
-            public void onVideoTrackDisabled(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
-
+            public void onVideoTrackDisabled(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication) {
             }
         };
     }
@@ -773,8 +854,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onClick(View v) {
                 if (config.isHangUpInApp()) {
-                    // Propagating the event to the web side in order to allow developers to do something else before disconnecting the room
-                    publishEvent(CallEvent.HANG_UP);
+                    // Send the event to the web side in order to allow developers to do something else before disconnecting the room
+                    publishEvent(CallEvent.of(HANG_UP).withRoomCtx(room));
                 } else {
                     onDisconnect();
                 }
@@ -789,7 +870,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 if (cameraCapturer != null) {
                     CameraCapturerCompat.Source cameraSource = cameraCapturer.getCameraSource();
                     cameraCapturer.switchCamera();
-                    thumbnailVideoView.setMirror(cameraSource == CameraCapturerCompat.Source.BACK_CAMERA);
+                    thumbnailVideoView.setMirror(
+                        cameraSource == CameraCapturerCompat.Source.BACK_CAMERA);
                 }
             }
         };
@@ -843,7 +925,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                     boolean enable = !localAudioTrack.isEnabled();
                     localAudioTrack.enable(enable);
                     int icon = enable ?
-                        FAKE_R.getDrawable("ic_mic_green_24px") : FAKE_R.getDrawable("ic_mic_off_red_24px");
+                        FAKE_R.getDrawable("ic_mic_green_24px")
+                        : FAKE_R.getDrawable("ic_mic_off_red_24px");
                     muteActionFab.setImageDrawable(ContextCompat.getDrawable(
                         TwilioVideoActivity.this, icon));
                 }
@@ -877,10 +960,6 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     private void publishEvent(CallEvent event) {
         TwilioVideoManager.getInstance().publishEvent(event);
-    }
-
-    private void publishEvent(CallEvent event, JSONObject data) {
-        TwilioVideoManager.getInstance().publishEvent(event, data);
     }
 
     @Override

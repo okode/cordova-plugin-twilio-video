@@ -21,7 +21,9 @@ public class CallConfig implements Serializable {
     private boolean disableBackButton;
 
     public void parse(JSONObject config) {
-        if (config == null) { return; }
+        if (config == null) {
+            return;
+        }
         this.primaryColorHex = config.optString(PRIMARY_COLOR_PROP, null);
         this.secondaryColorHex = config.optString(SECONDARY_COLOR_PROP, null);
         this.hangUpInApp = config.optBoolean(HANG_UP_IN_APP, false);
@@ -41,7 +43,7 @@ public class CallConfig implements Serializable {
     }
 
     public boolean isDisableBackButton() {
-      return disableBackButton;
+        return disableBackButton;
     }
 
 }

@@ -40,8 +40,7 @@ public class CameraCapturerCompat implements VideoCapturer {
         BACK_CAMERA;
 
         public static Source switchCameraSource(Source source) {
-            return source == Source.FRONT_CAMERA ?
-                Source.BACK_CAMERA : Source.FRONT_CAMERA;
+            return source == Source.FRONT_CAMERA ? Source.BACK_CAMERA : Source.FRONT_CAMERA;
         }
     }
 
@@ -49,12 +48,14 @@ public class CameraCapturerCompat implements VideoCapturer {
         if (Camera2Capturer.isSupported(context) && isLollipopApiSupported()) {
             cameraManager = (CameraManager) context.getSystemService(Context.CAMERA_SERVICE);
             setCamera2Maps(context);
-            camera2Capturer = new Camera2Capturer(context, getAvailableCamera2Id(preferredCameraSource));
+            camera2Capturer = new Camera2Capturer(context,
+                getAvailableCamera2Id(preferredCameraSource));
             activeCapturer = camera2Capturer;
             camera1Capturer = null;
         } else {
             setCamera1Maps();
-            camera1Capturer = new CameraCapturer(context, getAvailableCamera1Id(preferredCameraSource));
+            camera1Capturer = new CameraCapturer(context,
+                getAvailableCamera1Id(preferredCameraSource));
             activeCapturer = camera1Capturer;
             camera2Capturer = null;
         }

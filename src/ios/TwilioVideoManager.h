@@ -1,7 +1,8 @@
 #import <Foundation/Foundation.h>
+#import "CallEvent.h"
 
 @protocol TwilioVideoEventProducerDelegate <NSObject>
-- (void) onCallEvent:(NSString*)event with:(NSDictionary*)data;
+- (void) onCallEvent:(CallEvent*)event;
 @end
 
 @protocol TwilioVideoActionProducerDelegate <NSObject>
@@ -9,10 +10,12 @@
 @end
 
 @interface TwilioVideoManager : NSObject
+
 @property (nonatomic, weak) id <TwilioVideoEventProducerDelegate> eventDelegate;
 @property (nonatomic, weak) id <TwilioVideoActionProducerDelegate> actionDelegate;
+
 + (id)getInstance;
-- (void)publishEvent:(NSString*)event;
-- (void)publishEvent:(NSString*)event with:(NSDictionary*)data;
+- (void)publishEvent:(CallEvent*)event;
 - (BOOL)publishDisconnection;
+
 @end

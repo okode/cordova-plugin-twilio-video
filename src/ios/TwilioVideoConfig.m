@@ -5,6 +5,14 @@
 #define HANG_UP_IN_APP                      @"hangUpInApp"
 
 @implementation TwilioVideoConfig
+
+- (id)init {
+    @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                   reason:@"-init is not a valid initializer for the class TwilioVideoJsonConverter"
+                                 userInfo:nil];
+    return nil;
+}
+
 -(void) parse:(NSDictionary*)config {
     if (config == NULL || config == (id)[NSNull null]) { return; }
     self.primaryColorHex = [config objectForKey:PRIMARY_COLOR_PROP];
@@ -20,4 +28,5 @@
     [scanner scanHexInt:&rgbValue];
     return [UIColor colorWithRed:((rgbValue & 0xFF0000) >> 16)/255.0 green:((rgbValue & 0xFF00) >> 8)/255.0 blue:(rgbValue & 0xFF)/255.0 alpha:1.0];
 }
+
 @end

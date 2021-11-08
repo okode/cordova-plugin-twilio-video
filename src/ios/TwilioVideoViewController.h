@@ -3,7 +3,6 @@
 #import "TwilioVideoManager.h"
 #import "TwilioVideoConfig.h"
 #import "TwilioVideoPermissions.h"
-#import "TwilioVideoUtils.h"
 
 @interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraSourceDelegate, TwilioVideoActionProducerDelegate>
 
@@ -19,7 +18,6 @@
 @property (nonatomic, strong) TVILocalAudioTrack *localAudioTrack;
 @property (nonatomic, strong) TVIRemoteParticipant *remoteParticipant;
 @property (nonatomic, weak) TVIVideoView *remoteView;
-@property (nonatomic, strong) TVIRoom *room;
 
 #pragma mark UI Element Outlets and handles
 
@@ -28,11 +26,10 @@
 
 @property (nonatomic, weak) IBOutlet UIButton *disconnectButton;
 @property (nonatomic, weak) IBOutlet UIButton *micButton;
-@property (nonatomic, weak) IBOutlet UILabel *roomLabel;
-@property (nonatomic, weak) IBOutlet UILabel *roomLine;
 @property (nonatomic, weak) IBOutlet UIButton *cameraSwitchButton;
 @property (nonatomic, weak) IBOutlet UIButton *videoButton;
 
 - (void)connectToRoom:(NSString*)room token: (NSString *)token;
++ (TVIRoom*)getVideocallRoomInstance;
 
 @end

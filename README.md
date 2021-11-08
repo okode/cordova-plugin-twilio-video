@@ -48,7 +48,9 @@ Have a look at <a href="typings/twiliovideo.d.ts">definitions file</a> where the
 ### Events
 Manage the events emitted by the plugin while the videocall is running.
 
-Event list
+EVENT LIST
+------------
+- `BAD_CONNECTION_REQUEST`: fired when the params supplied to 'openRoom' method are invalid. [UNRECOVERABLE STATE(*)].
 - `OPENED`: fired when the videocall is opened.
 - `CONNECTED`: fired when the videocall is stablished successfully.
 - `CONNECT_FAILURE`: fired when the videocall connection fails. [UNRECOVERABLE STATE(*)].

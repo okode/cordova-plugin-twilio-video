@@ -1,31 +1,28 @@
 #import "TwilioVideoViewController.h"
 
-// CALL EVENTS
-NSString *const OPENED = @"OPENED";
-NSString *const CONNECTED = @"CONNECTED";
-NSString *const CONNECT_FAILURE = @"CONNECT_FAILURE";
-NSString *const DISCONNECTED = @"DISCONNECTED";
-NSString *const DISCONNECTED_WITH_ERROR = @"DISCONNECTED_WITH_ERROR";
-NSString *const RECONNECTING = @"RECONNECTING";
-NSString *const RECONNECTED = @"RECONNECTED";
-NSString *const PARTICIPANT_CONNECTED = @"PARTICIPANT_CONNECTED";
-NSString *const PARTICIPANT_DISCONNECTED = @"PARTICIPANT_DISCONNECTED";
-NSString *const REMOTE_VIDEO_TRACK_ADDED = @"REMOTE_VIDEO_TRACK_ADDED";
-NSString *const REMOTE_VIDEO_TRACK_REMOVED = @"REMOTE_VIDEO_TRACK_REMOVED";
-NSString *const HANG_UP = @"HANG_UP";
-NSString *const CLOSED = @"CLOSED";
-NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
-
 @implementation TwilioVideoViewController
 
+static TVIRoom *currentRoom;
+
 #pragma mark - UIViewController
+
++ (TVIRoom*)getVideocallRoomInstance {
+    return currentRoom;
+}
+
+- (void)dealloc {
+    // We are done with current room
+    if (currentRoom) {
+        currentRoom = nil;
+    }
+}
 
 - (void)viewDidLoad {
     [super viewDidLoad];
 
     [[TwilioVideoManager getInstance] setActionDelegate:self];
 
-    [[TwilioVideoManager getInstance] publishEvent: OPENED];
+    [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_OPENED]];
     [self.navigationController setNavigationBarHidden:YES animated:NO];
 
     [self logMessage:[NSString stringWithFormat:@"TwilioVideo v%@", [TwilioVideoSDK sdkVersion]]];
@@ -69,7 +66,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
          if (grantedPermissions) {
              [self doConnect];
          } else {
-             [[TwilioVideoManager getInstance] publishEvent: PERMISSIONS_REQUIRED];
+             [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_PERMISSIONS_REQUIRED]];
              [self handleConnectionError];
          }
     }];
@@ -77,7 +74,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 
 - (IBAction)disconnectButtonPressed:(id)sender {
     if ([self.config hangUpInApp]) {
-        [[TwilioVideoManager getInstance] publishEvent: HANG_UP];
+        [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_HANG_UP] withRoomCtx:currentRoom]];
     } else {
         [self onDisconnect];
     }
@@ -119,7 +116,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
         [self.previewView removeFromSuperview];
         return;
     }
-
+    
     AVCaptureDevice *frontCamera = [TVICameraSource captureDeviceForPosition:AVCaptureDevicePositionFront];
     AVCaptureDevice *backCamera = [TVICameraSource captureDeviceForPosition:AVCaptureDevicePositionBack];
 
@@ -218,7 +215,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
                                                                       }];
 
     // Connect to the Room using the options we provided.
-    self.room = [TwilioVideoSDK connectWithOptions:connectOptions delegate:self];
+    currentRoom = [TwilioVideoSDK connectWithOptions:connectOptions delegate:self];
 
     [self logMessage:@"Attempting to connect to room"];
 }
@@ -295,7 +292,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 }
 
 - (void) dismiss {
-    [[TwilioVideoManager getInstance] publishEvent: CLOSED];
+    [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_CLOSED]];
     dispatch_async(dispatch_get_main_queue(), ^{
         [self dismissViewControllerAnimated:NO completion:nil];
     });
@@ -304,8 +301,8 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 #pragma mark - TwilioVideoActionProducerDelegate
 
 - (void)onDisconnect {
-    if (self.room != NULL) {
-        [self.room disconnect];
+    if (currentRoom != NULL) {
+        [currentRoom disconnect];
     }
 }
 
@@ -314,7 +311,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 - (void)didConnectToRoom:(nonnull TVIRoom *)room {
     // At the moment, this example only supports rendering one Participant at a time.
     [self logMessage:[NSString stringWithFormat:@"Connected to room %@ as %@", room.name, room.localParticipant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: CONNECTED];
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_CONNECTED] withRoomCtx:room]];
 
     if (room.remoteParticipants.count > 0) {
         self.remoteParticipant = room.remoteParticipants[0];
@@ -324,9 +321,8 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 
 - (void)room:(nonnull TVIRoom *)room didFailToConnectWithError:(nonnull NSError *)error {
     [self logMessage:[NSString stringWithFormat:@"Failed to connect to room, error = %@", error]];
-    [[TwilioVideoManager getInstance] publishEvent: CONNECT_FAILURE with:[TwilioVideoUtils convertErrorToDictionary:error]];
-
-    self.room = nil;
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_CONNECT_FAILURE withError:error] withRoomCtx:room]];
+    currentRoom = nil;
 
     [self showRoomUI:NO];
     [self handleConnectionError];
@@ -336,24 +332,24 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
     [self logMessage:[NSString stringWithFormat:@"Disconnected from room %@, error = %@", room.name, error]];
 
     [self cleanupRemoteParticipant];
-    self.room = nil;
+    currentRoom = nil;
 
     [self showRoomUI:NO];
     if (error != NULL) {
-        [[TwilioVideoManager getInstance] publishEvent:DISCONNECTED_WITH_ERROR with:[TwilioVideoUtils convertErrorToDictionary:error]];
+        [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_DISCONNECTED_WITH_ERROR withError:error] withRoomCtx:room]];
         [self handleConnectionError];
     } else {
-        [[TwilioVideoManager getInstance] publishEvent: DISCONNECTED];
+        [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_DISCONNECTED] withRoomCtx:room]];
         [self dismiss];
     }
 }
 
 - (void)room:(nonnull TVIRoom *)room isReconnectingWithError:(nonnull NSError *)error {
-    [[TwilioVideoManager getInstance] publishEvent: RECONNECTING with:[TwilioVideoUtils convertErrorToDictionary:error]];
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_RECONNECTING withError:error] withRoomCtx:room]];
 }
 
 - (void)didReconnectToRoom:(nonnull TVIRoom *)room {
-    [[TwilioVideoManager getInstance] publishEvent: RECONNECTED];
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_RECONNECTED] withRoomCtx:room]];
 }
 
 - (void)room:(nonnull TVIRoom *)room participantDidConnect:(nonnull TVIRemoteParticipant *)participant {
@@ -365,7 +361,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
                       participant.identity,
                       (unsigned long)[participant.audioTracks count],
                       (unsigned long)[participant.videoTracks count]]];
-    [[TwilioVideoManager getInstance] publishEvent: PARTICIPANT_CONNECTED];
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_PARTICIPANT_CONNECTED] withRoomCtx:room]];
 }
 
 - (void)room:(nonnull TVIRoom *)room participantDidDisconnect:(nonnull TVIRemoteParticipant *)participant {
@@ -373,7 +369,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
         [self cleanupRemoteParticipant];
     }
     [self logMessage:[NSString stringWithFormat:@"Room %@ participant %@ disconnected", room.name, participant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: PARTICIPANT_DISCONNECTED];
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_PARTICIPANT_DISCONNECTED] withRoomCtx:room]];
 }
 
 
@@ -419,7 +415,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 
     [self logMessage:[NSString stringWithFormat:@"Subscribed to %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: REMOTE_VIDEO_TRACK_ADDED];
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_REMOTE_VIDEO_TRACK_ADDED] withRoomCtx:currentRoom]];
 
     if (self.remoteParticipant == participant) {
         [self setupRemoteView];
@@ -436,7 +432,7 @@ NSString *const PERMISSIONS_REQUIRED = @"PERMISSIONS_REQUIRED";
 
     [self logMessage:[NSString stringWithFormat:@"Unsubscribed from %@ video track for Participant %@",
                       publication.trackName, participant.identity]];
-    [[TwilioVideoManager getInstance] publishEvent: REMOTE_VIDEO_TRACK_REMOVED];
+    [[TwilioVideoManager getInstance] publishEvent:[[CallEvent of:EVENT_REMOTE_VIDEO_TRACK_REMOVED] withRoomCtx:currentRoom]];
 
     if (self.remoteParticipant == participant) {
         [videoTrack removeRenderer:self.remoteView];

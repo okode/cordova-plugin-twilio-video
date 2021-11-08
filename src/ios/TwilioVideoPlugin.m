@@ -15,8 +15,11 @@
     NSString* token = args[0];
     NSString* room = args[1];
     TwilioVideoConfig *config = [[TwilioVideoConfig alloc] init];
-    if ([args count] > 2) {
-        [config parse: command.arguments[2]];
+    [config parse:command.arguments[2]];
+    
+    if (token == NULL || room == NULL) {
+        [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_BAD_CONNECTION_REQUEST]];
+        return;
     }
     
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -43,6 +46,12 @@
     }
 }
 
+- (void)getRoom:(CDVInvokedUrlCommand*)command {
+    TVIRoom *currentRoom = [TwilioVideoViewController getVideocallRoomInstance];
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[TwilioVideoJsonConverter convertRoomToDictionary:currentRoom]];
+    [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+}
+
 - (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command {
     BOOL hasRequiredPermissions = [TwilioVideoPermissions hasRequiredPermissions];
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasRequiredPermissions] callbackId:command.callbackId];
@@ -58,23 +67,15 @@
 
 #pragma mark - TwilioVideoEventProducerDelegate
 
-- (void)onCallEvent:(NSString *)event with:(NSDictionary*)data {
+- (void)onCallEvent:(CallEvent *)event {
     if (!self.listenerCallbackID) {
         NSLog(@"Listener callback unavailable.  event %@", event);
         return;
     }
     
-    if (data != NULL) {
-        NSLog(@"Event received %@ with data %@", event, data);
-    } else {
-        NSLog(@"Event received %@", event);
-    }
-    
-    NSMutableDictionary *message = [NSMutableDictionary dictionary];
-    [message setValue:event forKey:@"event"];
-    [message setValue:data != NULL ? data : [NSNull null] forKey:@"data"];
-    
-    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:message];
+    NSLog(@"Event received %@", event);
+        
+    CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[ event toJSON]];
     [result setKeepCallbackAsBool:YES];
     
     [self.commandDelegate sendPluginResult:result callbackId:self.listenerCallbackID];

@@ -61,7 +61,10 @@ export interface TwilioVideoAppConfig {
 }
 
 export interface TwilioVideoAppEvent {
-  eventId: string;
+  eventId: 'BAD_CONNECTION_REQUEST' | 'OPENED' | 'CONNECTED' | 'CONNECT_FAILURE' | 'DISCONNECTED' |
+           'DISCONNECTED_WITH_ERROR' | 'RECONNECTING' | 'RECONNECTED' | 'PARTICIPANT_CONNECTED' |
+           'PARTICIPANT_DISCONNECTED' | 'REMOTE_VIDEO_TRACK_ADDED' | 'REMOTE_VIDEO_TRACK_REMOVED' |
+           'HANG_UP' | 'CLOSED' | 'PERMISSIONS_REQUIRED';
   room?: TwilioVideoAppRoom;
   error?: TwilioVideoAppError;
 }
@@ -70,16 +73,28 @@ export interface TwilioVideoAppRoom {
   sid?: string;
   localParticipant?: TwilioVideoAppParticipant;
   remoteParticipants: TwilioVideoAppParticipant[];
+  /**
+   * (Android) It's a string
+   * (iOS) It's a number
+   */
   state?: string | number;
 }
 
 export interface TwilioVideoAppParticipant {
   sid?: string;
+  /**
+   * (Android) It's a string
+   * (iOS) It's a number
+   */
   networkQualityLevel?: string | number;
-  state?: string | number;
+  /**
+   * (Android) It's a string
+   * (iOS) It's a number
+   */
+   state?: string | number;
 }
 
 export interface TwilioVideoAppError {
-  code?: string;
+  code?: number;
   message?: string;
 }

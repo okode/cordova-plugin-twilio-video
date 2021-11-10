@@ -2,6 +2,13 @@
 
 @implementation TwilioVideoJsonConverter
 
+- (id)init {
+    @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                   reason:@"-init is not a valid initializer for the class TwilioVideoJsonConverter"
+                                 userInfo:nil];
+    return nil;
+}
+
 + (NSDictionary*)convertErrorToDictionary:(NSError*)error {
     if (error == NULL) { return NULL; }
     return @{ @"code": [NSNumber numberWithInteger:[error code]], @"message": [error localizedDescription] };

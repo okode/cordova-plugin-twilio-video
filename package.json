@@ -1,6 +1,7 @@
 {
     "version": "6.0.0",
     "name": "cordova-plugin-twilio-video",
+    "types": "./types/index.d.ts",
     "cordova_name": "Twilio video plugin",
     "license": "MIT",
     "platforms": [

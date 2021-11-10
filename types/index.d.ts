@@ -48,7 +48,7 @@ export interface TwilioVideoAppConfig {
   /**
    * Hex secondary brand color for your project.  It will be used to customize the videocall experience.
    */
-  secondaryColor?: TwilioVideoAppRoom;
+  secondaryColor?: string;
   /**
    * (Default = false) Flag to handle videocall close from web side by explicitly calling 'closeRoom'.
    * Example: Useful when it is needed to invoke a backend service before closing the Twilio videocall.

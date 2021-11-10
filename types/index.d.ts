@@ -91,7 +91,23 @@ export interface TwilioVideoAppParticipant {
    * (Android) It's a string
    * (iOS) It's a number
    */
-   state?: string | number;
+  state?: string | number;
+  audioTracks?: TwilioVideoAppTrack[];
+  videoTracks?: TwilioVideoAppTrack[];
+}
+
+export interface TwilioVideoAppTrack {
+  sid?: string;
+  /**
+   * (Android) It's a string
+   * (iOS) It's a number
+   */
+  name?: string;
+  /**
+   * (Android) It's a string
+   * (iOS) It's a number
+   */
+  isEnabled?: boolean;
 }
 
 export interface TwilioVideoAppError {

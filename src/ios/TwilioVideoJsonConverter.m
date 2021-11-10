@@ -34,6 +34,27 @@
     [dict setObject:participant.sid forKey:@"sid"];
     [dict setObject:[NSNumber numberWithInteger:participant.networkQualityLevel] forKey:@"networkQualityLevel"];
     [dict setObject:[NSNumber numberWithInteger:participant.state] forKey:@"state"];
+    // Audio tracks
+    NSMutableArray *audioTracksArray = [NSMutableArray new];
+    for (TVITrackPublication* audioTrack in participant.audioTracks) {
+        [audioTracksArray addObject:[self convertTrackToDictionary:audioTrack]];
+    }
+    [dict setObject:audioTracksArray forKey:@"audioTracks"];
+    // Video tracks
+    NSMutableArray *videoTracksArray = [NSMutableArray new];
+    for (TVITrackPublication* videoTrack in participant.videoTracks) {
+        [videoTracksArray addObject:[self convertTrackToDictionary:videoTrack]];
+    }
+    [dict setObject:videoTracksArray forKey:@"videoTracks"];
+    return dict;
+}
+
++ (NSDictionary*)convertTrackToDictionary:(TVITrackPublication*)track {
+    if (track == NULL) { return NULL; }
+    NSMutableDictionary *dict = [NSMutableDictionary new];
+    [dict setObject:track.trackSid forKey:@"sid"];
+    [dict setObject:track.trackName forKey:@"name"];
+    [dict setObject:[NSNumber numberWithBool:track.trackEnabled] forKey:@"isEnabled"];
     return dict;
 }
 

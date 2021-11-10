@@ -5,6 +5,7 @@ import android.util.Log;
 import com.twilio.video.NetworkQualityLevel;
 import com.twilio.video.Participant;
 import com.twilio.video.Room;
+import com.twilio.video.TrackPublication;
 import com.twilio.video.TwilioException;
 
 import org.json.JSONArray;
@@ -71,10 +72,41 @@ public class TwilioVideoJsonConverter {
                 networkQualityLevel != null ? networkQualityLevel.name() : null
             );
             participantJsonObj.putOpt("state", state != null ? state.name() : null);
+          // Audio tracks
+          JSONArray audioTracksJsonArray = new JSONArray();
+          if (participant.getAudioTracks() != null) {
+            for (TrackPublication track : participant.getAudioTracks()) {
+              audioTracksJsonArray.put(convertTrackToJSON(track));
+            }
+          }
+          participantJsonObj.putOpt("audioTracks", audioTracksJsonArray);
+          // Video tracks
+          JSONArray videoTracksJsonArray = new JSONArray();
+          if (participant.getVideoTracks() != null) {
+            for (TrackPublication track : participant.getVideoTracks()) {
+              videoTracksJsonArray.put(convertTrackToJSON(track));
+            }
+          }
+          participantJsonObj.putOpt("videoTracks", audioTracksJsonArray);
         } catch (JSONException e) {
             Log.e(TwilioVideo.TAG, "Error converting Twilio participant to JSON", e);
         }
         return participantJsonObj;
+    }
+
+    private static JSONObject convertTrackToJSON(TrackPublication track) {
+      if (track == null) {
+        return null;
+      }
+      JSONObject trackJsonObj = new JSONObject();
+      try {
+        trackJsonObj.putOpt("sid", track.getTrackSid());
+        trackJsonObj.putOpt("name", track.getTrackName());
+        trackJsonObj.putOpt("isEnabled", track.getTrackSid());
+      } catch (JSONException e) {
+        Log.e(TwilioVideo.TAG, "Error converting Twilio track to JSON", e);
+      }
+      return trackJsonObj;
     }
 
 }

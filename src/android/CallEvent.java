@@ -37,7 +37,7 @@ public class CallEvent {
     public JSONObject toJSON() {
         JSONObject jsonObj = new JSONObject();
         try {
-            jsonObj.putOpt("event", this.eventId.name());
+            jsonObj.putOpt("eventId", this.eventId.name());
             jsonObj.putOpt("room", TwilioVideoJsonConverter.convertRoomToJSON(this.room));
             jsonObj.putOpt("error",
                 TwilioVideoJsonConverter.convertExceptionToJSON(this.error));
@@ -49,11 +49,11 @@ public class CallEvent {
 
     @Override
     public String toString() {
-        return "CallEvent{" +
-            "eventId=" + eventId +
-            ", room=" + room != null ? room.getSid() : "none" +
-            ", error=" + error +
-            '}';
+        return new StringBuilder("CallEvent{")
+            .append("eventId=").append(eventId)
+            .append(", room=").append(room != null ? room.getSid() : "none")
+            .append(", error=").append("error")
+            .append('}').toString();
     }
 
 }

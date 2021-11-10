@@ -23,6 +23,16 @@ TwilioVideo.closeRoom = function() {
     });
 };
 
+TwilioVideo.getRoom = function() {
+    return new Promise(function(resolve, reject) {
+        exec(function(result) {
+            resolve(result);
+        }, function(error) {
+            reject(error);
+        }, "TwilioVideoPlugin", "getRoom", []);
+    });
+};
+
 TwilioVideo.hasRequiredPermissions = function() {
     return new Promise(function(resolve, reject) {
         exec(function(result) {

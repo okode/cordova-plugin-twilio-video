@@ -6,13 +6,6 @@
 
 @implementation TwilioVideoConfig
 
-- (id)init {
-    @throw [NSException exceptionWithName:NSInternalInconsistencyException
-                                   reason:@"-init is not a valid initializer for the class TwilioVideoJsonConverter"
-                                 userInfo:nil];
-    return nil;
-}
-
 -(void) parse:(NSDictionary*)config {
     if (config == NULL || config == (id)[NSNull null]) { return; }
     self.primaryColorHex = [config objectForKey:PRIMARY_COLOR_PROP];

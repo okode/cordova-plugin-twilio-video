@@ -29,6 +29,21 @@ declare module TwilioVideo {
     closeRoom(): Promise<void>;
 
     /**
+     * It returns basic info of the running twilio video room
+     */
+    getRoom(): Promise<{
+      localParticipant?: {
+        networkQualityLevel?: string | number;
+        state?: string | number;
+      };
+      remoteParticipants: {
+        networkQualityLevel?: string | number;
+        state?: string | number;
+      }[];
+      state?: string | number;
+    }>;
+
+    /**
      * Check if the user granted all required permissions (Camera and Microphone)
      * @return If user has granted all permissions or not
      */

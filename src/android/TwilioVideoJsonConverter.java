@@ -17,9 +17,9 @@ public class TwilioVideoJsonConverter {
     }
 
     public static JSONObject convertExceptionToJSON(TwilioException e) {
-        JSONObject data = null;
+        if (e == null) { return null; }
+        JSONObject data = new JSONObject();
         try {
-            data = new JSONObject();
             data.put("code", e.getCode());
             data.put("description", e.getLocalizedMessage());
         } catch (JSONException e1) {
@@ -34,6 +34,7 @@ public class TwilioVideoJsonConverter {
         }
         JSONObject roomJsonObj = new JSONObject();
         try {
+            roomJsonObj.putOpt("sid", room.getSid());
             // Local participant
             roomJsonObj.putOpt(
                 "localParticipant",
@@ -64,7 +65,8 @@ public class TwilioVideoJsonConverter {
         NetworkQualityLevel networkQualityLevel = participant.getNetworkQualityLevel();
         Participant.State state = participant.getState();
         try {
-            participantJsonObj.putOpt(
+          participantJsonObj.putOpt("sid", participant.getSid());
+          participantJsonObj.putOpt(
                 "networkQualityLevel",
                 networkQualityLevel != null ? networkQualityLevel.name() : null
             );

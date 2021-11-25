@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<plugin id="cordova-plugin-twilio-video" version="5.2.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="cordova-plugin-twilio-video" version="6.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>TwilioVideo</name>
     <author>Okode</author>
     <license>MIT</license>
@@ -26,8 +26,10 @@
         <source-file src="src/ios/TwilioVideoManager.m" />
         <header-file src="src/ios/TwilioVideoConfig.h" />
         <source-file src="src/ios/TwilioVideoConfig.m" />
-        <header-file src="src/ios/TwilioVideoUtils.h" />
-        <source-file src="src/ios/TwilioVideoUtils.m" />
+        <header-file src="src/ios/TwilioVideoJsonConverter.h" />
+        <source-file src="src/ios/TwilioVideoJsonConverter.m" />
+        <header-file src="src/ios/CallEvent.h" />
+        <source-file src="src/ios/CallEvent.m" />
         <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
         <resource-file src="src/ios/Resources/end_call.png" target="Resources/end_call.png" />
         <resource-file src="src/ios/Resources/end_call@2x.png" target="Resources/end_call@2x.png" />
@@ -43,18 +45,17 @@
         <resource-file src="src/ios/Resources/video@3x.png" target="Resources/video@3x.png" />
         <resource-file src="src/ios/Resources/no_video.png" target="Resources/no_video.png" />
         <resource-file src="src/ios/Resources/no_video@2x.png" target="Resources/no_video@2x.png" />
-        <resource-file src="src/ios/Resources/no_video@3x.png" target="Resources/no_video@3x.png" />
+        <resource-file src="src/ios/Resources/no_video@3x.png" target="Resourc/no_video@3x.png" />
         <resource-file src="src/ios/Resources/switch_camera.png" target="Resources/switch_camera.png" />
         <resource-file src="src/ios/Resources/switch_camera@2x.png" target="Resources/switch_camera@2x.png" />
         <resource-file src="src/ios/Resources/switch_camera@3x.png" target="Resources/switch_camera@3x.png" />
 
-        <framework src="TwilioVideo" type="podspec" spec="3.7.0"/>
-        <podspec>
-            <config>
+        <framework src="TwilioVideo" type="podspec" spec="4.6.1"/>
+        <podspec>d1            <config>
                 <source url="https://cdn.cocoapods.org/"/>
             </config>
             <pods>
-                <pod name="TwilioVideo" spec="3.7.0"/>
+                <pod name="TwilioVideo" spec="4.6.1"/>
             </pods>
         </podspec>
 
@@ -80,12 +81,14 @@
         <source-file src="src/android/TwilioVideo.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoActivity.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEvent.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/CallEventId.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoManager.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallEventObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallActionObserver.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CallConfig.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CameraCapturerCompat.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoUtils.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/TwilioVideoJsonConverter.java" target-dir="src/org/apache/cordova/twiliovideo" />
 
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="src/android/twiliovideo.gradle" custom="true" type="gradleReference" />
@@ -100,7 +103,6 @@
         <resource-file src="src/android/res/drawable/ic_videocam_off_red_24px.xml" target="res/drawable/ic_videocam_off_red_24px.xml" />
 		<resource-file src="src/android/res/drawable/ic_phonelink_ring_white_24dp.xml" target="res/drawable/ic_phonelink_ring_white_24dp.xml" />
 		<resource-file src="src/android/res/drawable/ic_volume_up_white_24dp.xml" target="res/drawable/ic_volume_up_white_24dp.xml" />
-        <resource-file src="src/android/res/drawable/ic_volume_headhphones_white_24dp.xml" target="res/drawable/ic_volume_headhphones_white_24dp.xml" />
 
         <resource-file src="src/android/res/layout/activity_video.xml" target="res/layout/activity_video.xml" />
         <resource-file src="src/android/res/layout/content_video.xml" target="res/layout/content_video.xml" />

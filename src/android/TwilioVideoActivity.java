@@ -2,27 +2,23 @@ package org.apache.cordova.twiliovideo;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.media.AudioAttributes;
-import android.media.AudioFocusRequest;
 import android.media.AudioManager;
-import android.os.Build;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.twilio.video.CameraCapturer;
-import com.twilio.video.CameraCapturer.CameraSource;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.twilio.audioswitch.AudioDevice;
+import com.twilio.audioswitch.AudioSwitch;
 import com.twilio.video.ConnectOptions;
 import com.twilio.video.LocalAudioTrack;
 import com.twilio.video.LocalParticipant;
@@ -37,16 +33,32 @@ import com.twilio.video.RemoteVideoTrackPublication;
 import com.twilio.video.Room;
 import com.twilio.video.TwilioException;
 import com.twilio.video.Video;
-import com.twilio.video.VideoRenderer;
 import com.twilio.video.VideoTrack;
 import com.twilio.video.VideoView;
 
-import org.json.JSONObject;
-
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class TwilioVideoActivity extends AppCompatActivity implements CallActionObserver {
+import kotlin.Unit;
+import kotlin.jvm.functions.Function2;
+
+import static org.apache.cordova.twiliovideo.CallEventId.CLOSED;
+import static org.apache.cordova.twiliovideo.CallEventId.CONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.CONNECT_FAILURE;
+import static org.apache.cordova.twiliovideo.CallEventId.DISCONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.DISCONNECTED_WITH_ERROR;
+import static org.apache.cordova.twiliovideo.CallEventId.HANG_UP;
+import static org.apache.cordova.twiliovideo.CallEventId.OPENED;
+import static org.apache.cordova.twiliovideo.CallEventId.PARTICIPANT_CONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.PARTICIPANT_DISCONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.PERMISSIONS_REQUIRED;
+import static org.apache.cordova.twiliovideo.CallEventId.RECONNECTED;
+import static org.apache.cordova.twiliovideo.CallEventId.RECONNECTING;
+import static org.apache.cordova.twiliovideo.CallEventId.REMOTE_VIDEO_TRACK_ADDED;
+import static org.apache.cordova.twiliovideo.CallEventId.REMOTE_VIDEO_TRACK_REMOVED;
+
+public class TwilioVideoActivity extends AppCompatActivity implements CallActionObserver, AudioManager.OnAudioFocusChangeListener {
 
     /*
      * Audio and video tracks can be created with names. This feature is useful for categorizing
@@ -57,6 +69,14 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
      */
     private static final String LOCAL_AUDIO_TRACK_NAME = "microphone";
     private static final String LOCAL_VIDEO_TRACK_NAME = "camera";
+
+    private static final boolean IS_AUDIO_LOGGING_ENABLED = false;
+    private static final List<Class<? extends AudioDevice>> PREFERRED_AUDIO_DEVICE_LIST =
+        Arrays.asList(
+            AudioDevice.BluetoothHeadset.class,
+            AudioDevice.WiredHeadset.class,
+            AudioDevice.Speakerphone.class
+        );
 
     private static final int PERMISSIONS_REQUEST_CODE = 1;
 
@@ -73,7 +93,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     /*
      * A Room represents communication between a local participant and one or more participants.
      */
-    private Room room;
+    private static Room room;
     private LocalParticipant localParticipant;
 
     /*
@@ -94,14 +114,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private FloatingActionButton localVideoActionFab;
     private FloatingActionButton muteActionFab;
     private FloatingActionButton switchAudioActionFab;
-    private AudioManager audioManager;
-    private String participantIdentity;
+    private String remoteParticipantIdentity;
 
-    private int previousAudioMode;
-    private boolean previousMicrophoneMute;
+    /*
+     * Audio management
+     */
+    private AudioSwitch audioSwitch;
+    private int savedVolumeControlStream;
+
     private boolean disconnectedFromOnDestroy;
-    private VideoRenderer localVideoView;
 
+    public static Room getVideocallRoomInstance() {
+        return room;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +136,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
         FAKE_R = new FakeR(this);
 
-        publishEvent(CallEvent.OPENED);
+        publishEvent(CallEvent.of(OPENED));
         setContentView(FAKE_R.getLayout("activity_video"));
 
         primaryVideoView = findViewById(FAKE_R.getId("primary_video_view"));
@@ -124,15 +149,16 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         switchAudioActionFab = findViewById(FAKE_R.getId("switch_audio_action_fab"));
 
         /*
-         * Enable changing the volume using the up/down keys during a conversation
+         * Setup audio management and set the volume control stream
          */
+        audioSwitch = new AudioSwitch(
+            getApplicationContext(),
+            IS_AUDIO_LOGGING_ENABLED,
+            this,
+            PREFERRED_AUDIO_DEVICE_LIST
+        );
+        savedVolumeControlStream = getVolumeControlStream();
         setVolumeControlStream(AudioManager.STREAM_VOICE_CALL);
-
-        /*
-         * Needed for setting/abandoning audio focus during call
-         */
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.setSpeakerphoneOn(true);
 
         Intent intent = getIntent();
 
@@ -171,8 +197,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 createAudioAndVideoTracks();
                 connectToRoom();
             } else {
-                publishEvent(CallEvent.PERMISSIONS_REQUIRED);
-                TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
+                publishEvent(CallEvent.of(PERMISSIONS_REQUIRED));
+                handleConnectionError();
             }
         }
     }
@@ -185,10 +211,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
          */
         if (localVideoTrack == null && hasPermissionForCameraAndMicrophone()) {
             localVideoTrack = LocalVideoTrack.create(this,
-                    true,
-                    cameraCapturer.getVideoCapturer(),
-                    LOCAL_VIDEO_TRACK_NAME);
-            localVideoTrack.addRenderer(thumbnailVideoView);
+                true,
+                cameraCapturer,
+                LOCAL_VIDEO_TRACK_NAME);
+            localVideoTrack.addSink(thumbnailVideoView);
 
             /*
              * If connected to a Room then share the local video track.
@@ -223,7 +249,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     @Override
     public void onBackPressed() {
-        if (config.isDisableBackButton()) { return; }
+        if (config.isDisableBackButton()) {
+            return;
+        }
         super.onBackPressed();
         overridePendingTransition(0, 0);
     }
@@ -232,12 +260,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     protected void onDestroy() {
 
         /*
+         * Tear down audio management and restore previous volume stream
+         */
+        audioSwitch.stop();
+        setVolumeControlStream(savedVolumeControlStream);
+
+        /*
          * Always disconnect from the room before leaving the Activity to
          * ensure any memory allocated to the Room resource is freed.
          */
         if (room != null && room.getState() != Room.State.DISCONNECTED) {
             room.disconnect();
             disconnectedFromOnDestroy = true;
+            room = null;
         }
 
         /*
@@ -253,59 +288,65 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             localVideoTrack = null;
         }
 
-        publishEvent(CallEvent.CLOSED);
+        publishEvent(CallEvent.of(CLOSED));
 
         TwilioVideoManager.getInstance().setActionListenerObserver(null);
 
         super.onDestroy();
     }
 
+    private void startAudio() {
+        audioSwitch.start(new Function2<List<? extends AudioDevice>, AudioDevice, Unit>() {
+            @Override
+            public Unit invoke(List<? extends AudioDevice> audioDevices, AudioDevice audioDevice) {
+                return Unit.INSTANCE;
+            }
+        });
+    }
+
     private boolean hasPermissionForCameraAndMicrophone() {
-        int resultCamera = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA);
-        int resultMic = ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO);
+        int resultCamera = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.CAMERA);
+        int resultMic = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.RECORD_AUDIO);
         return resultCamera == PackageManager.PERMISSION_GRANTED &&
-                resultMic == PackageManager.PERMISSION_GRANTED;
+            resultMic == PackageManager.PERMISSION_GRANTED;
     }
 
     private void requestPermissions() {
         ActivityCompat.requestPermissions(
-                this,
-                TwilioVideo.PERMISSIONS_REQUIRED,
-                PERMISSIONS_REQUEST_CODE);
-
+            this,
+            TwilioVideo.PERMISSIONS_REQUIRED,
+            PERMISSIONS_REQUEST_CODE);
     }
 
     private void createAudioAndVideoTracks() {
         // Share your microphone
-        localAudioTrack = LocalAudioTrack.create(this, true, LOCAL_AUDIO_TRACK_NAME);
+        localAudioTrack = LocalAudioTrack.create(this, true,
+            LOCAL_AUDIO_TRACK_NAME);
 
         // Share your camera
-        cameraCapturer = new CameraCapturerCompat(this, getAvailableCameraSource());
+        cameraCapturer = new CameraCapturerCompat(this,
+            CameraCapturerCompat.Source.FRONT_CAMERA);
         localVideoTrack = LocalVideoTrack.create(this,
-                true,
-                cameraCapturer.getVideoCapturer(),
-                LOCAL_VIDEO_TRACK_NAME);
+            true,
+            cameraCapturer,
+            LOCAL_VIDEO_TRACK_NAME);
         this.moveLocalVideoToThumbnailView();
     }
 
-    private CameraSource getAvailableCameraSource() {
-        return (CameraCapturer.isSourceAvailable(CameraSource.FRONT_CAMERA)) ?
-                (CameraSource.FRONT_CAMERA) :
-                (CameraSource.BACK_CAMERA);
-    }
-
     private void connectToRoom() {
-        configureAudio(true);
+        startAudio();
         ConnectOptions.Builder connectOptionsBuilder = new ConnectOptions.Builder(accessToken)
-                .roomName(this.roomId)
-                .enableIceGatheringOnAnyAddressPorts(true);
+            .roomName(this.roomId)
+            .enableIceGatheringOnAnyAddressPorts(true);
 
         /*
          * Add local audio track to connect options to share with participants.
          */
         if (localAudioTrack != null) {
             connectOptionsBuilder
-                    .audioTracks(Collections.singletonList(localAudioTrack));
+                .audioTracks(Collections.singletonList(localAudioTrack));
         }
 
         /*
@@ -349,11 +390,40 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         switchAudioActionFab.setOnClickListener(switchAudioClickListener());
     }
 
+    private void showAudioDevices() {
+        List<AudioDevice> availableAudioDevices = audioSwitch.getAvailableAudioDevices();
+
+        if (availableAudioDevices.isEmpty()) {
+            return;
+        }
+
+        AudioDevice selectedDevice = audioSwitch.getSelectedAudioDevice();
+        int selectedDeviceIndex = availableAudioDevices.indexOf(selectedDevice);
+
+        List<String> audioDeviceNames = TwilioVideoUtils.getAudioDeviceNames(
+            this, availableAudioDevices
+        );
+
+        new AlertDialog.Builder(this)
+            .setSingleChoiceItems(
+                audioDeviceNames.toArray(new CharSequence[0]),
+                selectedDeviceIndex,
+                (dialog, index) -> {
+                    dialog.dismiss();
+                    AudioDevice selectedAudioDevice = availableAudioDevices.get(index);
+                    audioSwitch.selectDevice(selectedAudioDevice);
+                    audioSwitch.activate();
+                })
+            .create()
+            .show();
+    }
+
     /*
      * The actions performed during disconnect.
      */
     private void setDisconnectAction() {
-        connectActionFab.setImageDrawable(ContextCompat.getDrawable(this, FAKE_R.getDrawable("ic_call_end_white_24px")));
+        connectActionFab.setImageDrawable(ContextCompat.getDrawable(this,
+            FAKE_R.getDrawable("ic_call_end_white_24px")));
         connectActionFab.show();
         connectActionFab.setOnClickListener(disconnectClickListener());
     }
@@ -362,7 +432,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
      * Called when participant joins the room
      */
     private void addRemoteParticipant(RemoteParticipant participant) {
-        participantIdentity = participant.getIdentity();
+        remoteParticipantIdentity = participant.getIdentity();
 
 
         /*
@@ -370,7 +440,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
          */
         if (participant.getRemoteVideoTracks().size() > 0) {
             RemoteVideoTrackPublication remoteVideoTrackPublication =
-                    participant.getRemoteVideoTracks().get(0);
+                participant.getRemoteVideoTracks().get(0);
 
             /*
              * Only render video tracks that are subscribed to
@@ -392,38 +462,35 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
     private void addRemoteParticipantVideo(VideoTrack videoTrack) {
         primaryVideoView.setVisibility(View.VISIBLE);
         primaryVideoView.setMirror(false);
-        videoTrack.addRenderer(primaryVideoView);
+        videoTrack.addSink(primaryVideoView);
     }
 
     private void moveLocalVideoToThumbnailView() {
         if (thumbnailVideoView.getVisibility() == View.GONE) {
             thumbnailVideoView.setVisibility(View.VISIBLE);
             if (localVideoTrack != null) {
-                localVideoTrack.removeRenderer(primaryVideoView);
-                localVideoTrack.addRenderer(thumbnailVideoView);
-            }
-            if (localVideoView != null && thumbnailVideoView != null) {
-                localVideoView = thumbnailVideoView;
+                localVideoTrack.removeSink(primaryVideoView);
+                localVideoTrack.addSink(thumbnailVideoView);
             }
             thumbnailVideoView.setMirror(cameraCapturer.getCameraSource() ==
-                    CameraSource.FRONT_CAMERA);
+                CameraCapturerCompat.Source.FRONT_CAMERA);
         }
     }
 
     /*
      * Called when participant leaves the room
      */
-    private void removeRemoteParticipant(RemoteParticipant participant) {
-        if (!participant.getIdentity().equals(participantIdentity)) {
+    private void removeRemoteParticipant(RemoteParticipant remoteParticipant) {
+        if (!remoteParticipant.getIdentity().equals(remoteParticipantIdentity)) {
             return;
         }
 
         /*
          * Remove participant renderer
          */
-        if (participant.getRemoteVideoTracks().size() > 0) {
+        if (!remoteParticipant.getRemoteVideoTracks().isEmpty()) {
             RemoteVideoTrackPublication remoteVideoTrackPublication =
-                    participant.getRemoteVideoTracks().get(0);
+                remoteParticipant.getRemoteVideoTracks().get(0);
 
             /*
              * Remove video only if subscribed to participant track
@@ -436,7 +503,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     private void removeParticipantVideo(VideoTrack videoTrack) {
         primaryVideoView.setVisibility(View.GONE);
-        videoTrack.removeRenderer(primaryVideoView);
+        videoTrack.removeSink(primaryVideoView);
     }
 
     /*
@@ -447,7 +514,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onConnected(Room room) {
                 localParticipant = room.getLocalParticipant();
-                publishEvent(CallEvent.CONNECTED);
+                publishEvent(CallEvent.of(CONNECTED).withRoomCtx(room));
 
                 final List<RemoteParticipant> remoteParticipants = room.getRemoteParticipants();
                 if (remoteParticipants != null && !remoteParticipants.isEmpty()) {
@@ -457,18 +524,18 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
             @Override
             public void onConnectFailure(Room room, TwilioException e) {
-                publishEvent(CallEvent.CONNECT_FAILURE, TwilioVideoUtils.convertToJSON(e));
-                TwilioVideoActivity.this.handleConnectionError(config.getI18nConnectionError());
+                publishEvent(CallEvent.ofError(CONNECT_FAILURE, e).withRoomCtx(room));
+                TwilioVideoActivity.this.handleConnectionError();
             }
 
             @Override
             public void onReconnecting(@NonNull Room room, @NonNull TwilioException e) {
-                publishEvent(CallEvent.RECONNECTING, TwilioVideoUtils.convertToJSON(e));
+                publishEvent(CallEvent.ofError(RECONNECTING, e).withRoomCtx(room));
             }
 
             @Override
             public void onReconnected(@NonNull Room room) {
-                publishEvent(CallEvent.RECONNECTED);
+                publishEvent(CallEvent.of(RECONNECTED).withRoomCtx(room));
             }
 
             @Override
@@ -477,22 +544,22 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 TwilioVideoActivity.this.room = null;
                 // Only reinitialize the UI if disconnect was not called from onDestroy()
                 if (!disconnectedFromOnDestroy && e != null) {
-                    publishEvent(CallEvent.DISCONNECTED_WITH_ERROR, TwilioVideoUtils.convertToJSON(e));
-                    TwilioVideoActivity.this.handleConnectionError(config.getI18nDisconnectedWithError());
+                    publishEvent(CallEvent.ofError(DISCONNECTED_WITH_ERROR, e).withRoomCtx(room));
+                    handleConnectionError();
                 } else {
-                    publishEvent(CallEvent.DISCONNECTED);
+                    publishEvent(CallEvent.of(DISCONNECTED).withRoomCtx(room));
                 }
             }
 
             @Override
             public void onParticipantConnected(Room room, RemoteParticipant participant) {
-                publishEvent(CallEvent.PARTICIPANT_CONNECTED);
+                publishEvent(CallEvent.of(PARTICIPANT_CONNECTED).withRoomCtx(room));
                 addRemoteParticipant(participant);
             }
 
             @Override
             public void onParticipantDisconnected(Room room, RemoteParticipant participant) {
-                publishEvent(CallEvent.PARTICIPANT_DISCONNECTED);
+                publishEvent(CallEvent.of(PARTICIPANT_DISCONNECTED).withRoomCtx(room));
                 removeRemoteParticipant(participant);
             }
 
@@ -520,208 +587,264 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         return new RemoteParticipant.Listener() {
 
             @Override
-            public void onAudioTrackPublished(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
+            public void onAudioTrackPublished(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackPublished: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
-                                "subscribed=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteAudioTrackPublication.getTrackSid(),
-                        remoteAudioTrackPublication.isTrackEnabled(),
-                        remoteAudioTrackPublication.isTrackSubscribed(),
-                        remoteAudioTrackPublication.getTrackName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
+                        "subscribed=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteAudioTrackPublication.getTrackSid(),
+                    remoteAudioTrackPublication.isTrackEnabled(),
+                    remoteAudioTrackPublication.isTrackSubscribed(),
+                    remoteAudioTrackPublication.getTrackName()));
             }
 
             @Override
-            public void onAudioTrackUnpublished(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
+            public void onAudioTrackUnpublished(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackUnpublished: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
-                                "subscribed=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteAudioTrackPublication.getTrackSid(),
-                        remoteAudioTrackPublication.isTrackEnabled(),
-                        remoteAudioTrackPublication.isTrackSubscribed(),
-                        remoteAudioTrackPublication.getTrackName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteAudioTrackPublication: sid=%s, enabled=%b, " +
+                        "subscribed=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteAudioTrackPublication.getTrackSid(),
+                    remoteAudioTrackPublication.isTrackEnabled(),
+                    remoteAudioTrackPublication.isTrackSubscribed(),
+                    remoteAudioTrackPublication.getTrackName()));
             }
 
             @Override
-            public void onAudioTrackSubscribed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, RemoteAudioTrack remoteAudioTrack) {
+            public void onAudioTrackSubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication,
+                RemoteAudioTrack remoteAudioTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackSubscribed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteAudioTrack.isEnabled(),
-                        remoteAudioTrack.isPlaybackEnabled(),
-                        remoteAudioTrack.getName()));
-                publishEvent(CallEvent.AUDIO_TRACK_ADDED);
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteAudioTrack.isEnabled(),
+                    remoteAudioTrack.isPlaybackEnabled(),
+                    remoteAudioTrack.getName()));
             }
 
             @Override
-            public void onAudioTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, TwilioException twilioException) {
+            public void onAudioTrackSubscriptionFailed(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication,
+                TwilioException twilioException
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackSubscriptionFailed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteAudioTrackPublication: sid=%b, name=%s]" +
-                                "[TwilioException: code=%d, message=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteAudioTrackPublication.getTrackSid(),
-                        remoteAudioTrackPublication.getTrackName(),
-                        twilioException.getCode(),
-                        twilioException.getMessage()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteAudioTrackPublication: sid=%b, name=%s]" +
+                        "[TwilioException: code=%d, message=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteAudioTrackPublication.getTrackSid(),
+                    remoteAudioTrackPublication.getTrackName(),
+                    twilioException.getCode(),
+                    twilioException.getMessage()));
             }
 
             @Override
-            public void onAudioTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication, RemoteAudioTrack remoteAudioTrack) {
+            public void onAudioTrackUnsubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication,
+                RemoteAudioTrack remoteAudioTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onAudioTrackUnsubscribed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteAudioTrack.isEnabled(),
-                        remoteAudioTrack.isPlaybackEnabled(),
-                        remoteAudioTrack.getName()));
-                publishEvent(CallEvent.AUDIO_TRACK_REMOVED);
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteAudioTrack: enabled=%b, playbackEnabled=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteAudioTrack.isEnabled(),
+                    remoteAudioTrack.isPlaybackEnabled(),
+                    remoteAudioTrack.getName()));
             }
 
             @Override
-            public void onVideoTrackPublished(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
+            public void onVideoTrackPublished(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackPublished: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
-                                "subscribed=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteVideoTrackPublication.getTrackSid(),
-                        remoteVideoTrackPublication.isTrackEnabled(),
-                        remoteVideoTrackPublication.isTrackSubscribed(),
-                        remoteVideoTrackPublication.getTrackName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
+                        "subscribed=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteVideoTrackPublication.getTrackSid(),
+                    remoteVideoTrackPublication.isTrackEnabled(),
+                    remoteVideoTrackPublication.isTrackSubscribed(),
+                    remoteVideoTrackPublication.getTrackName()));
             }
 
             @Override
-            public void onVideoTrackUnpublished(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
+            public void onVideoTrackUnpublished(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackUnpublished: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
-                                "subscribed=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteVideoTrackPublication.getTrackSid(),
-                        remoteVideoTrackPublication.isTrackEnabled(),
-                        remoteVideoTrackPublication.isTrackSubscribed(),
-                        remoteVideoTrackPublication.getTrackName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteVideoTrackPublication: sid=%s, enabled=%b, " +
+                        "subscribed=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteVideoTrackPublication.getTrackSid(),
+                    remoteVideoTrackPublication.isTrackEnabled(),
+                    remoteVideoTrackPublication.isTrackSubscribed(),
+                    remoteVideoTrackPublication.getTrackName()));
             }
 
             @Override
-            public void onVideoTrackSubscribed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, RemoteVideoTrack remoteVideoTrack) {
+            public void onVideoTrackSubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication,
+                RemoteVideoTrack remoteVideoTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackSubscribed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteVideoTrack: enabled=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteVideoTrack.isEnabled(),
-                        remoteVideoTrack.getName()));
-                publishEvent(CallEvent.VIDEO_TRACK_ADDED);
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteVideoTrack: enabled=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteVideoTrack.isEnabled(),
+                    remoteVideoTrack.getName()));
+                publishEvent(CallEvent.of(REMOTE_VIDEO_TRACK_ADDED).withRoomCtx(room));
                 addRemoteParticipantVideo(remoteVideoTrack);
             }
 
             @Override
-            public void onVideoTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, TwilioException twilioException) {
+            public void onVideoTrackSubscriptionFailed(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication,
+                TwilioException twilioException
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackSubscriptionFailed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteVideoTrackPublication: sid=%b, name=%s]" +
-                                "[TwilioException: code=%d, message=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteVideoTrackPublication.getTrackSid(),
-                        remoteVideoTrackPublication.getTrackName(),
-                        twilioException.getCode(),
-                        twilioException.getMessage()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteVideoTrackPublication: sid=%b, name=%s]" +
+                        "[TwilioException: code=%d, message=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteVideoTrackPublication.getTrackSid(),
+                    remoteVideoTrackPublication.getTrackName(),
+                    twilioException.getCode(),
+                    twilioException.getMessage()));
             }
 
             @Override
-            public void onVideoTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication, RemoteVideoTrack remoteVideoTrack) {
+            public void onVideoTrackUnsubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication,
+                RemoteVideoTrack remoteVideoTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onVideoTrackUnsubscribed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteVideoTrack: enabled=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteVideoTrack.isEnabled(),
-                        remoteVideoTrack.getName()));
-                publishEvent(CallEvent.VIDEO_TRACK_REMOVED);
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteVideoTrack: enabled=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteVideoTrack.isEnabled(),
+                    remoteVideoTrack.getName()));
+                publishEvent(CallEvent.of(REMOTE_VIDEO_TRACK_REMOVED).withRoomCtx(room));
                 removeParticipantVideo(remoteVideoTrack);
             }
 
             @Override
-            public void onDataTrackPublished(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication) {
+            public void onDataTrackPublished(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackPublished: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
-                                "subscribed=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteDataTrackPublication.getTrackSid(),
-                        remoteDataTrackPublication.isTrackEnabled(),
-                        remoteDataTrackPublication.isTrackSubscribed(),
-                        remoteDataTrackPublication.getTrackName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
+                        "subscribed=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteDataTrackPublication.getTrackSid(),
+                    remoteDataTrackPublication.isTrackEnabled(),
+                    remoteDataTrackPublication.isTrackSubscribed(),
+                    remoteDataTrackPublication.getTrackName()));
             }
 
             @Override
-            public void onDataTrackUnpublished(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication) {
+            public void onDataTrackUnpublished(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackUnpublished: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
-                                "subscribed=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteDataTrackPublication.getTrackSid(),
-                        remoteDataTrackPublication.isTrackEnabled(),
-                        remoteDataTrackPublication.isTrackSubscribed(),
-                        remoteDataTrackPublication.getTrackName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteDataTrackPublication: sid=%s, enabled=%b, " +
+                        "subscribed=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteDataTrackPublication.getTrackSid(),
+                    remoteDataTrackPublication.isTrackEnabled(),
+                    remoteDataTrackPublication.isTrackSubscribed(),
+                    remoteDataTrackPublication.getTrackName()));
             }
 
             @Override
-            public void onDataTrackSubscribed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, RemoteDataTrack remoteDataTrack) {
+            public void onDataTrackSubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication,
+                RemoteDataTrack remoteDataTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackSubscribed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteDataTrack: enabled=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteDataTrack.isEnabled(),
-                        remoteDataTrack.getName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteDataTrack: enabled=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteDataTrack.isEnabled(),
+                    remoteDataTrack.getName()));
             }
 
             @Override
-            public void onDataTrackSubscriptionFailed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, TwilioException twilioException) {
+            public void onDataTrackSubscriptionFailed(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication,
+                TwilioException twilioException
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackSubscriptionFailed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteDataTrackPublication: sid=%b, name=%s]" +
-                                "[TwilioException: code=%d, message=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteDataTrackPublication.getTrackSid(),
-                        remoteDataTrackPublication.getTrackName(),
-                        twilioException.getCode(),
-                        twilioException.getMessage()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteDataTrackPublication: sid=%b, name=%s]" +
+                        "[TwilioException: code=%d, message=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteDataTrackPublication.getTrackSid(),
+                    remoteDataTrackPublication.getTrackName(),
+                    twilioException.getCode(),
+                    twilioException.getMessage()));
             }
 
             @Override
-            public void onDataTrackUnsubscribed(RemoteParticipant remoteParticipant, RemoteDataTrackPublication remoteDataTrackPublication, RemoteDataTrack remoteDataTrack) {
+            public void onDataTrackUnsubscribed(
+                RemoteParticipant remoteParticipant,
+                RemoteDataTrackPublication remoteDataTrackPublication,
+                RemoteDataTrack remoteDataTrack
+            ) {
                 Log.i(TwilioVideo.TAG, String.format("onDataTrackUnsubscribed: " +
-                                "[RemoteParticipant: identity=%s], " +
-                                "[RemoteDataTrack: enabled=%b, name=%s]",
-                        remoteParticipant.getIdentity(),
-                        remoteDataTrack.isEnabled(),
-                        remoteDataTrack.getName()));
+                        "[RemoteParticipant: identity=%s], " +
+                        "[RemoteDataTrack: enabled=%b, name=%s]",
+                    remoteParticipant.getIdentity(),
+                    remoteDataTrack.isEnabled(),
+                    remoteDataTrack.getName()));
             }
 
             @Override
-            public void onAudioTrackEnabled(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
-
+            public void onAudioTrackEnabled(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication) {
             }
 
             @Override
-            public void onAudioTrackDisabled(RemoteParticipant remoteParticipant, RemoteAudioTrackPublication remoteAudioTrackPublication) {
-
+            public void onAudioTrackDisabled(
+                RemoteParticipant remoteParticipant,
+                RemoteAudioTrackPublication remoteAudioTrackPublication) {
             }
 
             @Override
-            public void onVideoTrackEnabled(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
-
+            public void onVideoTrackEnabled(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication) {
             }
 
             @Override
-            public void onVideoTrackDisabled(RemoteParticipant remoteParticipant, RemoteVideoTrackPublication remoteVideoTrackPublication) {
-
+            public void onVideoTrackDisabled(
+                RemoteParticipant remoteParticipant,
+                RemoteVideoTrackPublication remoteVideoTrackPublication) {
             }
         };
     }
@@ -731,8 +854,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onClick(View v) {
                 if (config.isHangUpInApp()) {
-                    // Propagating the event to the web side in order to allow developers to do something else before disconnecting the room
-                    publishEvent(CallEvent.HANG_UP);
+                    // Send the event to the web side in order to allow developers to do something else before disconnecting the room
+                    publishEvent(CallEvent.of(HANG_UP).withRoomCtx(room));
                 } else {
                     onDisconnect();
                 }
@@ -745,13 +868,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             @Override
             public void onClick(View v) {
                 if (cameraCapturer != null) {
-                    CameraSource cameraSource = cameraCapturer.getCameraSource();
+                    CameraCapturerCompat.Source cameraSource = cameraCapturer.getCameraSource();
                     cameraCapturer.switchCamera();
-                    if (thumbnailVideoView.getVisibility() == View.VISIBLE) {
-                        thumbnailVideoView.setMirror(cameraSource == CameraSource.BACK_CAMERA);
-                    } else {
-                        primaryVideoView.setMirror(cameraSource == CameraSource.BACK_CAMERA);
-                    }
+                    thumbnailVideoView.setMirror(
+                        cameraSource == CameraCapturerCompat.Source.BACK_CAMERA);
                 }
             }
         };
@@ -761,16 +881,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (audioManager.isSpeakerphoneOn()) {
-                    audioManager.setSpeakerphoneOn(false);
-                } else {
-                    audioManager.setSpeakerphoneOn(true);
-
-                }
-                int icon = audioManager.isSpeakerphoneOn() ?
-                        FAKE_R.getDrawable("ic_phonelink_ring_white_24dp") : FAKE_R.getDrawable("ic_volume_headhphones_white_24dp");
-                switchAudioActionFab.setImageDrawable(ContextCompat.getDrawable(
-                        TwilioVideoActivity.this, icon));
+                showAudioDevices();
             }
         };
     }
@@ -795,7 +906,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                     }
 
                     localVideoActionFab.setImageDrawable(
-                            ContextCompat.getDrawable(TwilioVideoActivity.this, icon));
+                        ContextCompat.getDrawable(TwilioVideoActivity.this, icon));
                 }
             }
         };
@@ -814,81 +925,19 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                     boolean enable = !localAudioTrack.isEnabled();
                     localAudioTrack.enable(enable);
                     int icon = enable ?
-                            FAKE_R.getDrawable("ic_mic_green_24px") : FAKE_R.getDrawable("ic_mic_off_red_24px");
+                        FAKE_R.getDrawable("ic_mic_green_24px")
+                        : FAKE_R.getDrawable("ic_mic_off_red_24px");
                     muteActionFab.setImageDrawable(ContextCompat.getDrawable(
-                            TwilioVideoActivity.this, icon));
+                        TwilioVideoActivity.this, icon));
                 }
             }
         };
     }
 
-    private void configureAudio(boolean enable) {
-        if (enable) {
-            previousAudioMode = audioManager.getMode();
-            // Request audio focus before making any device switch
-            requestAudioFocus();
-            /*
-             * Use MODE_IN_COMMUNICATION as the default audio mode. It is required
-             * to be in this mode when playout and/or recording starts for the best
-             * possible VoIP performance. Some devices have difficulties with
-             * speaker mode if this is not set.
-             */
-            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
-            /*
-             * Always disable microphone mute during a WebRTC call.
-             */
-            previousMicrophoneMute = audioManager.isMicrophoneMute();
-            audioManager.setMicrophoneMute(false);
-        } else {
-            audioManager.setMode(previousAudioMode);
-            audioManager.abandonAudioFocus(null);
-            audioManager.setMicrophoneMute(previousMicrophoneMute);
-        }
+    private void handleConnectionError() {
+        Log.i(TwilioVideo.TAG, "Connection error happened. Finishing videocall...");
+        this.finish();
     }
-
-    private void requestAudioFocus() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            AudioAttributes playbackAttributes = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .build();
-            AudioFocusRequest focusRequest =
-                    new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
-                            .setAudioAttributes(playbackAttributes)
-                            .setAcceptsDelayedFocusGain(true)
-                            .setOnAudioFocusChangeListener(
-                                    new AudioManager.OnAudioFocusChangeListener() {
-                                        @Override
-                                        public void onAudioFocusChange(int i) {
-                                        }
-                                    })
-                            .build();
-            audioManager.requestAudioFocus(focusRequest);
-        } else {
-            audioManager.requestAudioFocus(null, AudioManager.STREAM_VOICE_CALL,
-                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-        }
-    }
-
-    private void handleConnectionError(String message) {
-        if (config.isHandleErrorInApp()) {
-            Log.i(TwilioVideo.TAG, "Error handling disabled for the plugin. This error should be handled in the hybrid app");
-            this.finish();
-            return;
-        }
-        Log.i(TwilioVideo.TAG, "Connection error handled by the plugin");
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage(message)
-                .setCancelable(false)
-                .setPositiveButton(config.getI18nAccept(), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        TwilioVideoActivity.this.finish();
-                    }
-                });
-        AlertDialog alert = builder.create();
-        alert.show();
-    }
-
 
     @Override
     public void onDisconnect() {
@@ -904,7 +953,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
 
     @Override
     public void finish() {
-        configureAudio(false);
+        audioSwitch.deactivate();
         super.finish();
         overridePendingTransition(0, 0);
     }
@@ -913,8 +962,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         TwilioVideoManager.getInstance().publishEvent(event);
     }
 
-    private void publishEvent(CallEvent event, JSONObject data) {
-        TwilioVideoManager.getInstance().publishEvent(event, data);
+    @Override
+    public void onAudioFocusChange(int i) {
+        Log.i(TwilioVideo.TAG, "Audio focus changed");
     }
-
 }

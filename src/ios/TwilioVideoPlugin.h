@@ -2,8 +2,11 @@
 #import "TwilioVideoViewController.h"
 #import "TwilioVideoConfig.h"
 #import "TwilioVideoManager.h"
+#import "TwilioVideoJsonConverter.h"
 
 @interface TwilioVideoPlugin : CDVPlugin<TwilioVideoEventProducerDelegate>
-@property (nonatomic, strong) NSString *listenerCallbackID;
+
+@property NSString *listenerCallbackID;
+
 @end
 

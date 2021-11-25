@@ -32,20 +32,30 @@ The plugin is available in the global scope so you can invoke its API like this:
 
 - Javascript
 
-``` Javascript
-window.twiliovideo.openRoom(token, room)
+```Javascript
+window.twiliovideo.[METHOD]
 ```
 
 - Typescript
 
-``` Typescript
-(window as any).twiliovideo.openRoom(token, room)
+```Typescript
+(window as any).twiliovideo.[METHOD]
 ```
+
+- Typescript with typings
+    - Declare a variable at the top of your Typescript file and import `TwilioVideoPlugin`
+    ```Typescript
+    declare const twiliovideo: TwilioVideoPlugin;
+    ```
+    - Invoke the plugin like this in any place of this file
+    ```Typescript
+    twiliovideo.[METHOD]
+    ```
 
 ### Methods
 Have a look at <a href="typings/twiliovideo.d.ts">definitions file</a> where the API is documented.
 
-### Events
+### Videocall events
 Manage the events emitted by the plugin while the videocall is running.
 
 EVENT LIST

@@ -43,10 +43,12 @@ public class TwilioVideoJsonConverter {
             );
             // Remote participants
             JSONArray remoteParticipantsJsonArray = new JSONArray();
-            for (Participant remoteParticipant : room.getRemoteParticipants()) {
+            if (room.getRemoteParticipants() != null) {
+              for (Participant remoteParticipant : room.getRemoteParticipants()) {
                 remoteParticipantsJsonArray.put(
-                    convertRoomPartipantToJSON(remoteParticipant)
+                  convertRoomPartipantToJSON(remoteParticipant)
                 );
+              }
             }
             roomJsonObj.putOpt("remoteParticipants", remoteParticipantsJsonArray);
             // Room state

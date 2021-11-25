@@ -16,21 +16,21 @@
     NSString* room = args[1];
     TwilioVideoConfig *config = [[TwilioVideoConfig alloc] init];
     [config parse:command.arguments[2]];
-    
+
     if (token == NULL || room == NULL) {
         [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_BAD_CONNECTION_REQUEST]];
         return;
     }
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         UIStoryboard *sb = [UIStoryboard storyboardWithName:@"TwilioVideo" bundle:nil];
         TwilioVideoViewController *vc = [sb instantiateViewControllerWithIdentifier:@"TwilioVideoViewController"];
-        
+
         vc.config = config;
 
         vc.view.backgroundColor = [UIColor clearColor];
         vc.modalPresentationStyle = UIModalPresentationOverFullScreen;
-        
+
         [self.viewController presentViewController:vc animated:NO completion:^{
             [vc connectToRoom:room token:token];
         }];
@@ -72,12 +72,12 @@
         NSLog(@"Listener callback unavailable.  event %@", event);
         return;
     }
-    
+
     NSLog(@"Event received %@", event);
-        
+
     CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:[ event toJSON]];
     [result setKeepCallbackAsBool:YES];
-    
+
     [self.commandDelegate sendPluginResult:result callbackId:self.listenerCallbackID];
 }
 

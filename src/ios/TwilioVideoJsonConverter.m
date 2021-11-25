@@ -18,10 +18,13 @@
     if (room == NULL) { return NULL; }
     NSMutableDictionary *dict = [NSMutableDictionary new];
     [dict setObject:room.sid forKey:@"sid"];
-    [dict setObject:[self convertRoomParticipantToDictionary:room.localParticipant] forKey:@"localParticipant"];
+    NSDictionary *participantDict = [self convertRoomParticipantToDictionary:room.localParticipant];
+    [dict setObject:participantDict != NULL ? participantDict : [NSNull null] forKey:@"localParticipant"];
     NSMutableArray *remotePartipantsArray = [NSMutableArray new];
-    for (TVIRemoteParticipant* remoteParticipant in room.remoteParticipants) {
-        [remotePartipantsArray addObject:[self convertRoomParticipantToDictionary:remoteParticipant]];
+    if (room.remoteParticipants != NULL) {
+        for (TVIRemoteParticipant* remoteParticipant in room.remoteParticipants) {
+            [remotePartipantsArray addObject:[self convertRoomParticipantToDictionary:remoteParticipant]];
+        }
     }
     [dict setObject:remotePartipantsArray forKey:@"remoteParticipants"];
     [dict setObject:[NSNumber numberWithInteger:room.state] forKey:@"state"];
@@ -36,14 +39,18 @@
     [dict setObject:[NSNumber numberWithInteger:participant.state] forKey:@"state"];
     // Audio tracks
     NSMutableArray *audioTracksArray = [NSMutableArray new];
-    for (TVITrackPublication* audioTrack in participant.audioTracks) {
-        [audioTracksArray addObject:[self convertTrackToDictionary:audioTrack]];
+    if (participant.audioTracks != NULL) {
+        for (TVITrackPublication* audioTrack in participant.audioTracks) {
+            [audioTracksArray addObject:[self convertTrackToDictionary:audioTrack]];
+        }
     }
     [dict setObject:audioTracksArray forKey:@"audioTracks"];
     // Video tracks
     NSMutableArray *videoTracksArray = [NSMutableArray new];
-    for (TVITrackPublication* videoTrack in participant.videoTracks) {
-        [videoTracksArray addObject:[self convertTrackToDictionary:videoTrack]];
+    if (participant.videoTracks != NULL) {
+        for (TVITrackPublication* videoTrack in participant.videoTracks) {
+            [videoTracksArray addObject:[self convertTrackToDictionary:videoTrack]];
+        }
     }
     [dict setObject:videoTracksArray forKey:@"videoTracks"];
     return dict;

@@ -16,6 +16,7 @@ import org.apache.cordova.LOG;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import static org.apache.cordova.twiliovideo.CallEventId.BAD_CONNECTION_REQUEST;
 
@@ -66,7 +67,12 @@ public class TwilioVideo extends CordovaPlugin {
 
     private void getRoom(CallbackContext callbackContext) {
         Room currentVideocallRoom = TwilioVideoActivity.getVideocallRoomInstance();
-        callbackContext.success(TwilioVideoJsonConverter.convertRoomToJSON(currentVideocallRoom));
+        JSONObject res = TwilioVideoJsonConverter.convertRoomToJSON(currentVideocallRoom);
+        if (res != null) {
+          callbackContext.success(res);
+        } else {
+          callbackContext.success((String) null);
+        }
     }
 
     public void openRoom(final JSONArray args) {

@@ -104,7 +104,7 @@ public class TwilioVideoJsonConverter {
       try {
         trackJsonObj.putOpt("sid", track.getTrackSid());
         trackJsonObj.putOpt("name", track.getTrackName());
-        trackJsonObj.putOpt("isEnabled", track.getTrackSid());
+        trackJsonObj.putOpt("isEnabled", track.isTrackEnabled());
       } catch (JSONException e) {
         Log.e(TwilioVideo.TAG, "Error converting Twilio track to JSON", e);
       }

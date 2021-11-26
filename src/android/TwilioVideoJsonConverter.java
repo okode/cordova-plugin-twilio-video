@@ -89,7 +89,7 @@ public class TwilioVideoJsonConverter {
               videoTracksJsonArray.put(convertTrackToJSON(track));
             }
           }
-          participantJsonObj.putOpt("videoTracks", audioTracksJsonArray);
+          participantJsonObj.putOpt("videoTracks", videoTracksJsonArray);
         } catch (JSONException e) {
             Log.e(TwilioVideo.TAG, "Error converting Twilio participant to JSON", e);
         }

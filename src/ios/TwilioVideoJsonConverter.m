@@ -40,20 +40,44 @@
     // Audio tracks
     NSMutableArray *audioTracksArray = [NSMutableArray new];
     if (participant.audioTracks != NULL) {
-        for (TVITrackPublication* audioTrack in participant.audioTracks) {
-            [audioTracksArray addObject:[self convertTrackToDictionary:audioTrack]];
+        for (TVIAudioTrackPublication* audioTrack in participant.audioTracks) {
+            [audioTracksArray addObject:[self convertAudioTrackToDictionary:audioTrack]];
         }
     }
     [dict setObject:audioTracksArray forKey:@"audioTracks"];
     // Video tracks
     NSMutableArray *videoTracksArray = [NSMutableArray new];
     if (participant.videoTracks != NULL) {
-        for (TVITrackPublication* videoTrack in participant.videoTracks) {
-            [videoTracksArray addObject:[self convertTrackToDictionary:videoTrack]];
+        for (TVIVideoTrackPublication* videoTrack in participant.videoTracks) {
+            [videoTracksArray addObject:[self convertVideoTrackToDictionary:videoTrack]];
         }
     }
     [dict setObject:videoTracksArray forKey:@"videoTracks"];
     return dict;
+}
+
++ (NSDictionary*)convertAudioTrackToDictionary:(TVIAudioTrackPublication*)audioTrackPublication {
+    NSDictionary *dict = [self convertTrackToDictionary:audioTrackPublication];
+    if (dict == NULL) { return NULL; }
+
+    NSMutableDictionary *mutableDict = [dict mutableCopy];
+    TVIAudioTrack *audioTrack = [audioTrackPublication audioTrack];
+    if (audioTrack == NULL) { return mutableDict; }
+
+    [mutableDict setObject:[NSNumber numberWithBool:audioTrack.enabled] forKey:@"isAudioEnabled"];
+    return mutableDict;
+}
+
++ (NSDictionary*)convertVideoTrackToDictionary:(TVIVideoTrackPublication*)videoTrackPublication {
+    NSDictionary *dict = [self convertTrackToDictionary:videoTrackPublication];
+    if (dict == NULL) { return NULL; }
+
+    NSMutableDictionary *mutableDict = [dict mutableCopy];
+    TVIVideoTrack *videoTrack = [videoTrackPublication videoTrack];
+    if (videoTrack == NULL) { return mutableDict; }
+
+    [mutableDict setObject:[NSNumber numberWithBool:videoTrack.enabled] forKey:@"isVideoEnabled"];
+    return mutableDict;
 }
 
 + (NSDictionary*)convertTrackToDictionary:(TVITrackPublication*)track {

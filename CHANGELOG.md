@@ -1,3 +1,10 @@
+# 6.1
+## Fixes
+- Fixed some typings
+## New features
+### Common
+- Added 'isAudioEnabled' and 'isVideoEnabled' params to the respective tracks.
+
 # 6.0
 ## Fixes
 ## New features

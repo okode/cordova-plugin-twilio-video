@@ -92,22 +92,34 @@ export interface TwilioVideoAppParticipant {
    * (iOS) It's a number
    */
   state?: string | number;
-  audioTracks?: TwilioVideoAppTrack[];
-  videoTracks?: TwilioVideoAppTrack[];
+  audioTracks?: TwilioVideoAppAudioTrack[];
+  videoTracks?: TwilioVideoAppVideoTrack[];
 }
 
-export interface TwilioVideoAppTrack {
-  sid?: string;
+export interface TwilioVideoAppAudioTrack extends TwilioVideoAppTrack {
   /**
    * (Android) It's a string
    * (iOS) It's a number
    */
+  isAudioEnabled?: boolean | number;
+}
+
+export interface TwilioVideoAppVideoTrack extends TwilioVideoAppTrack {
+  /**
+   * (Android) It's a string
+   * (iOS) It's a number
+   */
+  isVideoEnabled?: boolean | number;
+}
+
+export interface TwilioVideoAppTrack {
+  sid?: string;
   name?: string;
   /**
    * (Android) It's a string
    * (iOS) It's a number
    */
-  isEnabled?: boolean;
+  isEnabled?: boolean | number;
 }
 
 export interface TwilioVideoAppError {

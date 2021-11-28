@@ -2,15 +2,21 @@ package org.apache.cordova.twiliovideo;
 
 import android.util.Log;
 
+import com.twilio.video.AudioTrack;
+import com.twilio.video.AudioTrackPublication;
 import com.twilio.video.NetworkQualityLevel;
 import com.twilio.video.Participant;
 import com.twilio.video.Room;
 import com.twilio.video.TrackPublication;
 import com.twilio.video.TwilioException;
+import com.twilio.video.VideoTrack;
+import com.twilio.video.VideoTrackPublication;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import tvi.webrtc.VideoSink;
 
 public class TwilioVideoJsonConverter {
 
@@ -77,16 +83,16 @@ public class TwilioVideoJsonConverter {
           // Audio tracks
           JSONArray audioTracksJsonArray = new JSONArray();
           if (participant.getAudioTracks() != null) {
-            for (TrackPublication track : participant.getAudioTracks()) {
-              audioTracksJsonArray.put(convertTrackToJSON(track));
+            for (AudioTrackPublication track : participant.getAudioTracks()) {
+              audioTracksJsonArray.put(convertAudioTrackToJSON(track));
             }
           }
           participantJsonObj.putOpt("audioTracks", audioTracksJsonArray);
           // Video tracks
           JSONArray videoTracksJsonArray = new JSONArray();
           if (participant.getVideoTracks() != null) {
-            for (TrackPublication track : participant.getVideoTracks()) {
-              videoTracksJsonArray.put(convertTrackToJSON(track));
+            for (VideoTrackPublication track : participant.getVideoTracks()) {
+              videoTracksJsonArray.put(convertVideoTrackToJSON(track));
             }
           }
           participantJsonObj.putOpt("videoTracks", videoTracksJsonArray);
@@ -94,6 +100,44 @@ public class TwilioVideoJsonConverter {
             Log.e(TwilioVideo.TAG, "Error converting Twilio participant to JSON", e);
         }
         return participantJsonObj;
+    }
+
+    private static JSONObject convertAudioTrackToJSON(AudioTrackPublication audioTrackPublication) {
+      JSONObject audioTrackJsonObj = convertTrackToJSON(audioTrackPublication);
+      if (audioTrackJsonObj == null) {
+        return null;
+      }
+
+      AudioTrack audioTrack = audioTrackPublication.getAudioTrack();
+      if (audioTrack == null) {
+        return audioTrackJsonObj;
+      }
+
+      try {
+        audioTrackJsonObj.putOpt("isAudioEnabled", audioTrack.isEnabled());
+      } catch (JSONException e) {
+        Log.e(TwilioVideo.TAG, "Error converting Twilio audio track to JSON", e);
+      }
+      return audioTrackJsonObj;
+    }
+
+    private static JSONObject convertVideoTrackToJSON(VideoTrackPublication videoTrackPublication) {
+      JSONObject videoTrackJsonObj = convertTrackToJSON(videoTrackPublication);
+      if (videoTrackJsonObj == null) {
+        return null;
+      }
+
+      VideoTrack videoTrack = videoTrackPublication.getVideoTrack();
+      if (videoTrack == null) {
+        return videoTrackJsonObj;
+      }
+
+      try {
+        videoTrackJsonObj.putOpt("isVideoEnabled", videoTrack.isEnabled());
+      } catch (JSONException e) {
+        Log.e(TwilioVideo.TAG, "Error converting Twilio video track to JSON", e);
+      }
+      return videoTrackJsonObj;
     }
 
     private static JSONObject convertTrackToJSON(TrackPublication track) {

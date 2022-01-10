@@ -34,9 +34,9 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
     public getUnreadMessagesCount(Channel currentChannel) {
         currentChannel.getUnconsumedMessagesCount(new CallbackListener<Long>() {
             @Override
-            public void onSuccess(Long aLong) {
-                Log.d("TAG", "Messages Counts: Unread Messages Count : " + aLong.intValue());
-                count = aLong.intValue();
+            public void onSuccess(Long unreadMessage) {
+                count = unreadMessage == null ? 0 : unreadMessage.intValue();
+                Log.d(TAG, "Messages Counts: Unread Messages Count : " + count);
             }
         });
     }
@@ -70,6 +70,14 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
                             Log.d(TAG, "onSuccess: Channel Joined");
                             getUnreadMessagesCount(mChannel);
                         }
+
+                        @Override
+                        public void onError(ErrorInfo errorInfo) {
+                            if (errorInfo.getCode() == 50404) {
+                                Log.e(TAG, "onError: " + errorInfo.getMessage());
+                                getUnreadMessagesCount(mChannel);
+                            }
+                        }
                     });
                 }
 
@@ -84,6 +92,14 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
                                 public void onSuccess() {
                                     Log.d(TAG, "onSuccess: Channel Created");
                                     getUnreadMessagesCount(mChannel);
+                                }
+
+                                @Override
+                                public void onError(ErrorInfo errorInfo) {
+                                    if (errorInfo.getCode() == 50404) {
+                                        Log.e(TAG, "onError: " + errorInfo.getMessage());
+                                        getUnreadMessagesCount(mChannel);
+                                    }
                                 }
                             });
                         }

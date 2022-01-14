@@ -20,11 +20,9 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.twilio.chat.ListenerException;
 import com.twilio.video.CameraCapturer;
 import com.twilio.video.CameraCapturer.CameraSource;
 import com.twilio.video.ConnectOptions;
@@ -68,7 +66,7 @@ import androidx.core.content.FileProvider;
 
 import static org.apache.cordova.twiliovideo.CallEvent.ATTACHMENT;
 
-public class TwilioVideoActivity extends AppCompatActivity implements org.apache.cordova.twiliovideo.CallActionObserver,MessageCountListener {
+public class TwilioVideoActivity extends AppCompatActivity implements org.apache.cordova.twiliovideo.CallActionObserver {
 
     /*
      * Audio and video tracks can be created with names. This feature is useful for categorizing
@@ -178,11 +176,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
             roomId =  separated[0];
             userId =  separated[1] ;
         }else {
-            userId = "";
+           userId = "";
         }
-
-        twilioChatUnreadMessages = new TwilioChatUnreadMessages(this,roomId,this);
-        twilioChatUnreadMessages.fetch(userId);
 
         Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
         if (!hasPermissionForCameraAndMicrophone()) {
@@ -198,6 +193,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
          * Set the initial state of the UI
          */
         initializeUI();
+        twilioChatUnreadMessages = TwilioChatUnreadMessages(this, accessToken,roomId);
+        twilioChatUnreadMessages.build();
 
         chatActionFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -210,20 +207,6 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
 
             }
         });
-    }
-
-    @Override
-    public void onMessageCount(int count) {
-        try {
-            if (count == 0) {
-                txtUnreadMessages.setVisibility(View.GONE);
-            } else {
-                txtUnreadMessages.setVisibility(View.VISIBLE);
-                txtUnreadMessages.setText(String.valueOf(count));
-            }
-        } catch (ListenerException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -443,6 +426,13 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         attachment_fab.setOnClickListener(attachmentClickListener());
         switchAudioActionFab.show();
         switchAudioActionFab.setOnClickListener(switchAudioClickListener());
+
+        if (twilioChatUnreadMessages.getUnreadMessages() == 0){
+            txtUnreadMessages.setVisibility(View.GONE);
+        } else {
+            txtUnreadMessages.setVisibility(View.VISIBLE);
+            txtUnreadMessages.setText(twilioChatUnreadMessages.getUnreadMessages().toString());
+        }
     }
 
     /*

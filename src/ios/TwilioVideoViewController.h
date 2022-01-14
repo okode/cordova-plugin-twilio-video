@@ -45,8 +45,6 @@
 @property (strong, nonatomic) UIAlertController *alertCtrl;
 @property (strong, nonatomic) UIImagePickerController *imagePicker;
 
-@property (strong, nonatomic) IBOutlet UIView *navigationView;
-
 - (void)connectToRoom:(NSString*)room token: (NSString *)token;
 
 @end

@@ -219,66 +219,24 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
     NSURL *url = [NSURL URLWithString:self.productURL];
     NSURLRequest *request = [NSURLRequest requestWithURL:url];
     
-//    _webView = [[WKWebView alloc] initWithFrame:self.view.frame];
-//    [_webView loadRequest:request];
-//    _webView.navigationDelegate = self;
-//    _webView.frame = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height+40);
-//    [self animateViewHeight:_webView withAnimationType:kCATransitionFromTop isChatClose:NO];
-    
-    
-    _webView = [[WKWebView alloc] initWithFrame:CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height)];
+    _webView = [[WKWebView alloc] initWithFrame:self.view.frame];
     [_webView loadRequest:request];
     _webView.navigationDelegate = self;
     _webView.frame = CGRectMake(self.view.frame.origin.x, self.view.frame.origin.y, self.view.frame.size.width, self.view.frame.size.height+40);
     [self animateViewHeight:_webView withAnimationType:kCATransitionFromTop isChatClose:NO];
     
-    
-    
     [self createCloseButton];
 }
 
 - (void) createCloseButton {
-    
-//    UINavigationBar* navbar = [[UINavigationBar alloc] initWithFrame:CGRectMake(0, 20, self.view.frame.size.width, 64)];
-//
-//    UINavigationItem* navItem = [[UINavigationItem alloc] initWithTitle:@""];
-//    [navbar setBarTintColor:[UIColor whiteColor]];
-//
-//    UIImage* image3 = [UIImage imageNamed:@"close.png"];
-//    CGRect frameimg = CGRectMake(0, 0, image3.size.width, image3.size.height);
-//    UIButton *someButton = [[UIButton alloc] initWithFrame:frameimg];
-//    [someButton setBackgroundImage:image3 forState:UIControlStateNormal];
-//    [someButton addTarget:self action:@selector(btnCloseClicked:)
-//         forControlEvents:UIControlEventTouchUpInside];
-//    [someButton setShowsTouchWhenHighlighted:YES];
-//
-//    UIBarButtonItem *mailbutton =[[UIBarButtonItem alloc] initWithCustomView:someButton];
-//    navItem.rightBarButtonItem=mailbutton;
-//
-//    [navbar setItems:@[navItem]];
-    
-    
-    _navigationView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 70)];
-    _navigationView.backgroundColor=[UIColor whiteColor];
-    
-    
     UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
     [button addTarget:self action:@selector(btnCloseClicked:) forControlEvents:UIControlEventTouchUpInside];
     [button setImage:[UIImage imageNamed:@"close.png"] forState:UIControlStateNormal];
-    button.frame = CGRectMake(_navigationView.frame.size.width - 50, 30.0, 40.0, 40.0);
-    [_navigationView addSubview:button];
-    
-    [self.view addSubview: _navigationView];
-    
-//    UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-//    [button addTarget:self action:@selector(btnCloseClicked:) forControlEvents:UIControlEventTouchUpInside];
-//    [button setImage:[UIImage imageNamed:@"close.png"] forState:UIControlStateNormal];
-//    button.frame = CGRectMake(_webView.frame.size.width - 50, 30.0, 40.0, 40.0);
-//    [_webView addSubview:button];
+    button.frame = CGRectMake(_webView.frame.size.width - 50, 30.0, 40.0, 40.0);
+    [_webView addSubview:button];
 }
 
 - (void)btnCloseClicked:(UIButton*)button{
-    [_navigationView setHidden:true];
     [self animateViewHeight:self.view withAnimationType:kCATransitionFromBottom isChatClose:YES];
 }
 

@@ -19,39 +19,16 @@
         android:src="@drawable/ic_call_white_24px"
         app:backgroundTint="#f76c6c" />
 
-    <FrameLayout
-        android:id="@+id/frameLayout"
-        android:layout_width="wrap_content"
-        android:layout_marginRight="80dp"
-        android:layout_gravity="bottom|end"
-        android:layout_marginBottom="16dp"
-        android:layout_height="wrap_content">
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/connect_action_chat"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:src="@drawable/chat"
-            app:maxImageSize="24dp"
-            app:backgroundTint="#f76c6c" />
-
-        <TextView
-            android:id="@+id/txt_unread_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/unread_message_badge"
-            android:elevation="8dp"
-            android:layout_gravity="end"
-            android:visibility="gone"
-            android:paddingStart="7dp"
-            android:paddingEnd="7dp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:textColor="#FFF"
-            android:textSize="11sp" />
-
-    </FrameLayout>
+     <com.google.android.material.floatingactionbutton.FloatingActionButton
+             android:id="@+id/connect_action_chat"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_gravity="bottom|end"
+             android:layout_marginRight="80dp"
+             android:layout_marginBottom="16dp"
+             android:src="@drawable/chat"
+             app:maxImageSize="24dp"
+             app:backgroundTint="#f76c6c" />
 
     <LinearLayout
         android:layout_width="match_parent"

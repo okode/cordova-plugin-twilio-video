@@ -5,7 +5,6 @@ repositories {
 dependencies {
     implementation 'com.twilio:video-android:5.8.0'
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation "com.twilio:chat-android:6.0.0"
     implementation 'com.google.android.material:material:1.1.0-rc02'
     implementation 'com.android.volley:volley:1.2.1'
 }

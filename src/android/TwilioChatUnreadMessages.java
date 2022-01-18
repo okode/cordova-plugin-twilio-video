@@ -41,16 +41,10 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
     public void getUnreadMessagesCount(final Channel currentChannel) {
         currentChannel.getUnconsumedMessagesCount(new CallbackListener<Long>() {
             @Override
-<<<<<<< HEAD
             public void onSuccess(Long unreadMessage) {
                 count = unreadMessage == null ? 0 : unreadMessage.intValue();
                 Log.d("Messages", "Messages Counts: Unread Messages Count : " + count);
                 mListener.onMessageCount(count);
-=======
-            public void onSuccess(Long aLong) {
-                Log.d("TAG", "Messages Counts: Unread Messages Count : " + aLong.intValue());
-                count = aLong.intValue();
->>>>>>> parent of 76bcafd (- Handle Error response while joining channel.)
             }
         });
     }
@@ -85,7 +79,6 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
                             Log.d("TAG", "onSuccess: Channel Joined");
                             getUnreadMessagesCount(mChannel);
                         }
-<<<<<<< HEAD
 
                         @Override
                         public void onError(ErrorInfo errorInfo) {
@@ -94,8 +87,6 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
                                 getUnreadMessagesCount(mChannel);
                             }
                         }
-=======
->>>>>>> parent of 76bcafd (- Handle Error response while joining channel.)
                     });
                 }
 
@@ -111,7 +102,6 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
                                     Log.d("TAG", "onSuccess: Channel Created");
                                     getUnreadMessagesCount(mChannel);
                                 }
-<<<<<<< HEAD
 
                                 @Override
                                 public void onError(ErrorInfo errorInfo) {
@@ -120,8 +110,6 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
                                         getUnreadMessagesCount(mChannel);
                                     }
                                 }
-=======
->>>>>>> parent of 76bcafd (- Handle Error response while joining channel.)
                             });
                         }
                     });

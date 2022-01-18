@@ -5,14 +5,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-<<<<<<< HEAD
     <list default="true" id="14862811-7f9d-4f94-b1af-4d70e1b81c4b" name="Default Changelist" comment="" />
-=======
-    <list default="true" id="14862811-7f9d-4f94-b1af-4d70e1b81c4b" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/android/TwilioChatUnreadMessages.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/android/TwilioChatUnreadMessages.java" afterDir="false" />
-    </list>
->>>>>>> parent of 76bcafd (- Handle Error response while joining channel.)
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

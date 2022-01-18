@@ -125,7 +125,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
     private FloatingActionButton switchAudioActionFab;
     private FloatingActionButton attachment_fab;
     private AudioManager audioManager;
+    private TextView txtUnreadMessages;
     private String participantIdentity;
+    private TwilioChatUnreadMessages twilioChatUnreadMessages;
 
     private int previousAudioMode;
     private boolean previousMicrophoneMute;
@@ -150,6 +152,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
 
         connectActionFab = findViewById(FAKE_R.getId("connect_action_fab"));
         chatActionFab = findViewById(FAKE_R.getId("connect_action_chat"));
+        txtUnreadMessages = findViewById(FAKE_R.getId("txt_unread_message"));
         switchCameraActionFab = findViewById(FAKE_R.getId("switch_camera_action_fab"));
         localVideoActionFab = findViewById(FAKE_R.getId("local_video_action_fab"));
         muteActionFab = findViewById(FAKE_R.getId("mute_action_fab"));

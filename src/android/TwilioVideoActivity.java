@@ -16,6 +16,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
@@ -24,7 +26,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.twilio.chat.Channel;
+import com.twilio.chat.ChannelListener;
 import com.twilio.chat.ListenerException;
+import com.twilio.chat.Member;
+import com.twilio.chat.Message;
 import com.twilio.video.CameraCapturer;
 import com.twilio.video.CameraCapturer.CameraSource;
 import com.twilio.video.ConnectOptions;
@@ -68,7 +74,7 @@ import androidx.core.content.FileProvider;
 
 import static org.apache.cordova.twiliovideo.CallEvent.ATTACHMENT;
 
-public class TwilioVideoActivity extends AppCompatActivity implements org.apache.cordova.twiliovideo.CallActionObserver,MessageCountListener {
+public class TwilioVideoActivity extends AppCompatActivity implements org.apache.cordova.twiliovideo.CallActionObserver, MessageCountListener, ChannelListener {
 
     /*
      * Audio and video tracks can be created with names. This feature is useful for categorizing
@@ -95,7 +101,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
      */
     private String accessToken;
     private String roomId;
-    private String userId;
+    static String userId;
     private org.apache.cordova.twiliovideo.CallConfig config;
 
     /*
@@ -134,6 +140,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
     private boolean disconnectedFromOnDestroy;
     private VideoRenderer localVideoView;
     String imageFilePath;
+    private Channel mCurrentChatChannel;
 
 
     @Override
@@ -176,16 +183,13 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         this.roomId = intent.getStringExtra("roomId");
         this.config = (org.apache.cordova.twiliovideo.CallConfig) intent.getSerializableExtra("config");
 
-        if ( this.roomId.contains(":")){
-            String[] separated =  this.roomId.split(":");
-            roomId =  separated[0];
-            userId =  separated[1] ;
-        }else {
+        if (this.roomId.contains(":")) {
+            String[] separated = this.roomId.split(":");
+            roomId = separated[0];
+            userId = separated[1];
+        } else {
             userId = "";
         }
-
-        twilioChatUnreadMessages = new TwilioChatUnreadMessages(this,roomId,this);
-        twilioChatUnreadMessages.fetch(userId);
 
         Log.d(org.apache.cordova.twiliovideo.TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
         if (!hasPermissionForCameraAndMicrophone()) {
@@ -205,9 +209,9 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         chatActionFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String webUrl = "https://adma.stg.iron.fit/chat/"+userId+"/"+roomId;
-                Intent i= new Intent(getApplicationContext(), WebViewActivity.class);
-                i.putExtra("webUrl",webUrl);
+                String webUrl = "https://adma.stg.iron.fit/chat/" + userId + "/" + roomId;
+                Intent i = new Intent(getApplicationContext(), WebViewActivity.class);
+                i.putExtra("webUrl", webUrl);
                 i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(i);
 
@@ -216,17 +220,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
     }
 
     @Override
-    public void onMessageCount(int count) {
-        try {
-            if (count == 0) {
-                txtUnreadMessages.setVisibility(View.GONE);
-            } else {
-                txtUnreadMessages.setVisibility(View.VISIBLE);
-                txtUnreadMessages.setText(String.valueOf(count));
-            }
-        } catch (ListenerException e) {
-            e.printStackTrace();
-        }
+    public void onMessageCount(int count, Channel channel) {
+        mCurrentChatChannel = channel;
+        mCurrentChatChannel.addListener(TwilioVideoActivity.this);
+        Log.e("ChatListener", "Listener added");
     }
 
     @Override
@@ -275,6 +272,10 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         /*
          * If the local video track was released when the app was put in the background, recreate.
          */
+
+        twilioChatUnreadMessages = new TwilioChatUnreadMessages(this, roomId, this);
+        twilioChatUnreadMessages.fetch(userId);
+
         if (localVideoTrack == null && hasPermissionForCameraAndMicrophone()) {
             localVideoTrack = LocalVideoTrack.create(this,
                     true,
@@ -1044,7 +1045,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
                 bitmap.compress(Bitmap.CompressFormat.PNG, 80, byteArrayOutputStream);
                 byte[] byteArray = byteArrayOutputStream.toByteArray();
                 String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-                publishEvent(ATTACHMENT+"--"+encoded);
+                publishEvent(ATTACHMENT + "--" + encoded);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1062,7 +1063,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
                 bitmap.compress(Bitmap.CompressFormat.PNG, 80, byteArrayOutputStream);
                 byte[] byteArray = byteArrayOutputStream.toByteArray();
                 String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-                publishEvent(ATTACHMENT+"--"+encoded);
+                publishEvent(ATTACHMENT + "--" + encoded);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -1133,4 +1134,47 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         builder.show();
     }
 
+    @Override
+    public void onMessageAdded(Message message) {
+        Log.d("onMessageAdded","onMessageAdded");
+        txtUnreadMessages.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void onMessageUpdated(Message message, Message.UpdateReason updateReason) {
+
+    }
+
+    @Override
+    public void onMessageDeleted(Message message) {
+    }
+
+    @Override
+    public void onMemberAdded(Member member) {
+        Log.d("onMemberAdded","onMemberAdded");
+    }
+
+    @Override
+    public void onMemberUpdated(Member member, Member.UpdateReason updateReason) {
+
+    }
+
+    @Override
+    public void onMemberDeleted(Member member) {
+
+    }
+
+    @Override
+    public void onTypingStarted(Channel channel, Member member) {
+
+    }
+
+    @Override
+    public void onTypingEnded(Channel channel, Member member) {
+
+    }
+
+    @Override
+    public void onSynchronizationChanged(Channel channel) {
+    }
 }

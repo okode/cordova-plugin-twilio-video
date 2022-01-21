@@ -36,19 +36,8 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
         this.mListener = listener;
     }
 
-
-
-    /// implementation "com.twilio:chat-android:6.0.0"
-
     public void getUnreadMessagesCount(final Channel currentChannel) {
-        currentChannel.getUnconsumedMessagesCount(new CallbackListener<Long>() {
-            @Override
-            public void onSuccess(Long unreadMessage) {
-                count = unreadMessage == null ? 0 : unreadMessage.intValue();
-                Log.d("Messages", "Messages Counts: Unread Messages Count : " + count);
-                mListener.onMessageCount(count);
-            }
-        });
+                mListener.onMessageCount(count,currentChannel);
     }
 
     public void build(String accessToken) {
@@ -72,37 +61,26 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
         if (mChatClient != null) {
             mChatClient.getChannels().getChannel(mChannelId
                     , new CallbackListener<Channel>() {
-                @Override
-                public void onSuccess(Channel channel) {
-                    mChannel = channel;
-                    mChannel.join(new StatusListener() {
-                        @Override
-                        public void onSuccess() {
-                            Log.d("TAG", "onSuccess: Channel Joined");
-                            getUnreadMessagesCount(mChannel);
-                        }
-
-                        @Override
-                        public void onError(ErrorInfo errorInfo) {
-                            if (errorInfo.getCode() == 50404) {
-                                Log.e("TAG", "onError: " + errorInfo.getMessage());
-                                getUnreadMessagesCount(mChannel);
-                            }
-                        }
-                    });
-                }
-
-                @Override
-                public void onError(ErrorInfo errorInfo) {
-                    mChatClient.getChannels().createChannel(mChannelId, Channel.ChannelType.PRIVATE, new CallbackListener<Channel>() {
                         @Override
                         public void onSuccess(Channel channel) {
                             mChannel = channel;
                             mChannel.join(new StatusListener() {
                                 @Override
                                 public void onSuccess() {
-                                    Log.d("TAG", "onSuccess: Channel Created");
-                                    getUnreadMessagesCount(mChannel);
+                                    Log.d("TAG", "onSuccess: Channel Joined");
+                                    mChannel.getMessages().setAllMessagesConsumedWithResult(new CallbackListener<Long>() {
+                                        @Override
+                                        public void onSuccess(Long aLong) {
+                                            Log.e("TAG", "onSuccess: all messages consumed");
+                                            getUnreadMessagesCount(mChannel);
+                                        }
+
+                                        @Override
+                                        public void onError(ErrorInfo errorInfo) {
+                                            Log.e("TAG", "onError: "+errorInfo.getMessage() );
+                                            getUnreadMessagesCount(mChannel);
+                                        }
+                                    });
                                 }
 
                                 @Override
@@ -114,9 +92,20 @@ public class TwilioChatUnreadMessages extends CallbackListener<ChatClient> {
                                 }
                             });
                         }
+
+                        @Override
+                        public void onError(ErrorInfo errorInfo) {
+                            mChatClient.getChannels().createChannel(mChannelId, Channel.ChannelType.PRIVATE, new CallbackListener<Channel>() {
+                                @Override
+                                public void onSuccess(Channel channel) {
+                                    mChannel = channel;
+                                    Log.d("Chanelcreate",TwilioVideoActivity.userId);
+                                    fetch(TwilioVideoActivity.userId);
+
+                                }
+                            });
+                        }
                     });
-                }
-            });
         }
     }
 

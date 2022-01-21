@@ -272,7 +272,8 @@ public class TwilioVideoActivity extends AppCompatActivity implements org.apache
         /*
          * If the local video track was released when the app was put in the background, recreate.
          */
-
+         
+        txtUnreadMessages.setVisibility(View.GONE);
         twilioChatUnreadMessages = new TwilioChatUnreadMessages(this, roomId, this);
         twilioChatUnreadMessages.fetch(userId);
 

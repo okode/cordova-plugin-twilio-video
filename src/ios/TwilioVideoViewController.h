@@ -5,6 +5,7 @@
 #import "TwilioVideoPermissions.h"
 #import "TwilioVideoUtils.h"
 #import <WebKit/WebKit.h>
+#import "TwilioMessageUtils.h"
 
 @interface TwilioVideoViewController: UIViewController <TVIRemoteParticipantDelegate, TVIRoomDelegate, TVIVideoViewDelegate, TVICameraSourceDelegate, TwilioVideoActionProducerDelegate,UIImagePickerControllerDelegate, UINavigationControllerDelegate, WKNavigationDelegate>
 
@@ -46,6 +47,8 @@
 @property (strong, nonatomic) UIImagePickerController *imagePicker;
 
 @property (strong, nonatomic) IBOutlet UIView *navigationView;
+
+@property (strong, nonatomic) TwilioMessageUtils *twilioMessageUtils;
 
 - (void)connectToRoom:(NSString*)room token: (NSString *)token;
 

@@ -173,6 +173,91 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
              [self handleConnectionError: [self.config i18nConnectionError]];
          }
     }];
+    
+    [self getTokenFromUserId:self.userId ChannelName:self.roomName];
+}
+
+-(void)getTokenFromUserId:(NSString *)userId ChannelName:(NSString *)channelName {
+    NSLog(@"%s userId: %@", __func__, userId);
+
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://medicoparseserver.stg.iron.fit/api/doctor/private_chat/get_access_token"]
+                                                           cachePolicy:NSURLRequestUseProtocolCachePolicy
+                                                       timeoutInterval:30.0];
+    NSDictionary *headers = @{
+        @"Content-Type": @"application/x-www-form-urlencoded",
+    };
+    [request setAllHTTPHeaderFields:headers];
+
+    NSString *uuid = UIDevice.currentDevice.identifierForVendor.UUIDString;
+  
+    
+    NSMutableData *postData = [[NSMutableData alloc] initWithData:[[NSString stringWithFormat:@"identity=%@", userId] dataUsingEncoding:NSUTF8StringEncoding]];
+    [postData appendData:[[NSString stringWithFormat:@"&device=%@", uuid] dataUsingEncoding:NSUTF8StringEncoding]];
+    [request setHTTPBody:postData];
+    [request setHTTPMethod:@"POST"];
+    
+    [[NSURLSession.sharedSession dataTaskWithRequest:request
+                completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error) {
+            NSLog(@"%s error: %@", __func__, error);
+            return;
+        }
+        
+        if (data) {
+            NSDictionary *result = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableContainers error:nil];
+            NSLog(@"%s result: %@", __func__, result);
+
+            NSString *token = [result valueForKeyPath:@"data.token"];
+            [self getUnreadMessagesCountWithToken:token ChannelName:channelName];
+        }
+        
+    }] resume];
+}
+
+-(void)getUnreadMessagesCountWithToken:(NSString *)token ChannelName:(NSString *)channelName {
+    NSLog(@"%s token: %@, channelName: %@", __func__, token, channelName);
+
+    if (!self.twilioMessageUtils) {
+        self.twilioMessageUtils = [TwilioMessageUtils new];
+    }
+    
+    [self.twilioMessageUtils getUnreadMessagesCountWithToken:token ChannelName:channelName completion:^(BOOL success, NSUInteger count) {
+        NSLog(@"%s success: %d, unread messages: %lu", __func__, success, count);
+        [self addBadgeOnChatButton:count withDisplayCount:NO];
+    }];
+}
+
+-(void)addBadgeOnChatButton:(NSInteger)count withDisplayCount:(BOOL)isDisplayCount {
+    NSLog(@"%s: count: %ld", __func__, count);
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UILabel *lblCount = [self.chatButton.subviews filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(id  _Nullable evaluatedObject, NSDictionary<NSString *,id> * _Nullable bindings) {
+            if ([evaluatedObject isKindOfClass:[UILabel class]]) {
+                UILabel *lblAll = ((UILabel *)evaluatedObject);
+                return [lblAll.accessibilityIdentifier isEqualToString:@"chat_badge"];
+            }
+            return NO;
+        }]].firstObject;
+        
+        if (!lblCount) {
+            CGFloat size = 20;
+            CGFloat badgeX = self.chatButton.frame.size.width - size;
+            lblCount = [[UILabel alloc] initWithFrame:CGRectMake(badgeX, 0, size, size)];
+            lblCount.accessibilityIdentifier = @"chat_badge";
+            lblCount.textColor = UIColor.whiteColor;
+            lblCount.backgroundColor = UIColor.redColor;
+            lblCount.textAlignment = NSTextAlignmentCenter;
+            lblCount.clipsToBounds = YES;
+            lblCount.layer.cornerRadius = lblCount.bounds.size.height / 2.0;
+        }
+       
+        if (isDisplayCount) {
+            lblCount.text = [NSString stringWithFormat:@"%lu", count];
+        }
+        [lblCount setHidden:count == 0];
+        [self.chatButton addSubview:lblCount];
+        self.chatButton.clipsToBounds = NO;
+    });
 }
 
 - (IBAction)disconnectButtonPressed:(id)sender {
@@ -211,6 +296,9 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
 
 - (IBAction)chatButtonPressed:(id)sender {
     [self openWebView];
+    
+    //Hide badge on chat button
+    [self addBadgeOnChatButton:0 withDisplayCount:NO];
 }
 
 - (void) openWebView {

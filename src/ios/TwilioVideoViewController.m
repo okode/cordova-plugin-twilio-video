@@ -368,6 +368,8 @@ NSString *const ATTACHMENT = @"ATTACHMENT";
 - (void)btnCloseClicked:(UIButton*)button{
     [_navigationView setHidden:true];
     [self animateViewHeight:self.view withAnimationType:kCATransitionFromBottom isChatClose:YES];
+       //Hide badge on chat button
+    [self addBadgeOnChatButton:0 withDisplayCount:NO];
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation {

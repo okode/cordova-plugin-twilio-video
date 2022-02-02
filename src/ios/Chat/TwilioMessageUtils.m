@@ -79,9 +79,9 @@
     NSLog(@"%s", __func__);
     [self.channel getMessagesCountWithCompletion:^(TCHResult *result, NSUInteger messagesCount) {
         NSLog(@"%s result: %d, all messages: %lu", __func__, result.isSuccessful, messagesCount);
-        [self.channel getUnconsumedMessagesCountWithCompletion:^(TCHResult *result, NSUInteger count) {
-            NSLog(@"%s result: %d, 2 unread messages: %lu/%lu", __func__, result.isSuccessful, count, messagesCount);
-            completion(result.isSuccessful, count);
+        [self.channel getUnconsumedMessagesCountWithCompletion:^(TCHResult *result, NSNumber *count) {
+            NSLog(@"%s result: %d, 2 unread messages: %lu/%lu", __func__, result.isSuccessful, count.longValue, messagesCount);
+            completion(result.isSuccessful, count.longValue);
         }];
     }];
 }

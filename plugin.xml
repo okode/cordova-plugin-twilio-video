@@ -56,13 +56,22 @@
         <resource-file src="src/ios/Resources/close.png" target="Resources/close.png" />
         <resource-file src="src/ios/Resources/close@2x.png" target="Resources/close@2x.png" />
         <resource-file src="src/ios/Resources/close@3x.png" target="Resources/close@3x.png" />
-        <framework src="TwilioVideo" type="podspec" spec="3.7.0"/>
+        <framework src="TwilioVideo" type="podspec" spec="4.6.0"/>
         <podspec>
             <config>
                 <source url="https://cdn.cocoapods.org/"/>
             </config>
             <pods>
-                <pod name="TwilioVideo" spec="3.7.0"/>
+                <pod name="TwilioVideo" spec="4.6.0"/>
+            </pods>
+        </podspec>
+        <framework src="TwilioChatClient" type="podspec" spec="5.0.1"/>
+        <podspec>
+            <config>
+                <source url="https://cdn.cocoapods.org/"/>
+            </config>
+            <pods>
+                <pod name="TwilioChatClient" spec="5.0.1"/>
             </pods>
         </podspec>
 

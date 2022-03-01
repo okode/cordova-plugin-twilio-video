@@ -28,6 +28,8 @@
         <source-file src="src/ios/TwilioVideoConfig.m" />
         <header-file src="src/ios/TwilioVideoUtils.h" />
         <source-file src="src/ios/TwilioVideoUtils.m" />
+        <header-file src="src/ios/Chat/TwilioMessageUtils.h"/>
+        <source-file src="src/ios/Chat/TwilioMessageUtils.m"/>
         <resource-file src="src/ios/Resources/TwilioVideo.storyboard" target="Resources/TwilioVideo.storyboard" />
         <resource-file src="src/ios/Resources/end_call.png" target="Resources/end_call.png" />
         <resource-file src="src/ios/Resources/end_call@2x.png" target="Resources/end_call@2x.png" />
@@ -107,6 +109,8 @@
         <source-file src="src/android/CallConfig.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/CameraCapturerCompat.java" target-dir="src/org/apache/cordova/twiliovideo" />
         <source-file src="src/android/TwilioVideoUtils.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/MessageCountListener.java" target-dir="src/org/apache/cordova/twiliovideo" />
+        <source-file src="src/android/TwilioChatUnreadMessages.java" target-dir="src/org/apache/cordova/twiliovideo" />
 
         <framework src="com.google.android.gms:play-services-gcm:+" />
         <framework src="src/android/twiliovideo.gradle" custom="true" type="gradleReference" />

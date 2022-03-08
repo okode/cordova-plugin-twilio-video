@@ -1,6 +1,7 @@
 # 6.1
 ## Fixes
 - Fixed some typings
+- Fixed audio when video starts on android
 ## New features
 ### Common
 - Added 'isAudioEnabled' and 'isVideoEnabled' params to the respective tracks.

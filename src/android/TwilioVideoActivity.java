@@ -302,6 +302,7 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
                 return Unit.INSTANCE;
             }
         });
+        audioSwitch.activate();
     }
 
     private boolean hasPermissionForCameraAndMicrophone() {

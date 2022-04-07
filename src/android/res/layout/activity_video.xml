@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,66 +7,179 @@
     android:fitsSystemWindows="true"
     tools:context="org.apache.cordova.twiliovideo.TwilioVideoActivity">
 
-    <include layout="@layout/content_video" />
+    <RelativeLayout
+        android:id="@+id/toolBar"
+        android:layout_width="match_parent"
+        android:layout_height="78dp"
+        android:background="@android:color/white"
+        android:paddingStart="30dp"
+        android:paddingTop="15dp"
+        android:paddingEnd="25dp"
+        android:paddingBottom="15dp">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/connect_action_fab"
+        <ImageView
+            android:id="@+id/app_logo"
+            android:layout_width="71dp"
+            android:layout_height="23dp"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_app_name" />
+
+        <org.apache.cordova.twiliovideo.CircleImageView
+            android:id="@+id/profile_image"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/user" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/profile_image"
+            android:layout_toEndOf="@id/app_logo">
+
+            <TextView
+                android:id="@+id/text_user_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1"
+                android:text="dfsklvmdvdfmvklm"
+                android:textColor="@android:color/black"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/text_user_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/text_user_name"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="5dp"
+                android:layout_marginEnd="5dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1"
+                android:text="dsmfosgmfsklgm"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+    <include
+        layout="@layout/content_video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/toolBar" />
+
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_call_white_24px"
-        app:backgroundTint="#f76c6c" />
-
-    <FrameLayout
-        android:id="@+id/frameLayout"
-        android:layout_width="wrap_content"
-        android:layout_marginRight="80dp"
-        android:layout_gravity="bottom|end"
-        android:layout_marginBottom="16dp"
-        android:layout_height="wrap_content">
+        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom|start">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/connect_action_chat"
+            android:id="@+id/connect_action_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
-            android:src="@drawable/chat"
-            app:maxImageSize="24dp"
-            app:backgroundTint="#f76c6c" />
+            android:layout_marginStart="@dimen/fab_start_end_margin"
+            android:layout_marginBottom="@dimen/fab_top_bottom_margin"
+            android:src="@drawable/ic_call_white_24px"
+            app:backgroundTint="#EA1F1F" />
 
-        <TextView
-            android:id="@+id/txt_unread_message"
+        <FrameLayout
+            android:id="@+id/frameLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/unread_message_badge"
-            android:elevation="8dp"
-            android:layout_gravity="end"
-            android:visibility="gone"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:paddingTop="3dp"
-            android:paddingBottom="3dp"
-            android:textColor="#FFF"
-            android:textSize="11sp" />
+            android:layout_marginStart="@dimen/fab_between_margin"
+            android:layout_marginBottom="@dimen/fab_top_bottom_margin"
+            android:layout_toEndOf="@id/connect_action_fab">
 
-    </FrameLayout>
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/connect_action_chat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/chat"
+                app:backgroundTint="#40F5F6FD" />
 
-    <LinearLayout
+            <TextView
+                android:id="@+id/txt_unread_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:background="@drawable/unread_message_badge"
+                android:elevation="8dp"
+                android:paddingStart="10dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="10dp"
+                android:paddingBottom="3dp"
+                android:textColor="#FFF"
+                android:textSize="11sp"
+                android:visibility="gone" />
+
+        </FrameLayout>
+
+    </RelativeLayout>
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal" >
+        android:layout_below="@id/toolBar">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/local_video_action_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/fab_start_end_margin"
+            android:layout_marginTop="@dimen/fab_top_bottom_margin"
+            android:src="@drawable/ic_videocam_green_24px"
+            app:backgroundTint="#40F5F6FD" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/switch_camera_action_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:fabSize="mini"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_marginStart="@dimen/fab_between_margin"
+            android:layout_marginTop="@dimen/fab_top_bottom_margin"
+            android:layout_toEndOf="@+id/local_video_action_fab"
             android:src="@drawable/ic_switch_camera_512dp"
-            app:backgroundTint="#3e4666" 
-            />
+            app:backgroundTint="#40F5F6FD" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/attachment_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="@dimen/fab_top_bottom_margin"
+            android:layout_marginEnd="@dimen/fab_start_end_margin"
+            android:src="@drawable/attach"
+            app:backgroundTint="#40F5F6FD" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/mute_action_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/fab_top_bottom_margin"
+            android:layout_marginEnd="@dimen/fab_between_margin"
+            android:layout_toStartOf="@id/attachment_fab"
+            android:src="@drawable/ic_mic_green_24px"
+            app:backgroundTint="#40F5F6FD" />
+
+    </RelativeLayout>
+
+    <!--<LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal" >
+
+
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/switch_audio_action_fab"
             android:layout_width="wrap_content"
@@ -77,38 +189,7 @@
             android:src="@drawable/ic_phonelink_ring_white_24dp"
             app:backgroundTint="#3e4666"
             />
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/local_video_action_fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/fab_margin"
-            app:fabSize="mini"
-            android:src="@drawable/ic_videocam_green_24px" 
-            app:backgroundTint="#3e4666" 
-            />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/mute_action_fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:fabSize="mini"
-            android:layout_margin="@dimen/fab_margin"
-            android:src="@drawable/ic_mic_green_24px" 
-            app:backgroundTint="#3e4666"
-            />
+    </LinearLayout>-->
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/attachment_fab"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:fabSize="mini"
-                android:layout_margin="@dimen/fab_margin"
-                android:src="@drawable/attach"
-                app:backgroundTint="#3e4666"
-                />
-
-
-
-    </LinearLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</RelativeLayout>

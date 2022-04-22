@@ -49,7 +49,7 @@
     
     NSDictionary *options = @{
         TCHChannelOptionUniqueName: channelName,
-        TCHChannelOptionType:@(TCHChannelTypePrivate),
+        TCHChannelOptionType:@(TCHChannelTypePublic),
     };
     
     [self.client.channelsList createChannelWithOptions:options completion:^(TCHResult * _Nonnull result, TCHChannel * _Nullable channel) {

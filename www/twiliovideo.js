@@ -33,23 +33,43 @@ TwilioVideo.getRoom = function() {
     });
 };
 
-TwilioVideo.hasRequiredPermissions = function() {
+TwilioVideo.hasRequiredVideoCallPermissions = function() {
     return new Promise(function(resolve, reject) {
         exec(function(result) {
             resolve(result);
         }, function(error) {
             reject(error);
-        }, "TwilioVideoPlugin", "hasRequiredPermissions", []);
+        }, "TwilioVideoPlugin", "hasRequiredVideoCallPermissions", []);
     });
 };
 
-TwilioVideo.requestPermissions = function() {
+TwilioVideo.hasRequiredAudioCallPermissions = function() {
     return new Promise(function(resolve, reject) {
         exec(function(result) {
             resolve(result);
         }, function(error) {
             reject(error);
-        }, "TwilioVideoPlugin", "requestPermissions", []);
+        }, "TwilioVideoPlugin", "hasRequiredAudioCallPermissions", []);
+    });
+};
+
+TwilioVideo.requestRequiredVideoCallPermissions = function() {
+    return new Promise(function(resolve, reject) {
+        exec(function(result) {
+            resolve(result);
+        }, function(error) {
+            reject(error);
+        }, "TwilioVideoPlugin", "requestRequiredVideoCallPermissions", []);
+    });
+};
+
+TwilioVideo.requestRequiredAudioCallPermissions = function() {
+    return new Promise(function(resolve, reject) {
+        exec(function(result) {
+            resolve(result);
+        }, function(error) {
+            reject(error);
+        }, "TwilioVideoPlugin", "requestRequiredAudioCallPermissions", []);
     });
 };
 

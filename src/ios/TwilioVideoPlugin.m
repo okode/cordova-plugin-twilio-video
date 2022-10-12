@@ -52,13 +52,26 @@
     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
 
-- (void)hasRequiredPermissions:(CDVInvokedUrlCommand*)command {
-    BOOL hasRequiredPermissions = [TwilioVideoPermissions hasRequiredPermissions];
-    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasRequiredPermissions] callbackId:command.callbackId];
+- (void)hasRequiredVideoCallPermissions:(CDVInvokedUrlCommand*)command {
+    BOOL hasRequiredVideoCallPermissions = [TwilioVideoPermissions hasRequiredVideoCallPermissions];
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasRequiredVideoCallPermissions] callbackId:command.callbackId];
 }
 
-- (void)requestPermissions:(CDVInvokedUrlCommand*)command {
-    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
+- (void)hasRequiredAudioCallPermissions:(CDVInvokedUrlCommand*)command {
+    BOOL hasRequiredAudioCallPermissions = [TwilioVideoPermissions hasRequiredAudioCallPermissions];
+    [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:hasRequiredAudioCallPermissions] callbackId:command.callbackId];
+}
+
+- (void)requestRequiredVideoCallPermissions:(CDVInvokedUrlCommand*)command {
+    [TwilioVideoPermissions requestRequiredVideoCallPermissions:^(BOOL grantedPermissions) {
+                     [self.commandDelegate sendPluginResult:
+         [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:grantedPermissions]
+                                    callbackId:command.callbackId];
+    }];
+}
+
+- (void)requestRequiredAudioCallPermissions:(CDVInvokedUrlCommand*)command {
+    [TwilioVideoPermissions requestRequiredAudioCallPermissions:^(BOOL grantedPermissions) {
                      [self.commandDelegate sendPluginResult:
          [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:grantedPermissions]
                                     callbackId:command.callbackId];

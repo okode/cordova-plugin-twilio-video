@@ -14,11 +14,13 @@ public class CallConfig implements Serializable {
     private static final String SECONDARY_COLOR_PROP = "secondaryColor";
     private static final String HANG_UP_IN_APP = "hangUpInApp";
     private static final String DISABLE_BACK_BUTTON = "disableBackButton";
+    private static final String AUDIO_ONLY = "audioOnly";
 
     private String primaryColorHex;
     private String secondaryColorHex;
     private boolean hangUpInApp;
     private boolean disableBackButton;
+    private boolean audioOnly;
 
     public void parse(JSONObject config) {
         if (config == null) {
@@ -28,6 +30,7 @@ public class CallConfig implements Serializable {
         this.secondaryColorHex = config.optString(SECONDARY_COLOR_PROP, null);
         this.hangUpInApp = config.optBoolean(HANG_UP_IN_APP, false);
         this.disableBackButton = config.optBoolean(DISABLE_BACK_BUTTON, false);
+        this.audioOnly = config.optBoolean(AUDIO_ONLY, false);
     }
 
     public String getPrimaryColorHex() {
@@ -46,4 +49,7 @@ public class CallConfig implements Serializable {
         return disableBackButton;
     }
 
+    public boolean isAudioOnly() {
+        return audioOnly;
+    }
 }

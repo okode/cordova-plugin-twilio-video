@@ -23,8 +23,11 @@ import static org.apache.cordova.twiliovideo.CallEventId.BAD_CONNECTION_REQUEST;
 public class TwilioVideo extends CordovaPlugin {
 
     public static final String TAG = "TwilioPlugin";
-    public static final String[] PERMISSIONS_REQUIRED = new String[]{
+    public static final String[] PERMISSIONS_REQUIRED_VIDEO_CALL = new String[]{
         Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO
+    };
+    public static final String[] PERMISSIONS_REQUIRED_AUDIO_CALL = new String[]{
         Manifest.permission.RECORD_AUDIO
     };
 

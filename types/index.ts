@@ -28,16 +28,28 @@ export interface TwilioVideoPlugin {
   getRoom(): Promise<TwilioVideoAppRoom>;
 
   /**
-   * Check if the user granted all required permissions (Camera and Microphone)
+   * Check if the user granted all required permissions for a video call (Camera and Microphone)
    * @return If user has granted all permissions or not
    */
-  hasRequiredPermissions(): Promise<boolean>;
+  hasRequiredVideoCallPermissions(): Promise<boolean>;
 
   /**
-   * Request required permissions (Camera and Microphone)
+   * Check if the user granted all required permissions for an audio call (Microphone)
    * @return If user has granted all permissions or not
    */
-  requestPermissions(): Promise<boolean>;
+  hasRequiredAudioCallPermissions(): Promise<boolean>;
+
+  /**
+   * Request required permissions for a video call (Camera and Microphone)
+   * @return If user has granted all permissions or not
+   */
+   requestRequiredVideoCallPermissions(): Promise<boolean>;
+
+  /**
+   * Request required permissions for an audio call (Microphone)
+   * @return If user has granted all permissions or not
+   */
+   requestRequiredAudioCallPermissions(): Promise<boolean>;
 }
 
 export interface TwilioVideoAppConfig {
@@ -58,6 +70,10 @@ export interface TwilioVideoAppConfig {
    * (Only Android) (Default = false) Flag to disable back button while the videocall is running.
    */
   disableBackButton?: boolean;
+  /**
+   * (Default = false) Flag to disable video functionality in calls.
+   */
+  audioOnly?: boolean;
 }
 
 export interface TwilioVideoAppEvent {

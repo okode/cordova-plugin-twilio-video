@@ -167,9 +167,12 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         this.config = (CallConfig) intent.getSerializableExtra("config");
 
         Log.d(TwilioVideo.TAG, "BEFORE REQUEST PERMISSIONS");
-        if (!hasPermissionForCameraAndMicrophone()) {
-            Log.d(TwilioVideo.TAG, "REQUEST PERMISSIONS");
-            requestPermissions();
+        if (!config.isAudioOnly() && !hasPermissionForCameraAndMicrophone()) {
+            Log.d(TwilioVideo.TAG, "REQUEST VIDEO CALL PERMISSIONS");
+            requestRequiredVideoCallPermissions();
+        } else if (config.isAudioOnly() && !hasPermissionForMicrophone()) {
+            Log.d(TwilioVideo.TAG, "REQUEST AUDIO CALL PERMISSIONS");
+            requestRequiredVideoCallPermissions();
         } else {
             Log.d(TwilioVideo.TAG, "PERMISSIONS OK. CREATE LOCAL MEDIA");
             createAudioAndVideoTracks();
@@ -314,11 +317,26 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
             resultMic == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void requestPermissions() {
+    private boolean hasPermissionForMicrophone() {
+        int resultMic = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.RECORD_AUDIO);
+        return resultMic == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void requestRequiredVideoCallPermissions() {
         ActivityCompat.requestPermissions(
             this,
-            TwilioVideo.PERMISSIONS_REQUIRED,
-            PERMISSIONS_REQUEST_CODE);
+            TwilioVideo.PERMISSIONS_REQUIRED_VIDEO_CALL,
+            PERMISSIONS_REQUEST_CODE
+        );
+    }
+
+    private void requestRequiredAudioCallPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            TwilioVideo.PERMISSIONS_REQUIRED_VIDEO_CALL,
+            PERMISSIONS_REQUEST_CODE
+        );
     }
 
     private void createAudioAndVideoTracks() {
@@ -329,11 +347,13 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         // Share your camera
         cameraCapturer = new CameraCapturerCompat(this,
             CameraCapturerCompat.Source.FRONT_CAMERA);
-        localVideoTrack = LocalVideoTrack.create(this,
-            true,
-            cameraCapturer,
-            LOCAL_VIDEO_TRACK_NAME);
-        this.moveLocalVideoToThumbnailView();
+        if (config.isAudioOnly() == false) {
+            localVideoTrack = LocalVideoTrack.create(this,
+                true,
+                cameraCapturer,
+                LOCAL_VIDEO_TRACK_NAME);
+            this.moveLocalVideoToThumbnailView();
+        }
     }
 
     private void connectToRoom() {
@@ -389,6 +409,11 @@ public class TwilioVideoActivity extends AppCompatActivity implements CallAction
         muteActionFab.setOnClickListener(muteClickListener());
         switchAudioActionFab.show();
         switchAudioActionFab.setOnClickListener(switchAudioClickListener());
+
+        if (config.isAudioOnly() == true) {
+            switchCameraActionFab.hide();
+            localVideoActionFab.hide();
+        }
     }
 
     private void showAudioDevices() {

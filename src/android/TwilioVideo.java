@@ -23,8 +23,11 @@ import static org.apache.cordova.twiliovideo.CallEventId.BAD_CONNECTION_REQUEST;
 public class TwilioVideo extends CordovaPlugin {
 
     public static final String TAG = "TwilioPlugin";
-    public static final String[] PERMISSIONS_REQUIRED = new String[]{
+    public static final String[] PERMISSIONS_REQUIRED_VIDEO_CALL = new String[]{
         Manifest.permission.CAMERA,
+        Manifest.permission.RECORD_AUDIO
+    };
+    public static final String[] PERMISSIONS_REQUIRED_AUDIO_CALL = new String[]{
         Manifest.permission.RECORD_AUDIO
     };
 
@@ -55,11 +58,17 @@ public class TwilioVideo extends CordovaPlugin {
             case "getRoom":
                 this.getRoom(callbackContext);
                 break;
-            case "hasRequiredPermissions":
-                this.hasRequiredPermissions(callbackContext);
+            case "hasRequiredVideoCallPermissions":
+                this.hasRequiredVideoCallPermissions(callbackContext);
                 break;
-            case "requestPermissions":
-                this.requestRequiredPermissions();
+            case "hasRequiredAudioCallPermissions":
+                this.hasRequiredAudioCallPermissions(callbackContext);
+                break;
+            case "requestRequiredVideoCallPermissions":
+                this.requestRequiredVideoCallPermissions();
+                break;
+            case "requestRequiredAudioCallPermissions":
+                this.requestRequiredAudioCallPermissions();
                 break;
         }
         return true;
@@ -129,23 +138,48 @@ public class TwilioVideo extends CordovaPlugin {
         }
     }
 
-    private void hasRequiredPermissions(CallbackContext callbackContext) {
-        boolean hasRequiredPermissions = true;
-        for (String permission : TwilioVideo.PERMISSIONS_REQUIRED) {
-            hasRequiredPermissions = cordova.hasPermission(permission);
-            if (!hasRequiredPermissions) {
+    private void hasRequiredVideoCallPermissions(CallbackContext callbackContext) {
+        boolean hasRequiredVideoCallPermissions = true;
+        for (String permission : TwilioVideo.PERMISSIONS_REQUIRED_VIDEO_CALL) {
+            hasRequiredVideoCallPermissions = cordova.hasPermission(permission);
+            if (!hasRequiredVideoCallPermissions) {
                 break;
             }
         }
 
         callbackContext.sendPluginResult(
-            new PluginResult(PluginResult.Status.OK, hasRequiredPermissions)
+            new PluginResult(PluginResult.Status.OK, hasRequiredVideoCallPermissions)
         );
     }
 
-    private void requestRequiredPermissions() {
+    private void hasRequiredAudioCallPermissions(CallbackContext callbackContext) {
+        boolean hasRequiredAudioCallPermissions = true;
+        for (String permission : TwilioVideo.PERMISSIONS_REQUIRED_AUDIO_CALL) {
+            hasRequiredAudioCallPermissions = cordova.hasPermission(permission);
+            if (!hasRequiredAudioCallPermissions) {
+                break;
+            }
+        }
+
+        callbackContext.sendPluginResult(
+            new PluginResult(PluginResult.Status.OK, hasRequiredAudioCallPermissions)
+        );
+    }
+
+    private void requestRequiredVideoCallPermissions() {
         cordova.requestPermissions(
-            this, PERMISSIONS_REQUIRED_REQUEST_CODE, PERMISSIONS_REQUIRED);
+            this, 
+            PERMISSIONS_REQUIRED_REQUEST_CODE, 
+            PERMISSIONS_REQUIRED_VIDEO_CALL
+        );
+    }
+
+    private void requestRequiredAudioCallPermissions() {
+        cordova.requestPermissions(
+            this, 
+            PERMISSIONS_REQUIRED_REQUEST_CODE, 
+            PERMISSIONS_REQUIRED_AUDIO_CALL
+        );
     }
 
     @Override

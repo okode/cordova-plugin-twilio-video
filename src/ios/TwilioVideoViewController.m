@@ -62,14 +62,25 @@ static TVIRoom *currentRoom;
     self.accessToken = token;
     [self showRoomUI:YES];
 
-    [TwilioVideoPermissions requestRequiredPermissions:^(BOOL grantedPermissions) {
-         if (grantedPermissions) {
-             [self doConnect];
-         } else {
-             [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_PERMISSIONS_REQUIRED]];
-             [self handleConnectionError];
-         }
-    }];
+    if ([self.config audioOnly]) {
+        [TwilioVideoPermissions requestRequiredAudioCallPermissions:^(BOOL grantedPermissions) {
+            if (grantedPermissions) {
+                [self doConnect];
+            } else {
+                [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_PERMISSIONS_REQUIRED]];
+                [self handleConnectionError];
+            }
+        }];
+    } else {
+        [TwilioVideoPermissions requestRequiredVideoCallPermissions:^(BOOL grantedPermissions) {
+            if (grantedPermissions) {
+                [self doConnect];
+            } else {
+                [[TwilioVideoManager getInstance] publishEvent:[CallEvent of:EVENT_PERMISSIONS_REQUIRED]];
+                [self handleConnectionError];
+            }
+        }];
+    }
 }
 
 - (IBAction)disconnectButtonPressed:(id)sender {
@@ -112,7 +123,7 @@ static TVIRoom *currentRoom;
 
 - (void)startPreview {
     // TVICameraCapturer is not supported with the Simulator.
-    if ([self isSimulator]) {
+    if ([self isSimulator] || [self.config audioOnly]) {
         [self.previewView removeFromSuperview];
         return;
     }

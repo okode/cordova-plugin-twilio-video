@@ -3,6 +3,7 @@
 #define PRIMARY_COLOR_PROP                  @"primaryColor"
 #define SECONDARY_COLOR_PROP                @"secondaryColor"
 #define HANG_UP_IN_APP                      @"hangUpInApp"
+#define AUDIO_ONLY                          @"audioOnly"
 
 @implementation TwilioVideoConfig
 
@@ -12,6 +13,8 @@
     self.secondaryColorHex = [config objectForKey:SECONDARY_COLOR_PROP];
     NSNumber *hangUpInApp = [config objectForKey:HANG_UP_IN_APP];
     self.hangUpInApp = hangUpInApp ? [hangUpInApp boolValue] : false;
+    NSNumber *audioOnly = [config objectForKey:AUDIO_ONLY];
+    self.audioOnly = audioOnly ? [audioOnly boolValue] : false;
 }
 
 + (UIColor *)colorFromHexString:(NSString *)hexString {
